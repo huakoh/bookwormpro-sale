@@ -2,7 +2,7 @@
 
 Captures x-ratelimit-* headers from provider responses and provides
 formatted display for the /usage slash command.  Currently supports
-the Nous Portal header format (also used by OpenRouter and OpenAI-compatible
+the BookwormPRO Portal header format (also used by OpenRouter and OpenAI-compatible
 APIs that follow the same convention).
 
 Header schema (12 headers total):
@@ -214,7 +214,7 @@ def format_rate_limit_display(state: RateLimitState) -> str:
     ]:
         if bucket.limit > 0 and bucket.usage_pct >= 80:
             reset = _fmt_seconds(bucket.remaining_seconds_now)
-            warnings.append(f"  ⚠ {label} at {bucket.usage_pct:.0f}% — resets in {reset}")
+            warnings.append(f"  [警告] {label} at {bucket.usage_pct:.0f}% — resets in {reset}")
 
     if warnings:
         lines.append("")

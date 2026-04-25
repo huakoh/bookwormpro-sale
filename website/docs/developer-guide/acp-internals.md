@@ -6,7 +6,7 @@ description: "How the ACP adapter works: lifecycle, sessions, event bridge, appr
 
 # ACP Internals
 
-The ACP adapter wraps Hermes' synchronous `AIAgent` in an async JSON-RPC stdio server.
+The ACP adapter wraps BookwormPRO' synchronous `AIAgent` in an async JSON-RPC stdio server.
 
 Key implementation files:
 
@@ -22,9 +22,9 @@ Key implementation files:
 ## Boot flow
 
 ```text
-hermes acp / hermes-acp / python -m acp_adapter
+bookworm acp / bookworm-acp / python -m acp_adapter
   -> acp_adapter.entry.main()
-  -> load ~/.hermes/.env
+  -> load ~/.bookwormpro/.env
   -> configure stderr logging
   -> construct HermesACPAgent
   -> acp.run_agent(agent)
@@ -92,15 +92,15 @@ asyncio.run_coroutine_threadsafe(...)
 
 Mapping:
 
-- `allow_once` -> Hermes `once`
-- `allow_always` -> Hermes `always`
-- reject options -> Hermes `deny`
+- `allow_once` -> BookwormPRO `once`
+- `allow_always` -> BookwormPRO `always`
+- reject options -> BookwormPRO `deny`
 
 Timeouts and bridge failures deny by default.
 
 ### Tool rendering helpers
 
-`acp_adapter/tools.py` maps Hermes tools to ACP tool kinds and builds editor-facing content.
+`acp_adapter/tools.py` maps BookwormPRO tools to ACP tool kinds and builds editor-facing content.
 
 Examples:
 
@@ -114,7 +114,7 @@ Examples:
 ```text
 new_session(cwd)
   -> create SessionState
-  -> create AIAgent(platform="acp", enabled_toolsets=["hermes-acp"])
+  -> create AIAgent(platform="acp", enabled_toolsets=["bookworm-acp"])
   -> bind task_id/session_id to cwd override
 
 prompt(..., session_id)
@@ -142,12 +142,12 @@ prompt(..., session_id)
 
 ACP does not implement its own auth store.
 
-Instead it reuses Hermes' runtime resolver:
+Instead it reuses BookwormPRO' runtime resolver:
 
 - `acp_adapter/auth.py`
-- `hermes_cli/runtime_provider.py`
+- `bwm_cli/runtime_provider.py`
 
-So ACP advertises and uses the currently configured Hermes provider/credentials.
+So ACP advertises and uses the currently configured BookwormPRO provider/credentials.
 
 ## Working directory binding
 
@@ -177,6 +177,6 @@ ACP temporarily installs an approval callback on the terminal tool during prompt
 ## Related files
 
 - `tests/acp/` — ACP test suite
-- `toolsets.py` — `hermes-acp` toolset definition
-- `hermes_cli/main.py` — `hermes acp` CLI subcommand
-- `pyproject.toml` — `[acp]` optional dependency + `hermes-acp` script
+- `toolsets.py` — `bookworm-acp` toolset definition
+- `bwm_cli/main.py` — `bookworm acp` CLI subcommand
+- `pyproject.toml` — `[acp]` optional dependency + `bookworm-acp` script

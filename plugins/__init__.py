@@ -1,1 +1,1 @@
-# Hermes plugins package
+# BookwormPRO plugins package

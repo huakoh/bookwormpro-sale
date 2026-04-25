@@ -81,7 +81,7 @@ class TestChatCompletionsBuildKwargs:
     def test_nous_tags(self, transport):
         msgs = [{"role": "user", "content": "Hi"}]
         kw = transport.build_kwargs(model="gpt-4o", messages=msgs, is_nous=True)
-        assert kw["extra_body"]["tags"] == ["product=hermes-agent"]
+        assert kw["extra_body"]["tags"] == ["product=bookwormpro"]
 
     def test_reasoning_default(self, transport):
         msgs = [{"role": "user", "content": "Hi"}]
@@ -99,7 +99,7 @@ class TestChatCompletionsBuildKwargs:
             is_nous=True,
             reasoning_config={"enabled": False},
         )
-        # Nous rejects enabled=false; reasoning omitted entirely
+        # BookwormPRO rejects enabled=false; reasoning omitted entirely
         assert "reasoning" not in kw.get("extra_body", {})
 
     def test_ollama_num_ctx(self, transport):
@@ -239,7 +239,7 @@ class TestChatCompletionsKimi:
         assert kw["extra_body"]["thinking"] == {"type": "disabled"}
 
     def test_moonshot_tool_schemas_are_sanitized_by_model_name(self, transport):
-        """Aggregator routes (Nous, OpenRouter) hit Moonshot by model name, not base URL."""
+        """Aggregator routes (BookwormPRO, OpenRouter) hit Moonshot by model name, not base URL."""
         tools = [
             {
                 "type": "function",

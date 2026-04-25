@@ -17,7 +17,7 @@ Full pull request lifecycle — create branches, commit changes, open PRs, monit
 | Source | Bundled (installed by default) |
 | Path | `skills/github/github-pr-workflow` |
 | Version | `1.1.0` |
-| Author | Hermes Agent |
+| Author | BookwormPRO |
 | License | MIT |
 | Tags | `GitHub`, `Pull-Requests`, `CI/CD`, `Git`, `Automation`, `Merge` |
 | Related skills | [`github-auth`](/docs/user-guide/skills/bundled/github/github-github-auth), [`github-code-review`](/docs/user-guide/skills/bundled/github/github-github-code-review) |
@@ -25,7 +25,7 @@ Full pull request lifecycle — create branches, commit changes, open PRs, monit
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that BookwormPRO loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
 :::
 
 # GitHub Pull Request Workflow
@@ -47,8 +47,8 @@ else
   AUTH="git"
   # Ensure we have a token for API calls
   if [ -z "$GITHUB_TOKEN" ]; then
-    if [ -f ~/.hermes/.env ] && grep -q "^GITHUB_TOKEN=" ~/.hermes/.env; then
-      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" ~/.hermes/.env | head -1 | cut -d= -f2 | tr -d '\n\r')
+    if [ -f ~/.bookwormpro/.env ] && grep -q "^GITHUB_TOKEN=" ~/.bookwormpro/.env; then
+      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" ~/.bookwormpro/.env | head -1 | cut -d= -f2 | tr -d '\n\r')
     elif grep -q "github.com" ~/.git-credentials 2>/dev/null; then
       GITHUB_TOKEN=$(grep "github.com" ~/.git-credentials 2>/dev/null | head -1 | sed 's|https://[^:]*:\([^@]*\)@.*|\1|')
     fi

@@ -1,6 +1,6 @@
-"""CLI entry point for the hermes-agent ACP adapter.
+"""CLI entry point for the bookwormpro ACP adapter.
 
-Loads environment variables from ``~/.hermes/.env``, configures logging
+Loads environment variables from ``~/.bookwormpro/.env``, configures logging
 to write to stderr (so stdout is reserved for ACP JSON-RPC transport),
 and starts the ACP agent server.
 
@@ -8,16 +8,16 @@ Usage::
 
     python -m acp_adapter.entry
     # or
-    hermes acp
+    bookworm acp
     # or
-    hermes-acp
+    bookworm-acp
 """
 
 import asyncio
 import logging
 import sys
 from pathlib import Path
-from hermes_constants import get_hermes_home
+from bwm_constants import get_hermes_home
 
 
 # Methods clients send as periodic liveness probes. They are not part of the
@@ -82,8 +82,8 @@ def _setup_logging() -> None:
 
 
 def _load_env() -> None:
-    """Load .env from HERMES_HOME (default ``~/.hermes``)."""
-    from hermes_cli.env_loader import load_hermes_dotenv
+    """Load .env from BOOKWORMPRO_HOME (default ``~/.bookwormpro``)."""
+    from bwm_cli.env_loader import load_hermes_dotenv
 
     hermes_home = get_hermes_home()
     loaded = load_hermes_dotenv(hermes_home=hermes_home)
@@ -102,7 +102,7 @@ def main() -> None:
     _load_env()
 
     logger = logging.getLogger(__name__)
-    logger.info("Starting hermes-agent ACP adapter")
+    logger.info("Starting bookwormpro ACP adapter")
 
     # Ensure the project root is on sys.path so ``from run_agent import AIAgent`` works
     project_root = str(Path(__file__).resolve().parent.parent)

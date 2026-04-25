@@ -1,4 +1,4 @@
-"""Generic managed-tool gateway helpers for Nous-hosted vendor passthroughs."""
+"""Generic managed-tool gateway helpers for BookwormPRO-hosted vendor passthroughs."""
 
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
-from hermes_constants import get_hermes_home
+from bwm_constants import get_hermes_home
 from tools.tool_backend_helpers import managed_nous_tools_enabled
 
-_DEFAULT_TOOL_GATEWAY_DOMAIN = "nousresearch.com"
+_DEFAULT_TOOL_GATEWAY_DOMAIN = "bookwormpro.local"
 _DEFAULT_TOOL_GATEWAY_SCHEME = "https"
 _NOUS_ACCESS_TOKEN_REFRESH_SKEW_SECONDS = 120
 
@@ -28,7 +28,7 @@ class ManagedToolGatewayConfig:
 
 
 def auth_json_path():
-    """Return the Hermes auth store path, respecting HERMES_HOME overrides."""
+    """Return the BookwormPRO auth store path, respecting BOOKWORMPRO_HOME overrides."""
     return get_hermes_home() / "auth.json"
 
 
@@ -41,7 +41,7 @@ def _read_nous_provider_state() -> Optional[dict]:
         providers = data.get("providers", {})
         if not isinstance(providers, dict):
             return None
-        nous_provider = providers.get("nous", {})
+        nous_provider = providers.get("bookwormpro", {})
         if isinstance(nous_provider, dict):
             return nous_provider
     except Exception:
@@ -73,7 +73,7 @@ def _access_token_is_expiring(expires_at: object, skew_seconds: int) -> bool:
 
 
 def read_nous_access_token() -> Optional[str]:
-    """Read a Nous Subscriber OAuth access token from auth store or env override."""
+    """Read a BookwormPRO Subscriber OAuth access token from auth store or env override."""
     explicit = os.getenv("TOOL_GATEWAY_USER_TOKEN")
     if isinstance(explicit, str) and explicit.strip():
         return explicit.strip()
@@ -89,7 +89,7 @@ def read_nous_access_token() -> Optional[str]:
         return cached_token
 
     try:
-        from hermes_cli.auth import resolve_nous_access_token
+        from bwm_cli.auth import resolve_nous_access_token
 
         refreshed_token = resolve_nous_access_token(
             refresh_skew_seconds=_NOUS_ACCESS_TOKEN_REFRESH_SKEW_SECONDS,
@@ -97,7 +97,7 @@ def read_nous_access_token() -> Optional[str]:
         if isinstance(refreshed_token, str) and refreshed_token.strip():
             return refreshed_token.strip()
     except Exception as exc:
-        logger.debug("Nous access token refresh failed: %s", exc)
+        logger.debug("BookwormPRO access token refresh failed: %s", exc)
 
     return cached_token
 
@@ -159,7 +159,7 @@ def is_managed_tool_gateway_ready(
     gateway_builder: Optional[Callable[[str], str]] = None,
     token_reader: Optional[Callable[[], Optional[str]]] = None,
 ) -> bool:
-    """Return True when gateway URL and Nous access token are available."""
+    """Return True when gateway URL and BookwormPRO access token are available."""
     return resolve_managed_tool_gateway(
         vendor,
         gateway_builder=gateway_builder,

@@ -42,7 +42,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { SelectionSwitcher, Typography } from "@nous-research/ui";
+import { SelectionSwitcher, Typography } from "@bookwormpro-research/ui";
 import { cn } from "@/lib/utils";
 import { Backdrop } from "@/components/Backdrop";
 import { SidebarFooter } from "@/components/SidebarFooter";
@@ -78,7 +78,7 @@ const CHAT_NAV_ITEM: NavItem = {
   icon: Terminal,
 };
 
-/** Built-in routes except /chat (only with `hermes dashboard --tui`). */
+/** Built-in routes except /chat (only with `bookworm dashboard --tui`). */
 const BUILTIN_ROUTES_CORE: Record<string, ComponentType> = {
   "/": RootRedirect,
   "/sessions": SessionsPage,
@@ -395,7 +395,7 @@ export default function App() {
                 className="font-bold text-[1.125rem] leading-[0.95] tracking-[0.0525rem] text-midground"
                 style={{ mixBlendMode: "plus-lighter" }}
               >
-                Hermes
+                BookwormPRO
                 <br />
                 Agent
               </Typography>

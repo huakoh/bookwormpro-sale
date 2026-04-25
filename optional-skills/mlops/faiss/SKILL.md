@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [faiss-cpu, faiss-gpu, numpy]
 metadata:
-  hermes:
+  bookworm:
     tags: [RAG, FAISS, Similarity Search, Vector Search, Facebook AI, GPU Acceleration, Billion-Scale, K-NN, HNSW, High Performance, Large Scale]
 
 ---
@@ -217,7 +217,7 @@ vector_store = FaissVectorStore(faiss_index=faiss_index)
 
 ## Resources
 
-- **GitHub**: https://github.com/facebookresearch/faiss ⭐ 31,700+
+- **GitHub**: https://github.com/facebookresearch/faiss * 31,700+
 - **Wiki**: https://github.com/facebookresearch/faiss/wiki
 - **License**: MIT
 

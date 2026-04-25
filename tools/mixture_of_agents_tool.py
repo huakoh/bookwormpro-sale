@@ -441,31 +441,31 @@ if __name__ == "__main__":
     """
     Simple test/demo when run directly
     """
-    print("🤖 Mixture-of-Agents Tool Module")
+    print("[模型] Mixture-of-Agents Tool Module")
     print("=" * 50)
     
     # Check if API key is available
     api_available = check_openrouter_api_key()
     
     if not api_available:
-        print("❌ OPENROUTER_API_KEY environment variable not set")
+        print("[失败] OPENROUTER_API_KEY environment variable not set")
         print("Please set your API key: export OPENROUTER_API_KEY='your-key-here'")
         print("Get API key at: https://openrouter.ai/")
         exit(1)
     else:
-        print("✅ OpenRouter API key found")
+        print("[成功] OpenRouter API key found")
     
-    print("🛠️  MoA tools ready for use!")
+    print("[工具]  MoA tools ready for use!")
     
     # Show current configuration
     config = get_moa_configuration()
     print("\n⚙️  Current Configuration:")
-    print(f"  🤖 Reference models ({len(config['reference_models'])}): {', '.join(config['reference_models'])}")
+    print(f"  [模型] Reference models ({len(config['reference_models'])}): {', '.join(config['reference_models'])}")
     print(f"  🧠 Aggregator model: {config['aggregator_model']}")
     print(f"  🌡️  Reference temperature: {config['reference_temperature']}")
     print(f"  🌡️  Aggregator temperature: {config['aggregator_temperature']}")
     print(f"  🛡️  Failure tolerance: {config['failure_tolerance']}")
-    print(f"  📊 Minimum successful models: {config['min_successful_references']}")
+    print(f"  [状态] Minimum successful models: {config['min_successful_references']}")
     
     # Show debug mode status
     if _debug.active:

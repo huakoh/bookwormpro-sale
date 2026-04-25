@@ -6,7 +6,7 @@ description: "Runtime behavior of the tool registry, toolsets, dispatch, and ter
 
 # Tools Runtime
 
-Hermes tools are self-registering functions grouped into toolsets and executed through a central registry/dispatch system.
+BookwormPRO tools are self-registering functions grouped into toolsets and executed through a central registry/dispatch system.
 
 Primary files:
 
@@ -36,7 +36,7 @@ registry.register(
     requires_env=["SOME_VAR"],     # Optional: env vars needed (for UI display)
     is_async=False,                # Whether the handler is an async coroutine
     description="Run commands",    # Human-readable description
-    emoji="💻",                    # Emoji for spinner/progress display
+    emoji="[系统]",                    # Emoji for spinner/progress display
 )
 ```
 
@@ -64,7 +64,7 @@ Each import triggers the module's `registry.register()` calls. Errors in optiona
 After core tool discovery, MCP tools and plugin tools are also discovered:
 
 1. **MCP tools** — `tools.mcp_tool.discover_mcp_tools()` reads MCP server config and registers tools from external servers.
-2. **Plugin tools** — `hermes_cli.plugins.discover_plugins()` loads user/project/pip plugins that may register additional tools.
+2. **Plugin tools** — `bwm_cli.plugins.discover_plugins()` loads user/project/pip plugins that may register additional tools.
 
 ## Tool availability checking (`check_fn`)
 
@@ -94,12 +94,12 @@ Key behaviors:
 
 ## Toolset resolution
 
-Toolsets are named bundles of tools. Hermes resolves them through:
+Toolsets are named bundles of tools. BookwormPRO resolves them through:
 
 - explicit enabled/disabled toolset lists
-- platform presets (`hermes-cli`, `hermes-telegram`, etc.)
+- platform presets (`bookworm-cli`, `bookworm-telegram`, etc.)
 - dynamic MCP toolsets
-- curated special-purpose sets like `hermes-acp`
+- curated special-purpose sets like `bookworm-acp`
 
 ### How `get_tool_definitions()` filters tools
 

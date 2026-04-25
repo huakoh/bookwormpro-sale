@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [transformers, torch, pillow]
 metadata:
-  hermes:
+  bookworm:
     tags: [LLaVA, Vision-Language, Multimodal, Visual Question Answering, Image Chat, CLIP, Vicuna, Conversational AI, Instruction Tuning, VQA]
 
 ---
@@ -298,7 +298,7 @@ demo.launch()
 
 ## Resources
 
-- **GitHub**: https://github.com/haotian-liu/LLaVA ⭐ 23,000+
+- **GitHub**: https://github.com/haotian-liu/LLaVA * 23,000+
 - **Paper**: https://arxiv.org/abs/2304.08485
 - **Demo**: https://llava.hliu.cc
 - **Models**: https://huggingface.co/liuhaotian

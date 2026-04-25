@@ -4,7 +4,7 @@ Over 70 mind-body practices triggered by specific biometric (EXG) signals. These
 are sourced from NeuroLoop's protocol repertoire and are designed to be suggested
 when the system detects specific cognitive or physiological states.
 
-> **⚠️ Contraindication**: Wim Hof and hyperventilation-style breathwork are
+> **[警告] Contraindication**: Wim Hof and hyperventilation-style breathwork are
 > unsuitable for epilepsy_risk > 30, known cardiac conditions, or pregnancy.
 
 ---

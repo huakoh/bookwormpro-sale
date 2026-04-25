@@ -23,7 +23,7 @@ const fromScore = (n: number) => {
   const rare = n % 20 === 0
   const bag = rare ? LEGENDARY : FORTUNES
 
-  return `${rare ? '🌟' : '🔮'} ${bag[n % bag.length]}`
+  return `${rare ? '*' : '🔮'} ${bag[n % bag.length]}`
 }
 
 export const randomFortune = () => fromScore(Math.floor(Math.random() * 0x7fffffff))

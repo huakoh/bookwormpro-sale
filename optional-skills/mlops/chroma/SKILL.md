@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [chromadb, sentence-transformers]
 metadata:
-  hermes:
+  bookworm:
     tags: [RAG, Chroma, Vector Database, Embeddings, Semantic Search, Open Source, Self-Hosted, Document Retrieval, Metadata Filtering]
 
 ---
@@ -400,7 +400,7 @@ collection = client.get_or_create_collection("my_docs")
 
 ## Resources
 
-- **GitHub**: https://github.com/chroma-core/chroma ⭐ 24,300+
+- **GitHub**: https://github.com/chroma-core/chroma * 24,300+
 - **Docs**: https://docs.trychroma.com
 - **Discord**: https://discord.gg/MMeYNTmh3x
 - **Version**: 1.3.3+

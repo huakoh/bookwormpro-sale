@@ -456,11 +456,11 @@ class DetailedModel(BaseModel):
 ### 1. Be Specific
 
 ```python
-# ❌ Bad: Vague validation
+# [失败] Bad: Vague validation
 class Item(BaseModel):
     name: str
 
-# ✅ Good: Specific constraints
+# [成功] Good: Specific constraints
 class Item(BaseModel):
     name: str = Field(
         min_length=1,
@@ -472,7 +472,7 @@ class Item(BaseModel):
 ### 2. Provide Context
 
 ```python
-# ✅ Good: Explain why validation failed
+# [成功] Good: Explain why validation failed
 @field_validator('price')
 def validate_price(cls, v):
     if v <= 0:
@@ -486,7 +486,7 @@ def validate_price(cls, v):
 ### 3. Use Enums for Fixed Sets
 
 ```python
-# ❌ Bad: String validation
+# [失败] Bad: String validation
 status: str
 
 @field_validator('status')
@@ -495,7 +495,7 @@ def validate_status(cls, v):
         raise ValueError('Invalid status')
     return v
 
-# ✅ Good: Enum
+# [成功] Good: Enum
 class Status(str, Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"

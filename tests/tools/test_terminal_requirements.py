@@ -18,7 +18,7 @@ def _clear_terminal_env(monkeypatch):
     ]
     for key in keys:
         monkeypatch.delenv(key, raising=False)
-    # Default: no Nous subscription — patch both the terminal_tool local
+    # Default: no BookwormPRO subscription — patch both the terminal_tool local
     # binding and tool_backend_helpers (used by resolve_modal_backend_state).
     monkeypatch.setattr(terminal_tool_module, "managed_nous_tools_enabled", lambda: False)
     import tools.tool_backend_helpers as _tbh
@@ -26,7 +26,7 @@ def _clear_terminal_env(monkeypatch):
 
 
 def test_local_terminal_requirements(monkeypatch, caplog):
-    """Local backend uses Hermes' own LocalEnvironment wrapper."""
+    """Local backend uses BookwormPRO' own LocalEnvironment wrapper."""
     _clear_terminal_env(monkeypatch)
     monkeypatch.setenv("TERMINAL_ENV", "local")
 
@@ -155,7 +155,7 @@ def test_modal_backend_managed_mode_does_not_fall_back_to_direct(monkeypatch, ca
 
     assert ok is False
     assert any(
-        "paid Nous subscription is required" in record.getMessage()
+        "paid BookwormPRO subscription is required" in record.getMessage()
         for record in caplog.records
     )
 
@@ -173,6 +173,6 @@ def test_modal_backend_managed_mode_without_feature_flag_logs_clear_error(monkey
 
     assert ok is False
     assert any(
-        "paid Nous subscription is required" in record.getMessage()
+        "paid BookwormPRO subscription is required" in record.getMessage()
         for record in caplog.records
     )

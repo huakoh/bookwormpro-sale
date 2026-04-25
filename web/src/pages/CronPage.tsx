@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Clock, Pause, Play, Plus, Trash2, Zap } from "lucide-react";
-import { H2 } from "@nous-research/ui";
+import { H2 } from "@bookwormpro-research/ui";
 import { api } from "@/lib/api";
 import type { CronJob } from "@/lib/api";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
@@ -67,7 +67,7 @@ export default function CronPage() {
         name: name.trim() || undefined,
         deliver,
       });
-      showToast(t.common.create + " ✓", "success");
+      showToast(t.common.create + " [成功]", "success");
       setPrompt("");
       setSchedule("");
       setName("");

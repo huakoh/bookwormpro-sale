@@ -18,7 +18,7 @@ Features:
 
 Cloud sandbox note:
 - Persistent filesystems preserve working state across sandbox recreation
-- Persistent filesystems do NOT guarantee the same live sandbox or long-running processes survive cleanup, idle reaping, or Hermes exit
+- Persistent filesystems do NOT guarantee the same live sandbox or long-running processes survive cleanup, idle reaping, or BookwormPRO exit
 
 Usage:
     from terminal_tool import terminal_tool
@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 # long-running subprocesses immediately instead of blocking until timeout.
 # ---------------------------------------------------------------------------
 from tools.interrupt import is_interrupted, _interrupt_event  # noqa: F401 — re-exported
-# display_hermes_home imported lazily at call site (stale-module safety during hermes update)
+# display_hermes_home imported lazily at call site (stale-module safety during bookworm update)
 
 
 
@@ -121,10 +121,10 @@ def _check_disk_usage_warning():
     try:
         scratch_dir = _get_scratch_dir()
 
-        # Get total size of hermes directories
+        # Get total size of bookworm directories
         total_bytes = 0
         import glob
-        for path in glob.glob(str(scratch_dir / "hermes-*")):
+        for path in glob.glob(str(scratch_dir / "bookworm-*")):
             for f in Path(path).rglob('*'):
                 if f.is_file():
                     try:
@@ -241,7 +241,7 @@ def _handle_sudo_failure(output: str, env_type: str) -> str:
     
     Returns enhanced output if sudo failed in messaging context, else original.
     """
-    is_gateway = os.getenv("HERMES_GATEWAY_SESSION")
+    is_gateway = os.getenv("BOOKWORMPRO_GATEWAY_SESSION")
     
     if not is_gateway:
         return output
@@ -255,8 +255,8 @@ def _handle_sudo_failure(output: str, env_type: str) -> str:
     
     for failure in sudo_failures:
         if failure in output:
-            from hermes_constants import display_hermes_home as _dhh
-            return output + f"\n\n💡 Tip: To enable sudo over messaging, add SUDO_PASSWORD to {_dhh()}/.env on the agent machine."
+            from bwm_constants import display_hermes_home as _dhh
+            return output + f"\n\n[提示] Tip: To enable sudo over messaging, add SUDO_PASSWORD to {_dhh()}/.env on the agent machine."
     
     return output
 
@@ -270,7 +270,7 @@ def _prompt_for_sudo_password(timeout_seconds: int = 45) -> str:
     - Timeout expires (45s default)
     - Any error occurs
     
-    Only works in interactive mode (HERMES_INTERACTIVE=1).
+    Only works in interactive mode (BOOKWORMPRO_INTERACTIVE=1).
     If a _sudo_password_callback is registered (by the CLI), delegates to it
     so the prompt integrates with prompt_toolkit's UI.  Otherwise reads
     directly from /dev/tty with echo disabled.
@@ -336,7 +336,7 @@ def _prompt_for_sudo_password(timeout_seconds: int = 45) -> str:
             result["done"] = True
     
     try:
-        os.environ["HERMES_SPINNER_PAUSE"] = "1"
+        os.environ["BOOKWORMPRO_SPINNER_PAUSE"] = "1"
         time.sleep(0.2)
         
         print()
@@ -358,14 +358,14 @@ def _prompt_for_sudo_password(timeout_seconds: int = 45) -> str:
             password = result["password"] or ""
             print()  # newline after hidden input
             if password:
-                print("  ✓ Password received (cached for this session)")
+                print("  [成功] Password received (cached for this session)")
             else:
                 print("  ⏭ Skipped - continuing without sudo")
             print()
             sys.stdout.flush()
             return password
         else:
-            print("\n  ⏱ Timeout - continuing without sudo")
+            print("\n  [耗时] Timeout - continuing without sudo")
             print("    (Press Enter to dismiss)")
             print()
             sys.stdout.flush()
@@ -382,8 +382,8 @@ def _prompt_for_sudo_password(timeout_seconds: int = 45) -> str:
         sys.stdout.flush()
         return ""
     finally:
-        if "HERMES_SPINNER_PAUSE" in os.environ:
-            del os.environ["HERMES_SPINNER_PAUSE"]
+        if "BOOKWORMPRO_SPINNER_PAUSE" in os.environ:
+            del os.environ["BOOKWORMPRO_SPINNER_PAUSE"]
 
 def _safe_command_preview(command: Any, limit: int = 200) -> str:
     """Return a log-safe preview for possibly-invalid command values."""
@@ -694,7 +694,7 @@ def _transform_sudo_command(command: str | None) -> tuple[str | None, str | None
     password in the command string themselves; see their execute() methods for
     how they handle the non-None sudo_stdin case.
 
-    If SUDO_PASSWORD is not set and in interactive mode (HERMES_INTERACTIVE=1):
+    If SUDO_PASSWORD is not set and in interactive mode (BOOKWORMPRO_INTERACTIVE=1):
       Prompts user for password with 45s timeout, caches for session.
 
     If SUDO_PASSWORD is not set and NOT interactive:
@@ -711,7 +711,7 @@ def _transform_sudo_command(command: str | None) -> tuple[str | None, str | None
     has_configured_password = "SUDO_PASSWORD" in os.environ
     sudo_password = os.environ.get("SUDO_PASSWORD", "") if has_configured_password else _cached_sudo_password
 
-    if not has_configured_password and not sudo_password and os.getenv("HERMES_INTERACTIVE"):
+    if not has_configured_password and not sudo_password and os.getenv("BOOKWORMPRO_INTERACTIVE"):
         sudo_password = _prompt_for_sudo_password(timeout_seconds=45)
         if sudo_password:
             _cached_sudo_password = sudo_password
@@ -747,7 +747,7 @@ Foreground (default): Commands return INSTANTLY when done, even if the timeout i
 Background: Set background=true to get a session_id. Two patterns:
   (1) Long-lived processes that never exit (servers, watchers).
   (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.
-For servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.
+For servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so BookwormPRO can track lifecycle and output.
 After starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.
 Use process(action="poll") for progress checks, process(action="wait") to block until done.
 Working directory: Use 'workdir' for per-command cwd.
@@ -817,7 +817,7 @@ def _parse_env_var(name: str, default: str, converter=int, type_label: str = "in
     except (ValueError, json.JSONDecodeError):
         raise ValueError(
             f"Invalid value for {name}: {raw!r} (expected {type_label}). "
-            f"Check ~/.hermes/.env or environment variables."
+            f"Check ~/.bookwormpro/.env or environment variables."
         )
 
 
@@ -988,8 +988,8 @@ def _create_environment(env_type: str, image: str, cwd: str, timeout: int,
             if modal_state["managed_mode_blocked"]:
                 raise ValueError(
                     "Modal backend is configured for managed mode, but "
-                    "a paid Nous subscription is required for the Tool Gateway and no direct "
-                    "Modal credentials/config were found. Log in with `hermes model` or "
+                    "a paid BookwormPRO subscription is required for the Tool Gateway and no direct "
+                    "Modal credentials/config were found. Log in with `bookworm model` or "
                     "choose TERMINAL_MODAL_MODE=direct/auto."
                 )
             if modal_state["mode"] == "managed":
@@ -1177,7 +1177,7 @@ def cleanup_all_environments():
     # Also clean any orphaned directories
     scratch_dir = _get_scratch_dir()
     import glob
-    for path in glob.glob(str(scratch_dir / "hermes-*")):
+    for path in glob.glob(str(scratch_dir / "bookworm-*")):
         try:
             shutil.rmtree(path, ignore_errors=True)
             logger.info("Removed orphaned: %s", path)
@@ -1367,7 +1367,7 @@ def _foreground_background_guidance(command: str) -> str | None:
     if _SHELL_LEVEL_BACKGROUND_RE.search(command):
         return (
             "Foreground command uses shell-level background wrappers (nohup/disown/setsid). "
-            "Use terminal(background=true) so Hermes can track the process, then run "
+            "Use terminal(background=true) so BookwormPRO can track the process, then run "
             "readiness checks and tests in separate commands."
         )
 
@@ -1689,12 +1689,12 @@ def terminal_tool(
                 # routed back to the correct chat/thread.
                 if background and (notify_on_complete or watch_patterns):
                     from gateway.session_context import get_session_env as _gse
-                    _gw_platform = _gse("HERMES_SESSION_PLATFORM", "")
+                    _gw_platform = _gse("BOOKWORMPRO_SESSION_PLATFORM", "")
                     if _gw_platform:
-                        _gw_chat_id = _gse("HERMES_SESSION_CHAT_ID", "")
-                        _gw_thread_id = _gse("HERMES_SESSION_THREAD_ID", "")
-                        _gw_user_id = _gse("HERMES_SESSION_USER_ID", "")
-                        _gw_user_name = _gse("HERMES_SESSION_USER_NAME", "")
+                        _gw_chat_id = _gse("BOOKWORMPRO_SESSION_CHAT_ID", "")
+                        _gw_thread_id = _gse("BOOKWORMPRO_SESSION_THREAD_ID", "")
+                        _gw_user_id = _gse("BOOKWORMPRO_SESSION_USER_ID", "")
+                        _gw_user_name = _gse("BOOKWORMPRO_SESSION_USER_NAME", "")
                         proc_session.watcher_platform = _gw_platform
                         proc_session.watcher_chat_id = _gw_chat_id
                         proc_session.watcher_user_id = _gw_user_id
@@ -1788,7 +1788,7 @@ def terminal_tool(
             # replace it by returning a string from transform_terminal_output.
             # The hook is fail-open, and the first valid string return wins.
             try:
-                from hermes_cli.plugins import invoke_hook
+                from bwm_cli.plugins import invoke_hook
                 hook_results = invoke_hook(
                     "transform_terminal_output",
                     command=command,
@@ -1898,8 +1898,8 @@ def check_terminal_requirements() -> bool:
                 if modal_state["managed_mode_blocked"]:
                     logger.error(
                         "Modal backend selected with TERMINAL_MODAL_MODE=managed, but "
-                        "a paid Nous subscription is required for the Tool Gateway and no direct "
-                        "Modal credentials/config were found. Log in with `hermes model` "
+                        "a paid BookwormPRO subscription is required for the Tool Gateway and no direct "
+                        "Modal credentials/config were found. Log in with `bookworm model` "
                         "or choose TERMINAL_MODAL_MODE=direct/auto."
                     )
                     return False
@@ -1975,10 +1975,10 @@ if __name__ == "__main__":
     print(f"  Lifetime: {config['lifetime_seconds']}s")
 
     if not check_terminal_requirements():
-        print("\n❌ Requirements not met. Please check the messages above.")
+        print("\n[失败] Requirements not met. Please check the messages above.")
         exit(1)
 
-    print("\n✅ All requirements met!")
+    print("\n[成功] All requirements met!")
     print("\nAvailable Tool:")
     print("  - terminal_tool: Execute commands in sandboxed environments")
 
@@ -1997,7 +1997,7 @@ if __name__ == "__main__":
     print(f"  TERMINAL_MODAL_IMAGE: {os.getenv('TERMINAL_MODAL_IMAGE', default_img)}")
     print(f"  TERMINAL_DAYTONA_IMAGE: {os.getenv('TERMINAL_DAYTONA_IMAGE', default_img)}")
     print(f"  TERMINAL_CWD: {os.getenv('TERMINAL_CWD', os.getcwd())}")
-    from hermes_constants import display_hermes_home as _dhh
+    from bwm_constants import display_hermes_home as _dhh
     print(f"  TERMINAL_SANDBOX_DIR: {os.getenv('TERMINAL_SANDBOX_DIR', f'{_dhh()}/sandboxes')}")
     print(f"  TERMINAL_TIMEOUT: {os.getenv('TERMINAL_TIMEOUT', '60')}")
     print(f"  TERMINAL_LIFETIME_SECONDS: {os.getenv('TERMINAL_LIFETIME_SECONDS', '300')}")
@@ -2072,6 +2072,6 @@ registry.register(
     schema=TERMINAL_SCHEMA,
     handler=_handle_terminal,
     check_fn=check_terminal_requirements,
-    emoji="💻",
+    emoji="[系统]",
     max_result_size_chars=100_000,
 )

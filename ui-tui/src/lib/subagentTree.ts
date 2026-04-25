@@ -257,7 +257,7 @@ export function formatSummary(totals: SubagentAggregate): string {
   }
 
   if (totals.activeCount > 0) {
-    pieces.push(`⚡${totals.activeCount}`)
+    pieces.push(`*${totals.activeCount}`)
   }
 
   return pieces.join(' · ')

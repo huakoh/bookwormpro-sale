@@ -1,4 +1,4 @@
-import { Box, NoSelect, Text } from '@hermes/ink'
+import { Box, NoSelect, Text } from '@bookworm/ink'
 import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
 import spinners, { type BrailleSpinnerName } from 'unicode-animations'
 
@@ -381,7 +381,7 @@ function SubagentAccordion({
     }
 
     if (aggregate.activeCount > 0 && item.status !== 'running') {
-      rollupBits.push(`⚡${aggregate.activeCount}`)
+      rollupBits.push(`*${aggregate.activeCount}`)
     }
   }
 
@@ -787,7 +787,7 @@ export const ToolTrail = memo(function ToolTrail({
 
     if (parsed) {
       groups.push({
-        color: parsed.mark === '✗' ? t.color.error : t.color.cornsilk,
+        color: parsed.mark === '[失败]' ? t.color.error : t.color.cornsilk,
         content: parsed.detail ? parsed.call : `${parsed.call} ${parsed.mark}`,
         details: [],
         key: `tr-${i}`,
@@ -796,9 +796,9 @@ export const ToolTrail = memo(function ToolTrail({
 
       if (parsed.detail) {
         pushDetail({
-          color: parsed.mark === '✗' ? t.color.error : t.color.dim,
+          color: parsed.mark === '[失败]' ? t.color.error : t.color.dim,
           content: parsed.detail,
-          dimColor: parsed.mark !== '✗',
+          dimColor: parsed.mark !== '[失败]',
           key: `tr-${i}-d`
         })
       }
@@ -858,7 +858,7 @@ export const ToolTrail = memo(function ToolTrail({
   }
 
   for (const item of activity.slice(-4)) {
-    const glyph = item.tone === 'error' ? '✗' : item.tone === 'warn' ? '!' : '·'
+    const glyph = item.tone === 'error' ? '[失败]' : item.tone === 'warn' ? '!' : '·'
     const color = item.tone === 'error' ? t.color.error : item.tone === 'warn' ? t.color.warn : t.color.dim
     meta.push({ color, content: `${glyph} ${item.text}`, dimColor: item.tone === 'info', key: `a-${item.id}` })
   }
@@ -906,7 +906,7 @@ export const ToolTrail = memo(function ToolTrail({
       <Box flexDirection="column">
         {alerts.map(i => (
           <Text color={i.tone === 'error' ? t.color.error : t.color.warn} key={`ha-${i.id}`}>
-            {i.tone === 'error' ? '✗' : '!'} {i.text}
+            {i.tone === 'error' ? '[失败]' : '!'} {i.text}
           </Text>
         ))}
       </Box>

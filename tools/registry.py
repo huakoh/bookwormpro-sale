@@ -1,4 +1,4 @@
-"""Central registry for all hermes-agent tools.
+"""Central registry for all bookwormpro tools.
 
 Each tool file calls ``registry.register()`` at module level to declare its
 schema, handler, toolset membership, and availability check.  ``model_tools.py``
@@ -340,7 +340,7 @@ class ToolRegistry:
         entry = self.get_entry(name)
         return entry.toolset if entry else None
 
-    def get_emoji(self, name: str, default: str = "⚡") -> str:
+    def get_emoji(self, name: str, default: str = "*") -> str:
         """Return the emoji for a tool, or *default* if unset."""
         entry = self.get_entry(name)
         return (entry.emoji if entry and entry.emoji else default)

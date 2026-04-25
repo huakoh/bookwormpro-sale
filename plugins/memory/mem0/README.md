@@ -10,23 +10,23 @@ Server-side LLM fact extraction with semantic search, reranking, and automatic d
 ## Setup
 
 ```bash
-hermes memory setup    # select "mem0"
+bookworm memory setup    # select "mem0"
 ```
 
 Or manually:
 ```bash
-hermes config set memory.provider mem0
-echo "MEM0_API_KEY=your-key" >> ~/.hermes/.env
+bookworm config set memory.provider mem0
+echo "MEM0_API_KEY=your-key" >> ~/.bookwormpro/.env
 ```
 
 ## Config
 
-Config file: `$HERMES_HOME/mem0.json`
+Config file: `$BOOKWORMPRO_HOME/mem0.json`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `user_id` | `hermes-user` | User identifier on Mem0 |
-| `agent_id` | `hermes` | Agent identifier |
+| `user_id` | `bookworm-user` | User identifier on Mem0 |
+| `agent_id` | `bookworm` | Agent identifier |
 | `rerank` | `true` | Enable reranking for recall |
 
 ## Tools

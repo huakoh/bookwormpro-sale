@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [instructor, pydantic, openai, anthropic]
 metadata:
-  hermes:
+  bookworm:
     tags: [Prompt Engineering, Instructor, Structured Output, Pydantic, Data Extraction, JSON Parsing, Type Safety, Validation, Streaming, OpenAI, Anthropic]
 
 ---
@@ -645,12 +645,12 @@ class ValidatedUser(BaseModel):
 ### 1. Clear Field Descriptions
 
 ```python
-# ❌ Bad: Vague
+# [失败] Bad: Vague
 class Product(BaseModel):
     name: str
     price: float
 
-# ✅ Good: Descriptive
+# [成功] Good: Descriptive
 class Product(BaseModel):
     name: str = Field(description="Product name from the text")
     price: float = Field(description="Price in USD, without currency symbol")
@@ -659,7 +659,7 @@ class Product(BaseModel):
 ### 2. Use Appropriate Validation
 
 ```python
-# ✅ Good: Constrain values
+# [成功] Good: Constrain values
 class Rating(BaseModel):
     score: int = Field(ge=1, le=5, description="Rating from 1 to 5 stars")
     review: str = Field(min_length=10, description="Review text, at least 10 chars")
@@ -684,7 +684,7 @@ Example format:
 ### 4. Use Enums for Fixed Categories
 
 ```python
-# ✅ Good: Enum ensures valid values
+# [成功] Good: Enum ensures valid values
 class Status(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
@@ -709,11 +709,11 @@ class PartialData(BaseModel):
 
 | Feature | Instructor | Manual JSON | LangChain | DSPy |
 |---------|------------|-------------|-----------|------|
-| Type Safety | ✅ Yes | ❌ No | ⚠️ Partial | ✅ Yes |
-| Auto Validation | ✅ Yes | ❌ No | ❌ No | ⚠️ Limited |
-| Auto Retry | ✅ Yes | ❌ No | ❌ No | ✅ Yes |
-| Streaming | ✅ Yes | ❌ No | ✅ Yes | ❌ No |
-| Multi-Provider | ✅ Yes | ⚠️ Manual | ✅ Yes | ✅ Yes |
+| Type Safety | [成功] Yes | [失败] No | [警告] Partial | [成功] Yes |
+| Auto Validation | [成功] Yes | [失败] No | [失败] No | [警告] Limited |
+| Auto Retry | [成功] Yes | [失败] No | [失败] No | [成功] Yes |
+| Streaming | [成功] Yes | [失败] No | [成功] Yes | [失败] No |
+| Multi-Provider | [成功] Yes | [警告] Manual | [成功] Yes | [成功] Yes |
 | Learning Curve | Low | Low | Medium | High |
 
 **When to choose Instructor:**

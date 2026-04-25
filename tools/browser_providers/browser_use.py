@@ -70,7 +70,7 @@ class BrowserUseProvider(CloudBrowserProvider):
         return self._get_config_or_none() is not None
 
     # ------------------------------------------------------------------
-    # Config resolution (direct API key OR managed Nous gateway)
+    # Config resolution (direct API key OR managed BookwormPRO gateway)
     # ------------------------------------------------------------------
 
     def _get_config_or_none(self) -> Optional[Dict[str, Any]]:
@@ -126,7 +126,7 @@ class BrowserUseProvider(CloudBrowserProvider):
             headers["X-Idempotency-Key"] = _get_or_create_pending_create_key(task_id)
 
         # Keep gateway-backed sessions short so billing authorization does not
-        # default to a long Browser-Use timeout when Hermes only needs a task-
+        # default to a long Browser-Use timeout when BookwormPRO only needs a task-
         # scoped ephemeral browser.
         payload = (
             {

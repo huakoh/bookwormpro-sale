@@ -1,4 +1,4 @@
-import { Typography } from "@nous-research/ui";
+import { Typography } from "@bookwormpro-research/ui";
 import { useI18n } from "@/i18n/context";
 
 /**

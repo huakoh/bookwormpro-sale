@@ -610,7 +610,7 @@ class TestDelegationCredentialResolution(unittest.TestCase):
         self.assertIsNone(creds["base_url"])
         self.assertIsNone(creds["api_key"])
 
-    @patch("hermes_cli.runtime_provider.resolve_runtime_provider")
+    @patch("bwm_cli.runtime_provider.resolve_runtime_provider")
     def test_provider_resolves_full_credentials(self, mock_resolve):
         """When delegation.provider is set, full credentials are resolved."""
         mock_resolve.return_value = {
@@ -673,24 +673,24 @@ class TestDelegationCredentialResolution(unittest.TestCase):
                 _resolve_delegation_credentials(cfg, parent)
         self.assertIn("OPENAI_API_KEY", str(ctx.exception))
 
-    @patch("hermes_cli.runtime_provider.resolve_runtime_provider")
+    @patch("bwm_cli.runtime_provider.resolve_runtime_provider")
     def test_nous_provider_resolves_nous_credentials(self, mock_resolve):
-        """Nous provider resolves Nous Portal base_url and api_key."""
+        """BookwormPRO provider resolves BookwormPRO Portal base_url and api_key."""
         mock_resolve.return_value = {
-            "provider": "nous",
-            "base_url": "https://inference-api.nousresearch.com/v1",
-            "api_key": "nous-agent-key-xyz",
+            "provider": "bookwormpro",
+            "base_url": "",
+            "api_key": "bookwormpro-agent-key-xyz",
             "api_mode": "chat_completions",
         }
         parent = _make_mock_parent(depth=0)
-        cfg = {"model": "hermes-3-llama-3.1-8b", "provider": "nous"}
+        cfg = {"model": "bookworm-3-llama-3.1-8b", "provider": "bookwormpro"}
         creds = _resolve_delegation_credentials(cfg, parent)
-        self.assertEqual(creds["provider"], "nous")
-        self.assertEqual(creds["base_url"], "https://inference-api.nousresearch.com/v1")
-        self.assertEqual(creds["api_key"], "nous-agent-key-xyz")
-        mock_resolve.assert_called_once_with(requested="nous")
+        self.assertEqual(creds["provider"], "bookwormpro")
+        self.assertEqual(creds["base_url"], "")
+        self.assertEqual(creds["api_key"], "bookwormpro-agent-key-xyz")
+        mock_resolve.assert_called_once_with(requested="bookwormpro")
 
-    @patch("hermes_cli.runtime_provider.resolve_runtime_provider")
+    @patch("bwm_cli.runtime_provider.resolve_runtime_provider")
     def test_provider_resolution_failure_raises_valueerror(self, mock_resolve):
         """When provider resolution fails, ValueError is raised with helpful message."""
         mock_resolve.side_effect = RuntimeError("OPENROUTER_API_KEY not set")
@@ -701,7 +701,7 @@ class TestDelegationCredentialResolution(unittest.TestCase):
         self.assertIn("openrouter", str(ctx.exception).lower())
         self.assertIn("Cannot resolve", str(ctx.exception))
 
-    @patch("hermes_cli.runtime_provider.resolve_runtime_provider")
+    @patch("bwm_cli.runtime_provider.resolve_runtime_provider")
     def test_provider_resolves_but_no_api_key_raises(self, mock_resolve):
         """When provider resolves but has no API key, ValueError is raised."""
         mock_resolve.return_value = {
@@ -765,7 +765,7 @@ class TestDelegationProviderIntegration(unittest.TestCase):
     @patch("tools.delegate_tool._load_config")
     @patch("tools.delegate_tool._resolve_delegation_credentials")
     def test_cross_provider_delegation(self, mock_creds, mock_cfg):
-        """Parent on Nous, subagent on OpenRouter — full credential switch."""
+        """Parent on BookwormPRO, subagent on OpenRouter — full credential switch."""
         mock_cfg.return_value = {
             "max_iterations": 45,
             "model": "google/gemini-3-flash-preview",
@@ -779,9 +779,9 @@ class TestDelegationProviderIntegration(unittest.TestCase):
             "api_mode": "chat_completions",
         }
         parent = _make_mock_parent(depth=0)
-        parent.provider = "nous"
-        parent.base_url = "https://inference-api.nousresearch.com/v1"
-        parent.api_key = "nous-key-abc"
+        parent.provider = "bookwormpro"
+        parent.base_url = ""
+        parent.api_key = "bookwormpro-key-abc"
 
         with patch("run_agent.AIAgent") as MockAgent:
             mock_child = MagicMock()
@@ -793,7 +793,7 @@ class TestDelegationProviderIntegration(unittest.TestCase):
             delegate_task(goal="Cross-provider test", parent_agent=parent)
 
             _, kwargs = MockAgent.call_args
-            # Child should use OpenRouter, NOT Nous
+            # Child should use OpenRouter, NOT BookwormPRO
             self.assertEqual(kwargs["provider"], "openrouter")
             self.assertEqual(kwargs["base_url"], "https://openrouter.ai/api/v1")
             self.assertEqual(kwargs["api_key"], "sk-or-key")

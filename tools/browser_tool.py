@@ -3,7 +3,7 @@
 Browser Tool Module
 
 This module provides browser automation tools using agent-browser CLI.  It
-supports multiple backends — **Browser Use** (cloud, default for Nous
+supports multiple backends — **Browser Use** (cloud, default for BookwormPRO
 subscribers), **Browserbase** (cloud, direct credentials), and **local
 Chromium** — with identical agent-facing behaviour.  The backend is
 auto-detected from config and available credentials.
@@ -66,7 +66,7 @@ import requests
 from typing import Dict, Any, Optional, List, Tuple
 from pathlib import Path
 from agent.auxiliary_client import call_llm
-from hermes_constants import get_hermes_home
+from bwm_constants import get_hermes_home
 
 try:
     from tools.website_policy import check_website_access
@@ -189,7 +189,7 @@ def _get_command_timeout() -> int:
     _command_timeout_resolved = True
     result = DEFAULT_COMMAND_TIMEOUT
     try:
-        from hermes_cli.config import read_raw_config
+        from bwm_cli.config import read_raw_config
         cfg = read_raw_config()
         val = cfg.get("browser", {}).get("command_timeout")
         if val is not None:
@@ -275,7 +275,7 @@ def _get_cdp_override() -> str:
         return _resolve_cdp_override(env_override)
 
     try:
-        from hermes_cli.config import read_raw_config
+        from bwm_cli.config import read_raw_config
 
         cfg = read_raw_config()
         browser_cfg = cfg.get("browser", {})
@@ -301,7 +301,7 @@ def _get_dialog_policy_config() -> Tuple[str, float]:
     )
 
     try:
-        from hermes_cli.config import read_raw_config
+        from bwm_cli.config import read_raw_config
 
         cfg = read_raw_config()
         browser_cfg = cfg.get("browser", {}) if isinstance(cfg, dict) else {}
@@ -413,7 +413,7 @@ def _get_cloud_provider() -> Optional[CloudBrowserProvider]:
 
     _cloud_provider_resolved = True
     try:
-        from hermes_cli.config import read_raw_config
+        from bwm_cli.config import read_raw_config
         cfg = read_raw_config()
         browser_cfg = cfg.get("browser", {})
         provider_key = None
@@ -430,7 +430,7 @@ def _get_cloud_provider() -> Optional[CloudBrowserProvider]:
         logger.debug("Could not read cloud_provider from config: %s", e)
 
     if _cached_cloud_provider is None:
-        # Prefer Browser Use (managed Nous gateway or direct API key),
+        # Prefer Browser Use (managed BookwormPRO gateway or direct API key),
         # fall back to Browserbase (direct credentials only).
         fallback_provider = BrowserUseProvider()
         if fallback_provider.is_configured():
@@ -443,7 +443,7 @@ def _get_cloud_provider() -> Optional[CloudBrowserProvider]:
     return _cached_cloud_provider
 
 
-from hermes_constants import is_termux as _is_termux_environment
+from bwm_constants import is_termux as _is_termux_environment
 
 
 def _browser_install_hint() -> str:
@@ -496,7 +496,7 @@ def _allow_private_urls() -> bool:
     _allow_private_urls_resolved = True
     _cached_allow_private_urls = False  # safe default
     try:
-        from hermes_cli.config import read_raw_config
+        from bwm_cli.config import read_raw_config
         cfg = read_raw_config()
         _cached_allow_private_urls = bool(cfg.get("browser", {}).get("allow_private_urls"))
     except Exception as e:
@@ -555,7 +555,7 @@ def _emergency_cleanup_all_sessions():
     Called on process exit or interrupt to prevent orphaned sessions.
 
     Also runs the orphan reaper to clean up daemons left behind by previously
-    crashed hermes processes — this way every clean hermes exit sweeps
+    crashed bookworm processes — this way every clean bookworm exit sweeps
     accumulated orphans, not just ones that actively used the browser tool.
     """
     global _cleanup_done
@@ -578,9 +578,9 @@ def _emergency_cleanup_all_sessions():
                 _session_last_activity.clear()
                 _recording_sessions.clear()
 
-    # Sweep orphans from other crashed hermes processes.  Safe even if we
+    # Sweep orphans from other crashed bookworm processes.  Safe even if we
     # never used the browser — uses owner_pid liveness to avoid reaping
-    # daemons owned by other live hermes processes.
+    # daemons owned by other live bookworm processes.
     try:
         _reap_orphaned_browser_sessions()
     except Exception as e:
@@ -629,10 +629,10 @@ def _cleanup_inactive_browser_sessions():
 
 
 def _write_owner_pid(socket_dir: str, session_name: str) -> None:
-    """Record the current hermes PID as the owner of a browser socket dir.
+    """Record the current bookworm PID as the owner of a browser socket dir.
 
     Written atomically to ``<socket_dir>/<session_name>.owner_pid`` so the
-    orphan reaper can distinguish daemons owned by a live hermes process
+    orphan reaper can distinguish daemons owned by a live bookworm process
     (don't reap) from daemons whose owner crashed (reap).  Best-effort —
     an OSError here just falls back to the legacy ``tracked_names``
     heuristic in the reaper.
@@ -655,13 +655,13 @@ def _reap_orphaned_browser_sessions():
 
     This function scans the tmp directory for ``agent-browser-*`` socket dirs
     left behind by previous runs, reads the daemon PID files, and kills any
-    daemons whose owning hermes process is no longer alive.
+    daemons whose owning bookworm process is no longer alive.
 
     Ownership detection priority:
       1. ``<session>.owner_pid`` file (written by current code) — if the
-         referenced hermes PID is alive, leave the daemon alone regardless
+         referenced bookworm PID is alive, leave the daemon alone regardless
          of whether it's in *this* process's ``_active_sessions``.  This is
-         cross-process safe: two concurrent hermes instances won't reap each
+         cross-process safe: two concurrent bookworm instances won't reap each
          other's daemons.
       2. Fallback for daemons that predate owner_pid: check
          ``_active_sessions`` in the current process.  If not tracked here,
@@ -717,7 +717,7 @@ def _reap_orphaned_browser_sessions():
                 owner_alive = None  # corrupt file — fall through
 
         if owner_alive is True:
-            # Owner is alive — this session belongs to a live hermes process.
+            # Owner is alive — this session belongs to a live bookworm process.
             continue
 
         if owner_alive is None:
@@ -1103,7 +1103,7 @@ def _find_agent_browser() -> str:
     """
     Find the agent-browser CLI executable.
     
-    Checks in order: current PATH, Homebrew/common bin dirs, Hermes-managed
+    Checks in order: current PATH, Homebrew/common bin dirs, BookwormPRO-managed
     node, local node_modules/.bin/, npx fallback.
     
     Returns:
@@ -1134,7 +1134,7 @@ def _find_agent_browser() -> str:
         _agent_browser_resolved = True
         return which_result
 
-    # Build an extended search PATH including Hermes-managed Node, macOS
+    # Build an extended search PATH including BookwormPRO-managed Node, macOS
     # versioned Homebrew installs, and fallback system dirs like Termux.
     extended_path = _merge_browser_path("")
     if extended_path:
@@ -1269,7 +1269,7 @@ def _run_browser_command(
             f"agent-browser-{session_info['session_name']}"
         )
         os.makedirs(task_socket_dir, mode=0o700, exist_ok=True)
-        # Record this hermes PID as the session owner (cross-process safe
+        # Record this bookworm PID as the session owner (cross-process safe
         # orphan detection — see _write_owner_pid).
         _write_owner_pid(task_socket_dir, session_info['session_name'])
         logger.debug("browser cmd=%s task=%s socket_dir=%s (%d chars)",
@@ -2020,7 +2020,7 @@ def _maybe_start_recording(task_id: str):
         if task_id in _recording_sessions:
             return
     try:
-        from hermes_cli.config import read_raw_config
+        from bwm_cli.config import read_raw_config
         hermes_home = get_hermes_home()
         cfg = read_raw_config()
         record_enabled = cfg.get("browser", {}).get("record_sessions", False)
@@ -2150,7 +2150,7 @@ def browser_vision(question: str, annotate: bool = False, task_id: Optional[str]
     effective_task_id = task_id or "default"
     
     # Save screenshot to persistent location so it can be shared with users
-    from hermes_constants import get_hermes_dir
+    from bwm_constants import get_hermes_dir
     screenshots_dir = get_hermes_dir("cache/screenshots", "browser_screenshots")
     screenshot_path = screenshots_dir / f"browser_screenshot_{uuid_mod.uuid4().hex}.png"
     
@@ -2224,7 +2224,7 @@ def browser_vision(question: str, annotate: bool = False, task_id: Optional[str]
         vision_timeout = 120.0
         vision_temperature = 0.1
         try:
-            from hermes_cli.config import load_config
+            from bwm_cli.config import load_config
             _cfg = load_config()
             _vision_cfg = _cfg.get("auxiliary", {}).get("vision", {})
             _vt = _vision_cfg.get("timeout")
@@ -2512,7 +2512,7 @@ if __name__ == "__main__":
     """
     Simple test/demo when run directly
     """
-    print("🌐 Browser Tool Module")
+    print("[网页] Browser Tool Module")
     print("=" * 40)
 
     _cp = _get_cloud_provider()
@@ -2521,9 +2521,9 @@ if __name__ == "__main__":
     
     # Check requirements
     if check_browser_requirements():
-        print("✅ All requirements met")
+        print("[成功] All requirements met")
     else:
-        print("❌ Missing requirements:")
+        print("[失败] Missing requirements:")
         try:
             browser_cmd = _find_agent_browser()
             if _requires_real_termux_browser_install(browser_cmd):
@@ -2536,11 +2536,11 @@ if __name__ == "__main__":
             print(f"   - {_cp.provider_name()} credentials not configured")
             print("   Tip: set browser.cloud_provider to 'local' to use free local mode instead")
     
-    print("\n📋 Available Browser Tools:")
+    print("\n[汇总] Available Browser Tools:")
     for schema in BROWSER_TOOL_SCHEMAS:
         print(f"  🔹 {schema['name']}: {schema['description'][:60]}...")
     
-    print("\n💡 Usage:")
+    print("\n[提示] Usage:")
     print("  from tools.browser_tool import browser_navigate, browser_snapshot")
     print("  result = browser_navigate('https://example.com', task_id='my_task')")
     print("  snapshot = browser_snapshot(task_id='my_task')")
@@ -2559,7 +2559,7 @@ registry.register(
     schema=_BROWSER_SCHEMA_MAP["browser_navigate"],
     handler=lambda args, **kw: browser_navigate(url=args.get("url", ""), task_id=kw.get("task_id")),
     check_fn=check_browser_requirements,
-    emoji="🌐",
+    emoji="[网页]",
 )
 registry.register(
     name="browser_snapshot",
@@ -2633,5 +2633,5 @@ registry.register(
     schema=_BROWSER_SCHEMA_MAP["browser_console"],
     handler=lambda args, **kw: browser_console(clear=args.get("clear", False), expression=args.get("expression"), task_id=kw.get("task_id")),
     check_fn=check_browser_requirements,
-    emoji="🖥️",
+    emoji="[系统]",
 )

@@ -366,7 +366,7 @@ describe('formatSummary', () => {
         totalDuration: 134,
         totalTools: 124
       })
-    ).toBe('d3 · 7 agents · 124 tools · 2m 14s · ⚡2')
+    ).toBe('d3 · 7 agents · 124 tools · 2m 14s · *2')
   })
 })
 

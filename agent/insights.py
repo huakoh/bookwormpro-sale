@@ -1,11 +1,11 @@
 """
-Session Insights Engine for Hermes Agent.
+Session Insights Engine for BookwormPRO.
 
 Analyzes historical session data from the SQLite state database to produce
 comprehensive usage insights — token consumption, cost estimates, tool usage
 patterns, activity trends, model/platform breakdowns, and session metrics.
 
-Inspired by Claude Code's /insights command, adapted for Hermes Agent's
+Inspired by Claude Code's /insights command, adapted for BookwormPRO's
 multi-platform architecture with additional cost estimation and platform
 breakdown capabilities.
 
@@ -103,7 +103,7 @@ class InsightsEngine:
         Initialize with a SessionDB instance.
 
         Args:
-            db: A SessionDB instance (from hermes_state.py)
+            db: A SessionDB instance (from bwm_state.py)
         """
         self.db = db
         self._conn = db._conn
@@ -738,7 +738,7 @@ class InsightsEngine:
         # Header
         lines.append("")
         lines.append("  ╔══════════════════════════════════════════════════════════╗")
-        lines.append("  ║                    📊 Hermes Insights                    ║")
+        lines.append("  ║                    [状态] BookwormPRO Insights                    ║")
         period_label = f"Last {days} days"
         if src_filter:
             period_label += f" ({src_filter})"
@@ -757,7 +757,7 @@ class InsightsEngine:
             lines.append("")
 
         # Overview
-        lines.append("  📋 Overview")
+        lines.append("  [汇总] Overview")
         lines.append("  " + "─" * 56)
         lines.append(f"  Sessions:          {o['total_sessions']:<12}  Messages:        {o['total_messages']:,}")
         lines.append(f"  Tool calls:        {o['total_tool_calls']:<12,}  User messages:   {o['user_messages']:,}")
@@ -770,7 +770,7 @@ class InsightsEngine:
 
         # Model breakdown
         if report["models"]:
-            lines.append("  🤖 Models Used")
+            lines.append("  [模型] Models Used")
             lines.append("  " + "─" * 56)
             lines.append(f"  {'Model':<30} {'Sessions':>8} {'Tokens':>12}")
             for m in report["models"]:
@@ -789,7 +789,7 @@ class InsightsEngine:
 
         # Tool usage
         if report["tools"]:
-            lines.append("  🔧 Top Tools")
+            lines.append("  [工具] Top Tools")
             lines.append("  " + "─" * 56)
             lines.append(f"  {'Tool':<28} {'Calls':>8} {'%':>8}")
             for t in report["tools"][:15]:  # Top 15
@@ -855,7 +855,7 @@ class InsightsEngine:
 
         # Notable sessions
         if report.get("top_sessions"):
-            lines.append("  🏆 Notable Sessions")
+            lines.append("  [首选] Notable Sessions")
             lines.append("  " + "─" * 56)
             for ts in report["top_sessions"]:
                 lines.append(f"  {ts['label']:<20} {ts['value']:<18} ({ts['date']}, {ts['session_id']})")
@@ -873,7 +873,7 @@ class InsightsEngine:
         o = report["overview"]
         days = report["days"]
 
-        lines.append(f"📊 **Hermes Insights** — Last {days} days\n")
+        lines.append(f"[状态] **BookwormPRO Insights** — Last {days} days\n")
 
         # Overview
         lines.append(f"**Sessions:** {o['total_sessions']} | **Messages:** {o['total_messages']:,} | **Tool calls:** {o['total_tool_calls']:,}")
@@ -884,7 +884,7 @@ class InsightsEngine:
 
         # Models (top 5)
         if report["models"]:
-            lines.append("**🤖 Models:**")
+            lines.append("**[模型] Models:**")
             for m in report["models"][:5]:
                 lines.append(f"  {m['model'][:25]} — {m['sessions']} sessions, {m['total_tokens']:,} tokens")
             lines.append("")
@@ -898,7 +898,7 @@ class InsightsEngine:
 
         # Tools (top 8)
         if report["tools"]:
-            lines.append("**🔧 Top Tools:**")
+            lines.append("**[工具] Top Tools:**")
             for t in report["tools"][:8]:
                 lines.append(f"  {t['tool']} — {t['count']:,} calls ({t['percentage']:.1f}%)")
             lines.append("")

@@ -1,11 +1,11 @@
-import { useGpuTier } from "@nous-research/ui/hooks/use-gpu-tier";
+import { useGpuTier } from "@bookwormpro-research/ui/hooks/use-gpu-tier";
 
 /**
  * Replicates the visual layer stack of `<Overlays dark />` from
- * `@nous-research/ui` without pulling in its leva / gsap / three peer deps.
+ * `@bookwormpro-research/ui` without pulling in its leva / gsap / three peer deps.
  *
  * See `design-language/src/ui/components/overlays/index.tsx` for the source of
- * truth. Defaults match LENS_0 (the Hermes teal dark preset); the deep canvas
+ * truth. Defaults match LENS_0 (the BookwormPRO teal dark preset); the deep canvas
  * and the warm vignette both read theme-switchable CSS custom properties so
  * `ThemeProvider` can repaint the stack without remounting.
  *

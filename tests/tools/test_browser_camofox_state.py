@@ -1,4 +1,4 @@
-"""Tests for Hermes-managed Camofox state helpers."""
+"""Tests for BookwormPRO-managed Camofox state helpers."""
 
 from unittest.mock import patch
 
@@ -54,7 +54,7 @@ class TestCamofoxIdentity:
 
 class TestCamofoxConfigDefaults:
     def test_default_config_includes_managed_persistence_toggle(self):
-        from hermes_cli.config import DEFAULT_CONFIG
+        from bwm_cli.config import DEFAULT_CONFIG
 
         browser_cfg = DEFAULT_CONFIG["browser"]
         assert browser_cfg["camofox"]["managed_persistence"] is False

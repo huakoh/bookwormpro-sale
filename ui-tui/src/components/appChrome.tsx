@@ -1,4 +1,4 @@
-import { Box, type ScrollBoxHandle, Text } from '@hermes/ink'
+import { Box, type ScrollBoxHandle, Text } from '@bookworm/ink'
 import { useStore } from '@nanostores/react'
 import { type ReactNode, type RefObject, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 
@@ -111,7 +111,7 @@ function SpawnHud({ t }: { t: Theme }) {
       const extra = Math.max(0, active - widestLevel)
       const widthLabel = maxConc ? `${widestLevel}/${maxConc}` : `${widestLevel}`
       const suffix = extra > 0 ? `+${extra}` : ''
-      pieces.push(`⚡${widthLabel}${suffix}`)
+      pieces.push(`*${widthLabel}${suffix}`)
     }
   }
 
@@ -119,7 +119,7 @@ function SpawnHud({ t }: { t: Theme }) {
 
   return (
     <Text color={color}>
-      {atCap ? ' │ ⚠ ' : ' │ '}
+      {atCap ? ' │ [警告] ' : ' │ '}
       {pieces.join(' ')}
     </Text>
   )

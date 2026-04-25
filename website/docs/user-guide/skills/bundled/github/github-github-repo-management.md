@@ -17,7 +17,7 @@ Clone, create, fork, configure, and manage GitHub repositories. Manage remotes, 
 | Source | Bundled (installed by default) |
 | Path | `skills/github/github-repo-management` |
 | Version | `1.1.0` |
-| Author | Hermes Agent |
+| Author | BookwormPRO |
 | License | MIT |
 | Tags | `GitHub`, `Repositories`, `Git`, `Releases`, `Secrets`, `Configuration` |
 | Related skills | [`github-auth`](/docs/user-guide/skills/bundled/github/github-github-auth), [`github-pr-workflow`](/docs/user-guide/skills/bundled/github/github-github-pr-workflow), [`github-issues`](/docs/user-guide/skills/bundled/github/github-github-issues) |
@@ -25,7 +25,7 @@ Clone, create, fork, configure, and manage GitHub repositories. Manage remotes, 
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that BookwormPRO loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
 :::
 
 # GitHub Repository Management
@@ -44,8 +44,8 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null; then
 else
   AUTH="git"
   if [ -z "$GITHUB_TOKEN" ]; then
-    if [ -f ~/.hermes/.env ] && grep -q "^GITHUB_TOKEN=" ~/.hermes/.env; then
-      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" ~/.hermes/.env | head -1 | cut -d= -f2 | tr -d '\n\r')
+    if [ -f ~/.bookwormpro/.env ] && grep -q "^GITHUB_TOKEN=" ~/.bookwormpro/.env; then
+      GITHUB_TOKEN=$(grep "^GITHUB_TOKEN=" ~/.bookwormpro/.env | head -1 | cut -d= -f2 | tr -d '\n\r')
     elif grep -q "github.com" ~/.git-credentials 2>/dev/null; then
       GITHUB_TOKEN=$(grep "github.com" ~/.git-credentials 2>/dev/null | head -1 | sed 's|https://[^:]*:\([^@]*\)@.*|\1|')
     fi

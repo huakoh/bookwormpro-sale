@@ -115,7 +115,7 @@ export async function executeSlash({
           );
           return "error";
         }
-        if (d.type === "skill") sys(`⚡ loading skill: ${d.name}`);
+        if (d.type === "skill") sys(`* loading skill: ${d.name}`);
         await send(msg);
         return "sent";
       }

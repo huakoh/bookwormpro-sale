@@ -1,7 +1,7 @@
 """
-Hermes-Agent Atropos Environments
+BookwormPRO-Agent Atropos Environments
 
-Provides a layered integration between hermes-agent's tool-calling capabilities
+Provides a layered integration between bookwormpro's tool-calling capabilities
 and the Atropos RL training framework.
 
 Core layers:
@@ -21,7 +21,7 @@ Benchmarks (eval-only):
 try:
     from environments.agent_loop import AgentResult, HermesAgentLoop
     from environments.tool_context import ToolContext
-    from environments.hermes_base_env import HermesAgentBaseEnv, HermesAgentEnvConfig
+    from environments.bookwormpro_base_env import HermesAgentBaseEnv, HermesAgentEnvConfig
 except ImportError:
     # atroposlib not installed — environments are unavailable but
     # submodules like tool_call_parsers can still be imported directly.

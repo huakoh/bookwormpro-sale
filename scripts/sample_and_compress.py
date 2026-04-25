@@ -28,11 +28,11 @@ load_dotenv()
 
 # Default datasets to sample from
 DEFAULT_DATASETS = [
-    "NousResearch/swe-terminus-agent-glm-kimi-minimax",
-    "NousResearch/hermes-agent-megascience-sft1",
-    "NousResearch/Hermes-Agent-Thinking-GLM-4.7-SFT2",
-    "NousResearch/Hermes-Agent-Thinking-GLM-4.7-SFT1",
-    "NousResearch/terminal-tasks-glm-hermes-agent"
+    "BookwormPRO/swe-terminus-agent-glm-kimi-minimax",
+    "huakoh/BookwormPRO-megascience-sft1",
+    "BookwormPRO/BookwormPRO-Agent-Thinking-GLM-4.7-SFT2",
+    "BookwormPRO/BookwormPRO-Agent-Thinking-GLM-4.7-SFT1",
+    "BookwormPRO/terminal-tasks-glm-bookwormpro"
 ]
 
 
@@ -41,7 +41,7 @@ def load_dataset_from_hf(dataset_name: str) -> List[Dict[str, Any]]:
     Load a dataset from HuggingFace.
     
     Args:
-        dataset_name: HuggingFace dataset name (e.g., "NousResearch/dataset-name")
+        dataset_name: HuggingFace dataset name (e.g., "BookwormPRO/dataset-name")
         
     Returns:
         List of trajectory entries
@@ -54,7 +54,7 @@ def load_dataset_from_hf(dataset_name: str) -> List[Dict[str, Any]]:
         # Try loading with default config
         ds = load_dataset(dataset_name, split="train")
     except Exception as e:
-        print(f"   ⚠️  Error loading {dataset_name}: {e}")
+        print(f"   [警告]  Error loading {dataset_name}: {e}")
         return []
     
     # Convert to list of dicts
@@ -70,7 +70,7 @@ def load_dataset_from_hf(dataset_name: str) -> List[Dict[str, Any]]:
             # Assume the whole item is the entry
             entries.append(dict(item))
     
-    print(f"   ✅ Loaded {len(entries):,} entries from {dataset_name}")
+    print(f"   [成功] Loaded {len(entries):,} entries from {dataset_name}")
     return entries
 
 
@@ -152,7 +152,7 @@ def sample_from_datasets(
         entries = load_dataset_from_hf(dataset_name)
         
         if not entries:
-            print(f"   ⚠️  Skipping {dataset_name} (no entries loaded)")
+            print(f"   [警告]  Skipping {dataset_name} (no entries loaded)")
             continue
         
         # Add source metadata to each entry
@@ -161,10 +161,10 @@ def sample_from_datasets(
         
         all_entries.extend(entries)
     
-    print(f"\n📊 Total entries loaded: {len(all_entries):,}")
+    print(f"\n[状态] Total entries loaded: {len(all_entries):,}")
     
     # Filter by token count using parallel processing
-    print(f"\n🔍 Filtering trajectories with >= {min_tokens:,} tokens (using {num_proc} workers)...")
+    print(f"\n[查找] Filtering trajectories with >= {min_tokens:,} tokens (using {num_proc} workers)...")
     
     filtered_entries = []
     token_counts = []
@@ -191,7 +191,7 @@ def sample_from_datasets(
                 filtered_entries.append(entry)
                 token_counts.append(token_count)
     
-    print(f"\n   ✅ Found {len(filtered_entries):,} trajectories >= {min_tokens:,} tokens")
+    print(f"\n   [成功] Found {len(filtered_entries):,} trajectories >= {min_tokens:,} tokens")
     
     if token_counts:
         avg_tokens = sum(token_counts) / len(token_counts)
@@ -199,11 +199,11 @@ def sample_from_datasets(
     
     # Random sample from the filtered pool
     if len(filtered_entries) <= total_samples:
-        print(f"\n⚠️  Only {len(filtered_entries):,} trajectories available, using all of them")
+        print(f"\n[警告]  Only {len(filtered_entries):,} trajectories available, using all of them")
         sampled = filtered_entries
     else:
         sampled = random.sample(filtered_entries, total_samples)
-        print(f"\n✅ Randomly sampled {len(sampled):,} trajectories from pool of {len(filtered_entries):,}")
+        print(f"\n[成功] Randomly sampled {len(sampled):,} trajectories from pool of {len(filtered_entries):,}")
     
     # Show source distribution
     source_counts = {}
@@ -239,7 +239,7 @@ def save_samples_for_compression(
     # Split into batches
     num_batches = (len(samples) + batch_size - 1) // batch_size
     
-    print(f"\n💾 Saving {len(samples)} samples to {output_dir}")
+    print(f"\n[保存] Saving {len(samples)} samples to {output_dir}")
     print(f"   Batch size: {batch_size}, Total batches: {num_batches}")
     
     for i in range(num_batches):
@@ -252,7 +252,7 @@ def save_samples_for_compression(
             for entry in batch:
                 f.write(json.dumps(entry, ensure_ascii=False) + '\n')
     
-    print(f"   ✅ Saved {num_batches} batch files")
+    print(f"   [成功] Saved {num_batches} batch files")
 
 
 def run_compression(input_dir: Path, output_dir: Path, config_path: str):
@@ -292,7 +292,7 @@ def merge_output_to_single_jsonl(input_dir: Path, output_file: Path):
         input_dir: Directory containing JSONL files
         output_file: Output JSONL file path
     """
-    print(f"\n📦 Merging output files into {output_file.name}...")
+    print(f"\n[包] Merging output files into {output_file.name}...")
     
     all_entries = []
     for jsonl_file in sorted(input_dir.glob("*.jsonl")):
@@ -309,7 +309,7 @@ def merge_output_to_single_jsonl(input_dir: Path, output_file: Path):
         for entry in all_entries:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
     
-    print(f"   ✅ Merged {len(all_entries):,} entries into {output_file.name}")
+    print(f"   [成功] Merged {len(all_entries):,} entries into {output_file.name}")
     return output_file
 
 
@@ -339,7 +339,7 @@ def main(
         skip_download: Skip download and use existing sampled data
     """
     print("=" * 70)
-    print("📊 TRAJECTORY SAMPLING AND COMPRESSION")
+    print("[状态] TRAJECTORY SAMPLING AND COMPRESSION")
     print("=" * 70)
     
     # Parse datasets
@@ -348,7 +348,7 @@ def main(
     else:
         dataset_list = DEFAULT_DATASETS
     
-    print(f"\n📋 Configuration:")
+    print(f"\n[汇总] Configuration:")
     print(f"   Total samples: {total_samples:,}")
     print(f"   Min tokens filter: {min_tokens:,}")
     print(f"   Parallel workers: {num_proc}")
@@ -376,7 +376,7 @@ def main(
         )
         
         if not samples:
-            print("❌ No samples collected. Exiting.")
+            print("[失败] No samples collected. Exiting.")
             return
         
         # Step 2: Save to JSONL files
@@ -387,7 +387,7 @@ def main(
     # Step 3: Run compression
     config_path = base_dir / config
     if not config_path.exists():
-        print(f"❌ Config not found: {config_path}")
+        print(f"[失败] Config not found: {config_path}")
         return
     
     run_compression(sampled_dir, compressed_dir, str(config_path))
@@ -396,13 +396,13 @@ def main(
     merge_output_to_single_jsonl(compressed_dir, final_output)
     
     print("\n" + "=" * 70)
-    print("✅ COMPLETE!")
+    print("[成功] COMPLETE!")
     print("=" * 70)
     print(f"\n📁 Raw samples:        {sampled_dir}")
     print(f"📁 Compressed batches: {compressed_dir}")
     print(f"📁 Final output:       {final_output}")
     print(f"\nTo upload to HuggingFace:")
-    print(f"   huggingface-cli upload NousResearch/{output_name} {final_output}")
+    print(f"   huggingface-cli upload BookwormPRO/{output_name} {final_output}")
 
 
 if __name__ == "__main__":

@@ -48,8 +48,8 @@ def _restore_tool_and_agent_modules():
 def _enable_managed_nous_tools(monkeypatch):
     """Patch the source modules so managed_nous_tools_enabled() returns True
     even after tool modules are dynamically reloaded."""
-    monkeypatch.setattr("hermes_cli.auth.get_nous_auth_status", lambda: {"logged_in": True})
-    monkeypatch.setattr("hermes_cli.models.check_nous_free_tier", lambda: False)
+    monkeypatch.setattr("bwm_cli.auth.get_nous_auth_status", lambda: {"logged_in": True})
+    monkeypatch.setattr("bwm_cli.models.check_nous_free_tier", lambda: False)
 
 
 def _install_fake_tools_package():
@@ -170,7 +170,7 @@ def test_managed_fal_submit_uses_gateway_origin_and_nous_token(monkeypatch):
     _install_fake_fal_client(captured)
     monkeypatch.delenv("FAL_KEY", raising=False)
     monkeypatch.setenv("FAL_QUEUE_GATEWAY_URL", "http://127.0.0.1:3009")
-    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "nous-token")
+    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "bookwormpro-token")
 
     image_generation_tool = _load_tool_module(
         "tools.image_generation_tool",
@@ -184,7 +184,7 @@ def test_managed_fal_submit_uses_gateway_origin_and_nous_token(monkeypatch):
     )
 
     assert captured["submit_via"] == "managed_client"
-    assert captured["client_key"] == "nous-token"
+    assert captured["client_key"] == "bookwormpro-token"
     assert captured["submit_url"] == "http://127.0.0.1:3009/fal-ai/flux-2-pro"
     assert captured["method"] == "POST"
     assert captured["arguments"] == {"prompt": "test prompt", "num_images": 1}
@@ -198,7 +198,7 @@ def test_managed_fal_submit_reuses_cached_sync_client(monkeypatch):
     _install_fake_fal_client(captured)
     monkeypatch.delenv("FAL_KEY", raising=False)
     monkeypatch.setenv("FAL_QUEUE_GATEWAY_URL", "http://127.0.0.1:3009")
-    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "nous-token")
+    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "bookwormpro-token")
 
     image_generation_tool = _load_tool_module(
         "tools.image_generation_tool",
@@ -219,16 +219,16 @@ def test_openai_tts_uses_managed_audio_gateway_when_direct_key_absent(monkeypatc
     _install_fake_openai_module(captured)
     monkeypatch.delenv("VOICE_TOOLS_OPENAI_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.setenv("TOOL_GATEWAY_DOMAIN", "nousresearch.com")
-    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "nous-token")
+    monkeypatch.setenv("TOOL_GATEWAY_DOMAIN", "bookwormpro.local")
+    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "bookwormpro-token")
 
     tts_tool = _load_tool_module("tools.tts_tool", "tts_tool.py")
     monkeypatch.setattr(tts_tool.uuid, "uuid4", lambda: "tts-call-123")
     output_path = tmp_path / "speech.mp3"
     tts_tool._generate_openai_tts("hello world", str(output_path), {"openai": {}})
 
-    assert captured["api_key"] == "nous-token"
-    assert captured["base_url"] == "https://openai-audio-gateway.nousresearch.com/v1"
+    assert captured["api_key"] == "bookwormpro-token"
+    assert captured["base_url"] == "https://openai-audio-gateway.bookwormpro.local/v1"
     assert captured["speech_kwargs"]["model"] == "gpt-4o-mini-tts"
     assert captured["speech_kwargs"]["extra_headers"] == {"x-idempotency-key": "tts-call-123"}
     assert captured["stream_to_file"] == str(output_path)
@@ -241,8 +241,8 @@ def test_openai_tts_accepts_openai_api_key_as_direct_fallback(monkeypatch, tmp_p
     _install_fake_openai_module(captured)
     monkeypatch.delenv("VOICE_TOOLS_OPENAI_KEY", raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "openai-direct-key")
-    monkeypatch.setenv("TOOL_GATEWAY_DOMAIN", "nousresearch.com")
-    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "nous-token")
+    monkeypatch.setenv("TOOL_GATEWAY_DOMAIN", "bookwormpro.local")
+    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "bookwormpro-token")
 
     tts_tool = _load_tool_module("tools.tts_tool", "tts_tool.py")
     output_path = tmp_path / "speech.mp3"
@@ -257,12 +257,12 @@ def test_transcription_uses_model_specific_response_formats(monkeypatch, tmp_pat
     whisper_capture = {}
     _install_fake_tools_package()
     _install_fake_openai_module(whisper_capture, transcription_response="hello from whisper")
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("BOOKWORMPRO_HOME", str(tmp_path))
     (tmp_path / "config.yaml").write_text("stt:\n  provider: openai\n")
     monkeypatch.delenv("VOICE_TOOLS_OPENAI_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.setenv("TOOL_GATEWAY_DOMAIN", "nousresearch.com")
-    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "nous-token")
+    monkeypatch.setenv("TOOL_GATEWAY_DOMAIN", "bookwormpro.local")
+    monkeypatch.setenv("TOOL_GATEWAY_USER_TOKEN", "bookwormpro-token")
 
     transcription_tools = _load_tool_module(
         "tools.transcription_tools",
@@ -274,7 +274,7 @@ def test_transcription_uses_model_specific_response_formats(monkeypatch, tmp_pat
 
     whisper_result = transcription_tools.transcribe_audio(str(audio_path), model="whisper-1")
     assert whisper_result["success"] is True
-    assert whisper_capture["base_url"] == "https://openai-audio-gateway.nousresearch.com/v1"
+    assert whisper_capture["base_url"] == "https://openai-audio-gateway.bookwormpro.local/v1"
     assert whisper_capture["transcription_kwargs"]["response_format"] == "text"
     assert whisper_capture["close_calls"] == 1
 

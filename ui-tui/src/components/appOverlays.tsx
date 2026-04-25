@@ -1,4 +1,4 @@
-import { Box, Text } from '@hermes/ink'
+import { Box, Text } from '@bookworm/ink'
 import { useStore } from '@nanostores/react'
 
 import { useGateway } from '../app/gatewayContext.js'
@@ -77,7 +77,7 @@ export function PromptZone({
       <Box flexDirection="column" flexShrink={0} paddingX={1} paddingY={1}>
         <MaskedPrompt
           cols={cols}
-          icon="🔑"
+          icon="[密钥]"
           label={overlay.secret.prompt}
           onSubmit={onSecretSubmit}
           sub={`for ${overlay.secret.envVar}`}

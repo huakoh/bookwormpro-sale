@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [transformers, torch, pillow]
 metadata:
-  hermes:
+  bookworm:
     tags: [Multimodal, CLIP, Vision-Language, Zero-Shot, Image Classification, OpenAI, Image Search, Cross-Modal Retrieval, Content Moderation]
 
 ---
@@ -248,7 +248,7 @@ results = collection.query(
 
 ## Resources
 
-- **GitHub**: https://github.com/openai/CLIP ⭐ 25,300+
+- **GitHub**: https://github.com/openai/CLIP * 25,300+
 - **Paper**: https://arxiv.org/abs/2103.00020
 - **Colab**: https://colab.research.google.com/github/openai/clip/
 - **License**: MIT

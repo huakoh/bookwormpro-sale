@@ -12,7 +12,7 @@ import threading
 from collections import OrderedDict
 from pathlib import Path
 
-from hermes_constants import get_hermes_home, get_skills_dir, is_wsl
+from bwm_constants import get_hermes_home, get_skills_dir, is_wsl
 from typing import Optional
 
 from agent.skill_utils import (
@@ -86,11 +86,11 @@ def _find_git_root(start: Path) -> Optional[Path]:
     return None
 
 
-_HERMES_MD_NAMES = (".hermes.md", "HERMES.md")
+_HERMES_MD_NAMES = (".bookwormpro.md", "HERMES.md")
 
 
 def _find_hermes_md(cwd: Path) -> Optional[Path]:
-    """Discover the nearest ``.hermes.md`` or ``HERMES.md``.
+    """Discover the nearest ``.bookwormpro.md`` or ``HERMES.md``.
 
     Search order: *cwd* first, then each parent directory up to (and
     including) the git repository root.  Returns the first match, or
@@ -132,13 +132,29 @@ def _strip_yaml_frontmatter(content: str) -> str:
 # =========================================================================
 
 DEFAULT_AGENT_IDENTITY = (
-    "You are Hermes Agent, an intelligent AI assistant created by Nous Research. "
-    "You are helpful, knowledgeable, and direct. You assist users with a wide "
-    "range of tasks including answering questions, writing and editing code, "
-    "analyzing information, creative work, and executing actions via your tools. "
-    "You communicate clearly, admit uncertainty when appropriate, and prioritize "
-    "being genuinely useful over being verbose unless otherwise directed below. "
-    "Be targeted and efficient in your exploration and investigations."
+    "你是 BookwormPRO —— 一个由 BookwormPRO Project 创建的智能 AI 助手。"
+    "你乐于助人、知识渊博、表达直接。你协助用户完成各类任务："
+    "回答问题、编写和修改代码、分析信息、创意工作，并通过工具执行操作。"
+    "你表达清晰，必要时坦承不确定性，把'真正有用'置于'冗长说明'之上。"
+    "在探索与调研时保持目标明确、行动高效。\n\n"
+    "## 输出语言偏好\n"
+    "用户主要使用中文与你交流，请优先用简体中文回复以提供最佳体验。"
+    "用户用中文提问时自然用中文回答。用户用英文等其他语言提问时可跟随。"
+    "技术术语保留英文原名（Python、API、JSON、Transformer、CLI、REPL、JIT、GIL）。"
+    "代码内的标识符/变量名/函数名保持英文；代码注释优先中文。"
+    "错误堆栈（traceback）保留原始英文，必要时下方给中文摘要。\n\n"
+    "## 输出风格（朴素 ASCII 模块化）\n"
+    "**严格禁用 emoji 与图形字符**：不使用 fire/rocket/lightning/check-mark/"
+    "warning-sign/lab-flask/pin/bulb/chart/hammer/sparkles/star/gem 等任何 "
+    "pictographic Unicode（U+1F300-1F9FF / U+2600-27BF / U+1F680-1F6FF 范围）。"
+    "若需状态指示符号，使用 ASCII 中括号 tag：[成功] [失败] [警告] [信息] "
+    "[提示] [新增] [待办] [完成]。"
+    "若需视觉分隔，使用 --- 或 === 横线。\n\n"
+    "## 模块化结构（长回复必须遵守）\n"
+    "回复 >= 3 个段落或涉及多维度时，使用 markdown 模块化框架：\n"
+    "  # 一级标题（一句话点明核心）\n"
+    "  ## 1. 第一模块  ## 2. 第二模块  ## 对照表  ## 实操命令  ## 结论与建议\n"
+    "短回复（1-2 句）直接答，不用模块化。"
 )
 
 MEMORY_GUIDANCE = (
@@ -154,8 +170,8 @@ MEMORY_GUIDANCE = (
     "If you've discovered a new way to do something, solved a problem that could be "
     "necessary later, save it as a skill with the skill tool.\n"
     "Write memories as declarative facts, not instructions to yourself. "
-    "'User prefers concise responses' ✓ — 'Always respond concisely' ✗. "
-    "'Project uses pytest with xdist' ✓ — 'Run tests with pytest -n 4' ✗. "
+    "'User prefers concise responses' [成功] — 'Always respond concisely' [失败]. "
+    "'Project uses pytest with xdist' [成功] — 'Run tests with pytest -n 4' [失败]. "
     "Imperative phrasing gets re-read as a directive in later sessions and can "
     "cause repeated work or override the user's current request. Procedures and "
     "workflows belong in skills, not memory."
@@ -632,7 +648,7 @@ def build_skills_system_prompt(
     Falls back to a full filesystem scan when both layers miss.
 
     External skill directories (``skills.external_dirs`` in config.yaml) are
-    scanned alongside the local ``~/.hermes/skills/`` directory.  External dirs
+    scanned alongside the local ``~/.bookwormpro/skills/`` directory.  External dirs
     are read-only — they appear in the index but new skills are always created
     in the local dir.  Local skills take precedence when names collide.
     """
@@ -647,8 +663,8 @@ def build_skills_system_prompt(
     # produce distinct cache entries (gateway serves multiple platforms).
     from gateway.session_context import get_session_env
     _platform_hint = (
-        os.environ.get("HERMES_PLATFORM")
-        or get_session_env("HERMES_SESSION_PLATFORM")
+        os.environ.get("BOOKWORMPRO_PLATFORM")
+        or get_session_env("BOOKWORMPRO_SESSION_PLATFORM")
         or ""
     )
     disabled = get_disabled_skill_names()
@@ -848,12 +864,12 @@ def build_skills_system_prompt(
 
 
 def build_nous_subscription_prompt(valid_tool_names: "set[str] | None" = None) -> str:
-    """Build a compact Nous subscription capability block for the system prompt."""
+    """Build a compact BookwormPRO subscription capability block for the system prompt."""
     try:
-        from hermes_cli.nous_subscription import get_nous_subscription_features
+        from bwm_cli.nous_subscription import get_nous_subscription_features
         from tools.tool_backend_helpers import managed_nous_tools_enabled
     except Exception as exc:
-        logger.debug("Failed to import Nous subscription helper: %s", exc)
+        logger.debug("Failed to import BookwormPRO subscription helper: %s", exc)
         return ""
 
     if not managed_nous_tools_enabled():
@@ -886,28 +902,28 @@ def build_nous_subscription_prompt(valid_tool_names: "set[str] | None" = None) -
 
     def _status_line(feature) -> str:
         if feature.managed_by_nous:
-            return f"- {feature.label}: active via Nous subscription"
+            return f"- {feature.label}: active via BookwormPRO subscription"
         if feature.active:
             current = feature.current_provider or "configured provider"
             return f"- {feature.label}: currently using {current}"
         if feature.included_by_default and features.nous_auth_present:
-            return f"- {feature.label}: included with Nous subscription, not currently selected"
+            return f"- {feature.label}: included with BookwormPRO subscription, not currently selected"
         if feature.key == "modal" and features.nous_auth_present:
-            return f"- {feature.label}: optional via Nous subscription"
+            return f"- {feature.label}: optional via BookwormPRO subscription"
         return f"- {feature.label}: not currently available"
 
     lines = [
-        "# Nous Subscription",
-        "Nous subscription includes managed web tools (Firecrawl), image generation (FAL), OpenAI TTS, and browser automation (Browser Use) by default. Modal execution is optional.",
+        "# BookwormPRO Subscription",
+        "BookwormPRO subscription includes managed web tools (Firecrawl), image generation (FAL), OpenAI TTS, and browser automation (Browser Use) by default. Modal execution is optional.",
         "Current capability status:",
     ]
     lines.extend(_status_line(feature) for feature in features.items())
     lines.extend(
         [
-            "When a Nous-managed feature is active, do not ask the user for Firecrawl, FAL, OpenAI TTS, or Browser-Use API keys.",
-            "If the user is not subscribed and asks for a capability that Nous subscription would unlock or simplify, suggest Nous subscription as one option alongside direct setup or local alternatives.",
+            "When a BookwormPRO-managed feature is active, do not ask the user for Firecrawl, FAL, OpenAI TTS, or Browser-Use API keys.",
+            "If the user is not subscribed and asks for a capability that BookwormPRO subscription would unlock or simplify, suggest BookwormPRO subscription as one option alongside direct setup or local alternatives.",
             "Do not mention subscription unless the user asks about it or it directly solves the current missing capability.",
-            "Useful commands: hermes setup, hermes setup tools, hermes setup terminal, hermes status.",
+            "Useful commands: bookworm setup, bookworm setup tools, bookworm setup terminal, bookworm status.",
         ]
     )
     return "\n".join(lines)
@@ -930,17 +946,17 @@ def _truncate_content(content: str, filename: str, max_chars: int = CONTEXT_FILE
 
 
 def load_soul_md() -> Optional[str]:
-    """Load SOUL.md from HERMES_HOME and return its content, or None.
+    """Load SOUL.md from BOOKWORMPRO_HOME and return its content, or None.
 
     Used as the agent identity (slot #1 in the system prompt).  When this
     returns content, ``build_context_files_prompt`` should be called with
     ``skip_soul=True`` so SOUL.md isn't injected twice.
     """
     try:
-        from hermes_cli.config import ensure_hermes_home
+        from bwm_cli.config import ensure_hermes_home
         ensure_hermes_home()
     except Exception as e:
-        logger.debug("Could not ensure HERMES_HOME before loading SOUL.md: %s", e)
+        logger.debug("Could not ensure BOOKWORMPRO_HOME before loading SOUL.md: %s", e)
 
     soul_path = get_hermes_home() / "SOUL.md"
     if not soul_path.exists():
@@ -958,7 +974,7 @@ def load_soul_md() -> Optional[str]:
 
 
 def _load_hermes_md(cwd_path: Path) -> str:
-    """.hermes.md / HERMES.md — walk to git root."""
+    """.bookwormpro.md / HERMES.md — walk to git root."""
     hermes_md_path = _find_hermes_md(cwd_path)
     if not hermes_md_path:
         return ""
@@ -974,7 +990,7 @@ def _load_hermes_md(cwd_path: Path) -> str:
             pass
         content = _scan_context_content(content, rel)
         result = f"## {rel}\n\n{content}"
-        return _truncate_content(result, ".hermes.md")
+        return _truncate_content(result, ".bookwormpro.md")
     except Exception as e:
         logger.debug("Could not read %s: %s", hermes_md_path, e)
         return ""
@@ -1046,12 +1062,12 @@ def build_context_files_prompt(cwd: Optional[str] = None, skip_soul: bool = Fals
     """Discover and load context files for the system prompt.
 
     Priority (first found wins — only ONE project context type is loaded):
-      1. .hermes.md / HERMES.md  (walk to git root)
+      1. .bookwormpro.md / HERMES.md  (walk to git root)
       2. AGENTS.md / agents.md   (cwd only)
       3. CLAUDE.md / claude.md   (cwd only)
       4. .cursorrules / .cursor/rules/*.mdc  (cwd only)
 
-    SOUL.md from HERMES_HOME is independent and always included when present.
+    SOUL.md from BOOKWORMPRO_HOME is independent and always included when present.
     Each context source is capped at 20,000 chars.
 
     When *skip_soul* is True, SOUL.md is not included here (it was already
@@ -1073,7 +1089,7 @@ def build_context_files_prompt(cwd: Optional[str] = None, skip_soul: bool = Fals
     if project_context:
         sections.append(project_context)
 
-    # SOUL.md from HERMES_HOME only — skip when already loaded as identity
+    # SOUL.md from BOOKWORMPRO_HOME only — skip when already loaded as identity
     if not skip_soul:
         soul_content = load_soul_md()
         if soul_content:

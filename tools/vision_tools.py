@@ -4,7 +4,7 @@ Vision Tools Module
 
 This module provides vision analysis tools that work with image URLs.
 Uses the centralized auxiliary vision router, which can select OpenRouter,
-Nous, Codex, native Anthropic, or a custom OpenAI-compatible endpoint.
+BookwormPRO, Codex, native Anthropic, or a custom OpenAI-compatible endpoint.
 
 Available tools:
 - vision_analyze_tool: Analyze images from URLs with custom prompts
@@ -49,14 +49,14 @@ _debug = DebugSession("vision_tools", env_var="VISION_TOOLS_DEBUG")
 # Separate from auxiliary.vision.timeout which governs the LLM API call.
 # Resolution: config.yaml auxiliary.vision.download_timeout → env var → 30s default.
 def _resolve_download_timeout() -> float:
-    env_val = os.getenv("HERMES_VISION_DOWNLOAD_TIMEOUT", "").strip()
+    env_val = os.getenv("BOOKWORMPRO_VISION_DOWNLOAD_TIMEOUT", "").strip()
     if env_val:
         try:
             return float(env_val)
         except ValueError:
             pass
     try:
-        from hermes_cli.config import load_config
+        from bwm_cli.config import load_config
         cfg = load_config()
         val = cfg.get("auxiliary", {}).get("vision", {}).get("download_timeout")
         if val is not None:
@@ -555,7 +555,7 @@ async def vision_analyze_tool(
         vision_timeout = 120.0
         vision_temperature = 0.1
         try:
-            from hermes_cli.config import load_config
+            from bwm_cli.config import load_config
             _cfg = load_config()
             _vision_cfg = _cfg.get("auxiliary", {}).get("vision", {})
             _vt = _vision_cfg.get("timeout")
@@ -706,13 +706,13 @@ if __name__ == "__main__":
     api_available = check_vision_requirements()
     
     if not api_available:
-        print("❌ No auxiliary vision model available")
-        print("Configure a supported multimodal backend (OpenRouter, Nous, Codex, Anthropic, or a custom OpenAI-compatible endpoint).")
+        print("[失败] No auxiliary vision model available")
+        print("Configure a supported multimodal backend (OpenRouter, BookwormPRO, Codex, Anthropic, or a custom OpenAI-compatible endpoint).")
         exit(1)
     else:
-        print("✅ Vision model available")
+        print("[成功] Vision model available")
     
-    print("🛠️ Vision tools ready for use!")
+    print("[工具] Vision tools ready for use!")
     
     # Show debug mode status
     if _debug.active:

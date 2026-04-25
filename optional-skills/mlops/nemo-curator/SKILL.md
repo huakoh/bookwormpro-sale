@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [nemo-curator, cudf, dask, rapids]
 metadata:
-  hermes:
+  bookworm:
     tags: [Data Processing, NeMo Curator, Data Curation, GPU Acceleration, Deduplication, Quality Filtering, NVIDIA, RAPIDS, PII Redaction, Multimodal, LLM Training Data]
 
 ---
@@ -377,7 +377,7 @@ cluster.close()
 
 ## Resources
 
-- **GitHub**: https://github.com/NVIDIA/NeMo-Curator ⭐ 500+
+- **GitHub**: https://github.com/NVIDIA/NeMo-Curator * 500+
 - **Docs**: https://docs.nvidia.com/nemo-framework/user-guide/latest/datacuration/
 - **Version**: 0.4.0+
 - **License**: Apache 2.0

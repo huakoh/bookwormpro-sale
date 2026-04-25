@@ -1,4 +1,4 @@
-# nix/packages.nix — Hermes Agent package built with uv2nix
+# nix/packages.nix — BookwormPRO package built with uv2nix
 { inputs, ... }:
 {
   perSystem =
@@ -48,7 +48,7 @@
     {
       packages = {
         default = pkgs.stdenv.mkDerivation {
-          pname = "hermes-agent";
+          pname = "bookwormpro";
           version = (fromTOML (builtins.readFile ../pyproject.toml)).project.version;
 
           dontUnpack = true;
@@ -58,28 +58,28 @@
           installPhase = ''
             runHook preInstall
 
-            mkdir -p $out/share/hermes-agent $out/bin
-            cp -r ${bundledSkills} $out/share/hermes-agent/skills
-            cp -r ${hermesWeb} $out/share/hermes-agent/web_dist
+            mkdir -p $out/share/bookwormpro $out/bin
+            cp -r ${bundledSkills} $out/share/bookwormpro/skills
+            cp -r ${hermesWeb} $out/share/bookwormpro/web_dist
 
             # copy pre-built TUI (same layout as dev: ui-tui/dist/ + node_modules/)
             mkdir -p $out/ui-tui
-            cp -r ${hermesTui}/lib/hermes-tui/* $out/ui-tui/
+            cp -r ${hermesTui}/lib/bookworm-tui/* $out/ui-tui/
 
             ${pkgs.lib.concatMapStringsSep "\n"
               (name: ''
                 makeWrapper ${hermesVenv}/bin/${name} $out/bin/${name} \
                   --suffix PATH : "${runtimePath}" \
-                  --set HERMES_BUNDLED_SKILLS $out/share/hermes-agent/skills \
-                  --set HERMES_WEB_DIST $out/share/hermes-agent/web_dist \
-                  --set HERMES_TUI_DIR $out/ui-tui \
-                  --set HERMES_PYTHON ${hermesVenv}/bin/python3 \
-                  --set HERMES_NODE ${pkgs.nodejs_22}/bin/node
+                  --set BOOKWORMPRO_BUNDLED_SKILLS $out/share/bookwormpro/skills \
+                  --set BOOKWORMPRO_WEB_DIST $out/share/bookwormpro/web_dist \
+                  --set BOOKWORMPRO_TUI_DIR $out/ui-tui \
+                  --set BOOKWORMPRO_PYTHON ${hermesVenv}/bin/python3 \
+                  --set BOOKWORMPRO_NODE ${pkgs.nodejs_22}/bin/node
               '')
               [
-                "hermes"
-                "hermes-agent"
-                "hermes-acp"
+                "bookworm"
+                "bookwormpro"
+                "bookworm-acp"
               ]
             }
 
@@ -87,10 +87,10 @@
           '';
 
           passthru.devShellHook = ''
-            STAMP=".nix-stamps/hermes-agent"
+            STAMP=".nix-stamps/bookwormpro"
             STAMP_VALUE="${pyprojectHash}:${uvLockHash}"
             if [ ! -f "$STAMP" ] || [ "$(cat "$STAMP")" != "$STAMP_VALUE" ]; then
-              echo "hermes-agent: installing Python dependencies..."
+              echo "bookwormpro: installing Python dependencies..."
               uv venv .venv --python ${pkgs.python312}/bin/python3 2>/dev/null || true
               source .venv/bin/activate
               uv pip install -e ".[all]"
@@ -100,14 +100,14 @@
               echo "$STAMP_VALUE" > "$STAMP"
             else
               source .venv/bin/activate
-              export HERMES_PYTHON=${hermesVenv}/bin/python3
+              export BOOKWORMPRO_PYTHON=${hermesVenv}/bin/python3
             fi
           '';
 
           meta = with pkgs.lib; {
             description = "AI agent with advanced tool-calling capabilities";
-            homepage = "https://github.com/NousResearch/hermes-agent";
-            mainProgram = "hermes";
+            homepage = "https://github.com/huakoh/BookwormPRO";
+            mainProgram = "bookworm";
             license = licenses.mit;
             platforms = platforms.unix;
           };

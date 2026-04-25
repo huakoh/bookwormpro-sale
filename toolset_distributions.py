@@ -192,7 +192,7 @@ DISTRIBUTIONS = {
         }
     },
     
-    # Terminal-focused tasks distribution (for nous-terminal-tasks.jsonl)
+    # Terminal-focused tasks distribution (for bookwormpro-terminal-tasks.jsonl)
     "terminal_tasks": {
         "description": "Terminal-focused distribution with high terminal/file availability, occasional other tools",
         "toolsets": {
@@ -270,7 +270,7 @@ def sample_toolsets_from_distribution(distribution_name: str) -> List[str]:
     for toolset_name, probability in dist["toolsets"].items():
         # Validate toolset exists
         if not validate_toolset(toolset_name):
-            print(f"⚠️  Warning: Toolset '{toolset_name}' in distribution '{distribution_name}' is not valid")
+            print(f"[警告]  Warning: Toolset '{toolset_name}' in distribution '{distribution_name}' is not valid")
             continue
         
         # Roll the dice - if random value is less than probability, include this toolset
@@ -310,10 +310,10 @@ def print_distribution_info(distribution_name: str) -> None:
     """
     dist = get_distribution(distribution_name)
     if not dist:
-        print(f"❌ Unknown distribution: {distribution_name}")
+        print(f"[失败] Unknown distribution: {distribution_name}")
         return
     
-    print(f"\n📊 Distribution: {distribution_name}")
+    print(f"\n[状态] Distribution: {distribution_name}")
     print(f"   Description: {dist['description']}")
     print("   Toolsets:")
     for toolset, prob in sorted(dist["toolsets"].items(), key=lambda x: x[1], reverse=True):
@@ -324,11 +324,11 @@ if __name__ == "__main__":
     """
     Demo and testing of the distributions system
     """
-    print("📊 Toolset Distributions Demo")
+    print("[状态] Toolset Distributions Demo")
     print("=" * 60)
     
     # List all distributions
-    print("\n📋 Available Distributions:")
+    print("\n[汇总] Available Distributions:")
     print("-" * 40)
     for name, dist in list_distributions().items():
         print(f"\n  {name}:")
@@ -357,7 +357,7 @@ if __name__ == "__main__":
         print(f"  Sample 5: {samples[4]}")
     
     # Show detailed info
-    print("\n\n📊 Detailed Distribution Info:")
+    print("\n\n[状态] Detailed Distribution Info:")
     print("-" * 40)
     print_distribution_info("image_gen")
     print_distribution_info("research")

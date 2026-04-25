@@ -50,12 +50,12 @@ export const en: Translations = {
   },
 
   app: {
-    brand: "Hermes Agent",
+    brand: "BookwormPRO",
     brandShort: "HA",
     closeNavigation: "Close navigation",
     closeModelTools: "Close model and tools",
     footer: {
-      org: "Nous Research",
+      org: "BookwormPRO Project",
     },
     activeSessionsLabel: "Active Sessions:",
     gatewayStatusLabel: "Gateway Status:",
@@ -116,8 +116,8 @@ export const en: Translations = {
     starting: "Starting",
     startedInBackground: "Started in background — check logs for progress",
     stopped: "Stopped",
-    updateHermes: "Update Hermes",
-    updatingHermes: "Updating Hermes…",
+    updateHermes: "Update BookwormPRO",
+    updatingHermes: "Updating BookwormPRO…",
     waitingForOutput: "Waiting for output…",
   },
 
@@ -217,7 +217,7 @@ export const en: Translations = {
     all: "All",
     categories: "Categories",
     filters: "Filters",
-    noSkills: "No skills found. Skills are loaded from ~/.hermes/skills/",
+    noSkills: "No skills found. Skills are loaded from ~/.bookwormpro/skills/",
     noSkillsMatch: "No skills match your search or filter.",
     skillCount: "{count} skill{s}",
     resultCount: "{count} result{s}",
@@ -231,7 +231,7 @@ export const en: Translations = {
   },
 
   config: {
-    configPath: "~/.hermes/config.yaml",
+    configPath: "~/.bookwormpro/config.yaml",
     filters: "Filters",
     sections: "Sections",
     exportConfig: "Export config as JSON",
@@ -299,7 +299,7 @@ export const en: Translations = {
     login: "Login",
     disconnect: "Disconnect",
     managedExternally: "Managed externally",
-    copied: "Copied ✓",
+    copied: "Copied [成功]",
     cli: "CLI",
     copyCliCommand: "Copy CLI command (for external / fallback)",
     connect: "Connect",

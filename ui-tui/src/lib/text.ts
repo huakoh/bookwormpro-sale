@@ -95,17 +95,17 @@ export const formatToolCall = (name: string, context = '') => {
 export const buildToolTrailLine = (name: string, context: string, error?: boolean, note?: string) => {
   const detail = compactPreview(note ?? '', 72)
 
-  return `${formatToolCall(name, context)}${detail ? ` :: ${detail}` : ''} ${error ? ' ✗' : ' ✓'}`
+  return `${formatToolCall(name, context)}${detail ? ` :: ${detail}` : ''} ${error ? ' [失败]' : ' [成功]'}`
 }
 
-export const isToolTrailResultLine = (line: string) => line.endsWith(' ✓') || line.endsWith(' ✗')
+export const isToolTrailResultLine = (line: string) => line.endsWith(' [成功]') || line.endsWith(' [失败]')
 
 export const parseToolTrailResultLine = (line: string) => {
   if (!isToolTrailResultLine(line)) {
     return null
   }
 
-  const mark = line.endsWith(' ✗') ? '✗' : '✓'
+  const mark = line.endsWith(' [失败]') ? '[失败]' : '[成功]'
   const body = line.slice(0, -2)
   const [call, detail] = body.split(' :: ', 2)
 
@@ -125,8 +125,8 @@ export const parseToolTrailResultLine = (line: string) => {
 export const isTransientTrailLine = (line: string) => line.startsWith('drafting ') || line === 'analyzing tool output…'
 
 export const sameToolTrailGroup = (label: string, entry: string) =>
-  entry === `${label} ✓` ||
-  entry === `${label} ✗` ||
+  entry === `${label} [成功]` ||
+  entry === `${label} [失败]` ||
   entry.startsWith(`${label}(`) ||
   entry.startsWith(`${label} ::`) ||
   entry.startsWith(`${label}:`)

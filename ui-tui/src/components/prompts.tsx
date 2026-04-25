@@ -1,4 +1,4 @@
-import { Box, Text, useInput } from '@hermes/ink'
+import { Box, Text, useInput } from '@bookworm/ink'
 import { useState } from 'react'
 
 import { isMac } from '../lib/platform.js'
@@ -43,7 +43,7 @@ export function ApprovalPrompt({ onChoice, req, t }: ApprovalPromptProps) {
   return (
     <Box borderColor={t.color.warn} borderStyle="double" flexDirection="column" paddingX={1}>
       <Text bold color={t.color.warn}>
-        ⚠ approval required · {req.description}
+        [警告] approval required · {req.description}
       </Text>
 
       <Box flexDirection="column" paddingLeft={1}>
@@ -192,7 +192,7 @@ export function ConfirmPrompt({ onCancel, onConfirm, req, t }: ConfirmPromptProp
   return (
     <Box borderColor={accent} borderStyle="double" flexDirection="column" paddingX={1}>
       <Text bold color={accent}>
-        {req.danger ? '⚠' : '?'} {req.title}
+        {req.danger ? '[警告]' : '?'} {req.title}
       </Text>
 
       {req.detail ? (

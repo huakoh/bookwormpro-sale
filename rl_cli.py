@@ -27,29 +27,29 @@ from pathlib import Path
 import fire
 import yaml
 
-# Load .env from ~/.hermes/.env first, then project root as dev fallback.
+# Load .env from ~/.bookwormpro/.env first, then project root as dev fallback.
 # User-managed env files should override stale shell exports on restart.
 _hermes_home = get_hermes_home()
 _project_env = Path(__file__).parent / '.env'
 
-from hermes_cli.env_loader import load_hermes_dotenv
+from bwm_cli.env_loader import load_hermes_dotenv
 
 _loaded_env_paths = load_hermes_dotenv(hermes_home=_hermes_home, project_env=_project_env)
 for _env_path in _loaded_env_paths:
-    print(f"✅ Loaded environment variables from {_env_path}")
+    print(f"[成功] Loaded environment variables from {_env_path}")
 
 # Set terminal working directory to tinker-atropos submodule
 # This ensures terminal commands run in the right context for RL work
 tinker_atropos_dir = Path(__file__).parent / 'tinker-atropos'
 if tinker_atropos_dir.exists():
     os.environ['TERMINAL_CWD'] = str(tinker_atropos_dir)
-    os.environ['HERMES_QUIET'] = '1'  # Disable temp subdirectory creation
-    print(f"📂 Terminal working directory: {tinker_atropos_dir}")
+    os.environ['BOOKWORMPRO_QUIET'] = '1'  # Disable temp subdirectory creation
+    print(f"[目录] Terminal working directory: {tinker_atropos_dir}")
 else:
-    # Fall back to hermes-agent directory if submodule not found
+    # Fall back to bookwormpro directory if submodule not found
     os.environ['TERMINAL_CWD'] = str(Path(__file__).parent)
-    os.environ['HERMES_QUIET'] = '1'
-    print(f"⚠️  tinker-atropos submodule not found, using: {Path(__file__).parent}")
+    os.environ['BOOKWORMPRO_QUIET'] = '1'
+    print(f"[警告]  tinker-atropos submodule not found, using: {Path(__file__).parent}")
 
 # Import agent and tools
 from run_agent import AIAgent
@@ -60,7 +60,7 @@ from tools.rl_training_tool import get_missing_keys
 # Config Loading
 # ============================================================================
 
-from hermes_constants import get_hermes_home, OPENROUTER_BASE_URL
+from bwm_constants import get_hermes_home, OPENROUTER_BASE_URL
 
 DEFAULT_MODEL = "anthropic/claude-opus-4.5"
 DEFAULT_BASE_URL = OPENROUTER_BASE_URL
@@ -68,7 +68,7 @@ DEFAULT_BASE_URL = OPENROUTER_BASE_URL
 
 def load_hermes_config() -> dict:
     """
-    Load configuration from ~/.hermes/config.yaml.
+    Load configuration from ~/.bookwormpro/config.yaml.
     
     Returns:
         dict: Configuration with model, base_url, etc.
@@ -97,7 +97,7 @@ def load_hermes_config() -> dict:
                 config["base_url"] = file_config["base_url"]
                 
         except Exception as e:
-            print(f"⚠️  Warning: Failed to load config.yaml: {e}")
+            print(f"[警告]  Warning: Failed to load config.yaml: {e}")
     
     return config
 
@@ -190,7 +190,7 @@ def check_requirements():
         errors.append(f"Missing RL API keys: {', '.join(missing_rl_keys)}")
     
     if errors:
-        print("❌ Missing requirements:")
+        print("[失败] Missing requirements:")
         for error in errors:
             print(f"   - {error}")
         print("\nPlease set these environment variables in your .env file or shell.")
@@ -249,7 +249,7 @@ def main(
     
     Args:
         task: The training task/goal (e.g., "Train a model on GSM8k for math")
-        model: Model to use for the agent (reads from ~/.hermes/config.yaml if not provided)
+        model: Model to use for the agent (reads from ~/.bookwormpro/config.yaml if not provided)
         api_key: OpenRouter API key (uses OPENROUTER_API_KEY env var if not provided)
         base_url: API base URL (reads from config or defaults to OpenRouter)
         max_iterations: Maximum agent iterations (default: 200 for long workflows)
@@ -272,7 +272,7 @@ def main(
         # Check server status
         python rl_cli.py --check-server
     """
-    # Load config from ~/.hermes/config.yaml
+    # Load config from ~/.bookwormpro/config.yaml
     config = load_hermes_config()
     
     # Use config values if not explicitly provided
@@ -281,27 +281,27 @@ def main(
     if base_url is None:
         base_url = config["base_url"]
     
-    print("🎯 RL Training Agent")
+    print("[最终] RL Training Agent")
     print("=" * 60)
     
     # Handle setup check
     if check_server:
-        print("\n🔍 Checking tinker-atropos setup...")
+        print("\n[查找] Checking tinker-atropos setup...")
         ok, result = check_tinker_atropos()
         if ok:
-            print("✅ tinker-atropos submodule found")
+            print("[成功] tinker-atropos submodule found")
             print(f"   Path: {result.get('path')}")
             print(f"   Environments found: {result.get('environments_count', 0)}")
             
             # Also check API keys
             missing = get_missing_keys()
             if missing:
-                print(f"\n⚠️  Missing API keys: {', '.join(missing)}")
-                print("   Add them to ~/.hermes/.env")
+                print(f"\n[警告]  Missing API keys: {', '.join(missing)}")
+                print("   Add them to ~/.bookwormpro/.env")
             else:
-                print("✅ API keys configured")
+                print("[成功] API keys configured")
         else:
-            print(f"❌ tinker-atropos not set up: {result}")
+            print(f"[失败] tinker-atropos not set up: {result}")
             print("\nTo set up:")
             print("  git submodule update --init")
             print("  pip install -e ./tinker-atropos")
@@ -309,12 +309,12 @@ def main(
     
     # Handle environment listing
     if list_environments:
-        print("\n📋 Available RL Environments:")
+        print("\n[汇总] Available RL Environments:")
         print("-" * 40)
         try:
             data = list_environments_sync()
             if "error" in data:
-                print(f"❌ Error: {data['error']}")
+                print(f"[失败] Error: {data['error']}")
                 return
             
             envs = data.get("environments", [])
@@ -325,17 +325,17 @@ def main(
                 return
             
             for env in envs:
-                print(f"\n  📦 {env['name']}")
+                print(f"\n  [包] {env['name']}")
                 print(f"     Class: {env['class_name']}")
                 print(f"     Path: {env['file_path']}")
                 if env.get('description'):
                     desc = env['description'][:100] + "..." if len(env.get('description', '')) > 100 else env.get('description', '')
                     print(f"     Description: {desc}")
             
-            print(f"\n📊 Total: {len(envs)} environments")
+            print(f"\n[状态] Total: {len(envs)} environments")
             print("\nUse `rl_select_environment(name)` to select an environment for training.")
         except Exception as e:
-            print(f"❌ Error listing environments: {e}")
+            print(f"[失败] Error listing environments: {e}")
             print("\nMake sure tinker-atropos is set up:")
             print("  git submodule update --init")
             print("  pip install -e ./tinker-atropos")
@@ -347,7 +347,7 @@ def main(
     
     # Set default task if none provided
     if not task and not interactive:
-        print("\n⚠️  No task provided. Use --interactive for interactive mode or provide a task.")
+        print("\n[警告]  No task provided. Use --interactive for interactive mode or provide a task.")
         print("\nExamples:")
         print('  python rl_cli.py "Train a model on GSM8k math problems"')
         print('  python rl_cli.py "Create an RL environment for code generation"')
@@ -357,11 +357,11 @@ def main(
     # Get API key
     api_key = api_key or os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        print("❌ No API key provided. Set OPENROUTER_API_KEY or pass --api-key")
+        print("[失败] No API key provided. Set OPENROUTER_API_KEY or pass --api-key")
         sys.exit(1)
     
-    print(f"\n🤖 Model: {model}")
-    print(f"🔧 Max iterations: {max_iterations}")
+    print(f"\n[模型] Model: {model}")
+    print(f"[工具] Max iterations: {max_iterations}")
     print(f"📁 Toolsets: {', '.join(RL_TOOLSETS)}")
     print("=" * 60)
     
@@ -380,20 +380,20 @@ def main(
     
     if interactive:
         # Interactive mode - multiple conversations
-        print("\n🔄 Interactive RL Training Mode")
+        print("\n[调用] Interactive RL Training Mode")
         print("Type 'quit' or 'exit' to end the session.")
         print("Type 'status' to check active training runs.")
         print("-" * 40)
         
         while True:
             try:
-                user_input = input("\n🎯 RL Task> ").strip()
+                user_input = input("\n[最终] RL Task> ").strip()
                 
                 if not user_input:
                     continue
                 
                 if user_input.lower() in ('quit', 'exit', 'q'):
-                    print("\n👋 Goodbye!")
+                    print("\n[结束] Goodbye!")
                     break
                 
                 if user_input.lower() == 'status':
@@ -403,7 +403,7 @@ def main(
                     result = asyncio.run(rl_list_runs())
                     runs = json.loads(result)
                     if isinstance(runs, list) and runs:
-                        print("\n📊 Active Runs:")
+                        print("\n[状态] Active Runs:")
                         for run in runs:
                             print(f"  - {run['run_id']}: {run['environment']} ({run['status']})")
                     else:
@@ -416,26 +416,26 @@ def main(
                 print("\n" + "=" * 60)
                 
             except KeyboardInterrupt:
-                print("\n\n👋 Interrupted. Goodbye!")
+                print("\n\n[结束] Interrupted. Goodbye!")
                 break
             except Exception as e:
-                print(f"\n❌ Error: {e}")
+                print(f"\n[失败] Error: {e}")
                 if verbose:
                     import traceback
                     traceback.print_exc()
     else:
         # Single task mode
-        print(f"\n📝 Task: {task}")
+        print(f"\n[查询] Task: {task}")
         print("-" * 40)
         
         try:
             response = agent.run_conversation(task)
             print("\n" + "=" * 60)
-            print("✅ Task completed")
+            print("[成功] Task completed")
         except KeyboardInterrupt:
-            print("\n\n⚠️ Interrupted by user")
+            print("\n\n[警告] Interrupted by user")
         except Exception as e:
-            print(f"\n❌ Error: {e}")
+            print(f"\n[失败] Error: {e}")
             if verbose:
                 import traceback
                 traceback.print_exc()

@@ -302,7 +302,7 @@ def build_session_context_prompt(
     platforms_list = ["local (files on this machine)"]
     for p in context.connected_platforms:
         if p != Platform.LOCAL:
-            platforms_list.append(f"{p.value}: Connected ✓")
+            platforms_list.append(f"{p.value}: Connected [成功]")
     
     lines.append(f"**Connected Platforms:** {', '.join(platforms_list)}")
     
@@ -318,7 +318,7 @@ def build_session_context_prompt(
     lines.append("")
     lines.append("**Delivery options for scheduled tasks:**")
     
-    from hermes_constants import display_hermes_home
+    from bwm_constants import display_hermes_home
 
     # Origin delivery
     if context.source.platform == Platform.LOCAL:
@@ -592,7 +592,7 @@ class SessionStore:
         # Initialize SQLite session database
         self._db = None
         try:
-            from hermes_state import SessionDB
+            from bwm_state import SessionDB
             self._db = SessionDB()
         except Exception as e:
             print(f"[gateway] Warning: SQLite session store unavailable, falling back to JSONL: {e}")

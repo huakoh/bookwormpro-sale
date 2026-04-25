@@ -1,4 +1,4 @@
-import { useInput } from '@hermes/ink'
+import { useInput } from '@bookworm/ink'
 import { useStore } from '@nanostores/react'
 
 import type {

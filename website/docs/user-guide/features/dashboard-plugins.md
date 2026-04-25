@@ -1,19 +1,19 @@
 ---
 sidebar_position: 16
 title: "Dashboard Plugins"
-description: "Build custom tabs and extensions for the Hermes web dashboard"
+description: "Build custom tabs and extensions for the BookwormPRO web dashboard"
 ---
 
 # Dashboard Plugins
 
-Dashboard plugins let you add custom tabs to the web dashboard. A plugin can display its own UI, call the Hermes API, and optionally register backend endpoints — all without touching the dashboard source code.
+Dashboard plugins let you add custom tabs to the web dashboard. A plugin can display its own UI, call the BookwormPRO API, and optionally register backend endpoints — all without touching the dashboard source code.
 
 ## Quick Start
 
 Create a plugin directory with a manifest and a JS file:
 
 ```bash
-mkdir -p ~/.hermes/plugins/my-plugin/dashboard/dist
+mkdir -p ~/.bookwormpro/plugins/my-plugin/dashboard/dist
 ```
 
 **manifest.json:**
@@ -64,10 +64,10 @@ Refresh the dashboard — your tab appears in the navigation bar.
 
 ## Plugin Structure
 
-Plugins live inside the standard `~/.hermes/plugins/` directory. The dashboard extension is a `dashboard/` subfolder:
+Plugins live inside the standard `~/.bookwormpro/plugins/` directory. The dashboard extension is a `dashboard/` subfolder:
 
 ```
-~/.hermes/plugins/my-plugin/
+~/.bookwormpro/plugins/my-plugin/
   plugin.yaml              # optional — existing CLI/gateway plugin manifest
   __init__.py              # optional — existing CLI/gateway hooks
   dashboard/               # dashboard extension
@@ -153,7 +153,7 @@ SDK.hooks.useContext
 SDK.hooks.createContext
 
 // API
-SDK.api                // Hermes API client (getStatus, getSessions, etc.)
+SDK.api                // BookwormPRO API client (getStatus, getSessions, etc.)
 SDK.fetchJSON          // Raw fetch for custom endpoints — handles auth automatically
 
 // UI Components (shadcn/ui style)
@@ -200,7 +200,7 @@ SDK.fetchJSON("/api/plugins/my-plugin/data")
 
 ### Using Existing API Methods
 
-The `SDK.api` object has methods for all built-in Hermes endpoints:
+The `SDK.api` object has methods for all built-in BookwormPRO endpoints:
 
 ```javascript
 // Fetch agent status
@@ -239,14 +239,14 @@ Routes are mounted at `/api/plugins/<name>/`, so the above becomes:
 
 Plugin API routes bypass session token authentication since the dashboard server only binds to localhost.
 
-### Accessing Hermes Internals
+### Accessing BookwormPRO Internals
 
-Backend routes can import from the hermes-agent codebase:
+Backend routes can import from the bookwormpro codebase:
 
 ```python
 from fastapi import APIRouter
-from hermes_state import SessionDB
-from hermes_cli.config import load_config
+from bwm_state import SessionDB
+from bwm_cli.config import load_config
 
 router = APIRouter()
 
@@ -297,9 +297,9 @@ Plugins have up to 2 seconds to register after their script loads. If a plugin f
 
 The dashboard scans these directories for `dashboard/manifest.json`:
 
-1. **User plugins:** `~/.hermes/plugins/<name>/dashboard/manifest.json`
+1. **User plugins:** `~/.bookwormpro/plugins/<name>/dashboard/manifest.json`
 2. **Bundled plugins:** `<repo>/plugins/<name>/dashboard/manifest.json`
-3. **Project plugins:** `./.hermes/plugins/<name>/dashboard/manifest.json` (only when `HERMES_ENABLE_PROJECT_PLUGINS` is set)
+3. **Project plugins:** `./.bookwormpro/plugins/<name>/dashboard/manifest.json` (only when `BOOKWORMPRO_ENABLE_PROJECT_PLUGINS` is set)
 
 User plugins take precedence — if the same plugin name exists in multiple sources, the user version wins.
 
@@ -326,11 +326,11 @@ The repository includes an example plugin at `plugins/example-dashboard/` that d
 - Calling a backend API route
 - Registering via `window.__HERMES_PLUGINS__.register()`
 
-To try it, run `hermes dashboard` — the "Example" tab appears after Skills.
+To try it, run `bookworm dashboard` — the "Example" tab appears after Skills.
 
 ## Tips
 
 - **No build step required** — write plain JavaScript IIFEs. If you prefer JSX, use any bundler (esbuild, Vite, webpack) targeting IIFE output with React as an external.
 - **Keep bundles small** — React and all UI components are provided by the SDK. Your bundle should only contain your plugin logic.
 - **Use theme variables** — reference `var(--color-*)` in CSS to automatically match whatever theme the user has selected.
-- **Test locally** — run `hermes dashboard --no-open` and use browser dev tools to verify your plugin loads and registers correctly.
+- **Test locally** — run `bookworm dashboard --no-open` and use browser dev tools to verify your plugin loads and registers correctly.

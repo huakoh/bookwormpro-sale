@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Palette, Check } from "lucide-react";
-import { Typography } from "@nous-research/ui";
+import { Typography } from "@bookwormpro-research/ui";
 import { BUILTIN_THEMES, useTheme } from "@/themes";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  * Compact theme picker mounted next to the language switcher in the header.
  * Each dropdown row shows a 3-stop swatch (background / midground / warm
  * glow) so users can preview the palette before committing. User-defined
- * themes from `~/.hermes/dashboard-themes/*.yaml` that aren't in
+ * themes from `~/.bookwormpro/dashboard-themes/*.yaml` that aren't in
  * `BUILTIN_THEMES` render without swatches and apply the default palette.
  *
  * When placed at the bottom of a container (e.g. the sidebar rail), pass

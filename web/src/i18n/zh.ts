@@ -49,12 +49,12 @@ export const zh: Translations = {
   },
 
   app: {
-    brand: "Hermes Agent",
+    brand: "BookwormPRO",
     brandShort: "HA",
     closeNavigation: "关闭导航",
     closeModelTools: "关闭模型与工具",
     footer: {
-      org: "Nous Research",
+      org: "BookwormPRO Project",
     },
     activeSessionsLabel: "活跃会话：",
     gatewayStatusLabel: "网关状态：",
@@ -115,8 +115,8 @@ export const zh: Translations = {
     starting: "启动中",
     startedInBackground: "已在后台启动 — 请查看日志",
     stopped: "已停止",
-    updateHermes: "更新 Hermes",
-    updatingHermes: "正在更新 Hermes…",
+    updateHermes: "更新 BookwormPRO",
+    updatingHermes: "正在更新 BookwormPRO…",
     waitingForOutput: "等待输出…",
   },
 
@@ -214,7 +214,7 @@ export const zh: Translations = {
     all: "全部",
     categories: "分类",
     filters: "筛选",
-    noSkills: "未找到技能。技能从 ~/.hermes/skills/ 加载",
+    noSkills: "未找到技能。技能从 ~/.bookwormpro/skills/ 加载",
     noSkillsMatch: "没有匹配的技能。",
     skillCount: "{count} 个技能",
     resultCount: "{count} 个结果",
@@ -228,7 +228,7 @@ export const zh: Translations = {
   },
 
   config: {
-    configPath: "~/.hermes/config.yaml",
+    configPath: "~/.bookwormpro/config.yaml",
     filters: "筛选",
     sections: "分类",
     exportConfig: "导出配置为 JSON",
@@ -295,7 +295,7 @@ export const zh: Translations = {
     login: "登录",
     disconnect: "断开连接",
     managedExternally: "外部管理",
-    copied: "已复制 ✓",
+    copied: "已复制 [成功]",
     cli: "CLI",
     copyCliCommand: "复制 CLI 命令（用于外部/备用方式）",
     connect: "连接",

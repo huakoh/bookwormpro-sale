@@ -41,7 +41,7 @@ Table:        Below chart, alternating row fills
 |-------------|-----------|---------------|-----------|----------|--------|
 | FP16 | 62 GB | 0.5–2 | 62 | 75.2 | OOM / unusable |
 | Q8_0 | 32 GB | 3–5 | 32 | 75.0 | Partial offload |
-| Q4_K_M | 16.8 GB | 8–12 | 16.8 | 73.1 | Fits in VRAM ✓ |
+| Q4_K_M | 16.8 GB | 8–12 | 16.8 | 73.1 | Fits in VRAM [成功] |
 | IQ3_M | 12 GB | 12–15 | 12 | 70.5 | Full GPU speed |
 
 ## Bar CSS Classes

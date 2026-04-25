@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [flash-attn, torch, transformers]
 metadata:
-  hermes:
+  bookworm:
     tags: [Optimization, Flash Attention, Attention Optimization, Memory Efficiency, Speed Optimization, Long Context, PyTorch, SDPA, H100, FP8, Transformers]
 
 ---
@@ -326,9 +326,9 @@ print(torch.cuda.get_device_capability())
 ```
 
 Flash Attention requires:
-- Ampere (A100, A10): ✅ Full support
-- Turing (T4): ✅ Supported
-- Volta (V100): ❌ Not supported
+- Ampere (A100, A10): [成功] Full support
+- Turing (T4): [成功] Supported
+- Volta (V100): [失败] Not supported
 
 **Issue: Accuracy degradation**
 

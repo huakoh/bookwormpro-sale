@@ -1,13 +1,13 @@
 ---
 title: Vision & Image Paste
-description: Paste images from your clipboard into the Hermes CLI for multimodal vision analysis.
+description: Paste images from your clipboard into the BookwormPRO CLI for multimodal vision analysis.
 sidebar_label: Vision & Image Paste
 sidebar_position: 7
 ---
 
 # Vision & Image Paste
 
-Hermes Agent supports **multimodal vision** — you can paste images from your clipboard directly into the CLI and ask the agent to analyze, describe, or work with them. Images are sent to the model as base64-encoded content blocks, so any vision-capable model can process them.
+BookwormPRO supports **multimodal vision** — you can paste images from your clipboard directly into the CLI and ask the agent to analyze, describe, or work with them. Images are sent to the model as base64-encoded content blocks, so any vision-capable model can process them.
 
 ## How It Works
 
@@ -19,7 +19,7 @@ Hermes Agent supports **multimodal vision** — you can paste images from your c
 
 You can attach multiple images before sending — each gets its own badge. Press `Ctrl+C` to clear all attached images.
 
-Images are saved to `~/.hermes/images/` as PNG files with timestamped filenames.
+Images are saved to `~/.bookwormpro/images/` as PNG files with timestamped filenames.
 
 ## Paste Methods
 
@@ -33,11 +33,11 @@ How you attach an image depends on your terminal environment. Not all methods wo
 /paste
 ```
 
-Type `/paste` and press Enter. Hermes checks your clipboard for an image and attaches it. This is the safest option when your terminal rewrites `Cmd+V`/`Ctrl+V`, or when you copied only an image and there is no bracketed-paste text payload to inspect.
+Type `/paste` and press Enter. BookwormPRO checks your clipboard for an image and attaches it. This is the safest option when your terminal rewrites `Cmd+V`/`Ctrl+V`, or when you copied only an image and there is no bracketed-paste text payload to inspect.
 
 ### Ctrl+V / Cmd+V
 
-Hermes now treats paste as a layered flow:
+BookwormPRO now treats paste as a layered flow:
 - normal text paste first
 - native clipboard / OSC52 text fallback if the terminal did not deliver text cleanly
 - image attach when the clipboard or pasted payload resolves to an image or image path
@@ -50,7 +50,7 @@ If your clipboard has **only an image** (no text), terminals still cannot send b
 
 ### `/terminal-setup` for VS Code / Cursor / Windsurf
 
-If you run the TUI inside a local VS Code-family integrated terminal on macOS, Hermes can install the recommended `workbench.action.terminal.sendSequence` bindings for better multiline and undo/redo parity:
+If you run the TUI inside a local VS Code-family integrated terminal on macOS, BookwormPRO can install the recommended `workbench.action.terminal.sendSequence` bindings for better multiline and undo/redo parity:
 
 ```text
 /terminal-setup
@@ -62,14 +62,14 @@ This is especially useful when `Cmd+Enter`, `Cmd+Z`, or `Shift+Cmd+Z` are being 
 
 | Environment | `/paste` | Cmd/Ctrl+V | `/terminal-setup` | Notes |
 |---|:---:|:---:|:---:|---|
-| **macOS Terminal / iTerm2** | ✅ | ✅ | n/a | Best experience — native clipboard + screenshot-path recovery |
-| **Apple Terminal** | ✅ | ✅ | n/a | If Cmd+←/→/⌫ gets rewritten, use Ctrl+A / Ctrl+E / Ctrl+U fallbacks |
-| **Linux X11 desktop** | ✅ | ✅ | n/a | Requires `xclip` (`apt install xclip`) |
-| **Linux Wayland desktop** | ✅ | ✅ | n/a | Requires `wl-paste` (`apt install wl-clipboard`) |
-| **WSL2 (Windows Terminal)** | ✅ | ✅ | n/a | Uses `powershell.exe` — no extra install needed |
-| **VS Code / Cursor / Windsurf (local)** | ✅ | ✅ | ✅ | Recommended for better Cmd+Enter / undo / redo parity |
-| **VS Code / Cursor / Windsurf (SSH)** | ❌² | ❌² | ❌³ | Run `/terminal-setup` on the local machine instead |
-| **SSH terminal (any)** | ❌² | ❌² | n/a | Remote clipboard not accessible |
+| **macOS Terminal / iTerm2** | [成功] | [成功] | n/a | Best experience — native clipboard + screenshot-path recovery |
+| **Apple Terminal** | [成功] | [成功] | n/a | If Cmd+←/→/⌫ gets rewritten, use Ctrl+A / Ctrl+E / Ctrl+U fallbacks |
+| **Linux X11 desktop** | [成功] | [成功] | n/a | Requires `xclip` (`apt install xclip`) |
+| **Linux Wayland desktop** | [成功] | [成功] | n/a | Requires `wl-paste` (`apt install wl-clipboard`) |
+| **WSL2 (Windows Terminal)** | [成功] | [成功] | n/a | Uses `powershell.exe` — no extra install needed |
+| **VS Code / Cursor / Windsurf (local)** | [成功] | [成功] | [成功] | Recommended for better Cmd+Enter / undo / redo parity |
+| **VS Code / Cursor / Windsurf (SSH)** | [失败]² | [失败]² | [失败]³ | Run `/terminal-setup` on the local machine instead |
+| **SSH terminal (any)** | [失败]² | [失败]² | n/a | Remote clipboard not accessible |
 
 ² See [SSH & Remote Sessions](#ssh--remote-sessions) below
 ³ The command writes local IDE keybindings and should not be run from the remote host
@@ -78,7 +78,7 @@ This is especially useful when `Cmd+Enter`, `Cmd+Z`, or `Shift+Cmd+Z` are being 
 
 ### macOS
 
-**No setup required.** Hermes uses `osascript` (built into macOS) to read the clipboard. For faster performance, optionally install `pngpaste`:
+**No setup required.** BookwormPRO uses `osascript` (built into macOS) to read the clipboard. For faster performance, optionally install `pngpaste`:
 
 ```bash
 brew install pngpaste
@@ -123,12 +123,12 @@ echo $XDG_SESSION_TYPE
 
 ### WSL2
 
-**No extra setup required.** Hermes detects WSL2 automatically (via `/proc/version`) and uses `powershell.exe` to access the Windows clipboard through .NET's `System.Windows.Forms.Clipboard`. This is built into WSL2's Windows interop — `powershell.exe` is available by default.
+**No extra setup required.** BookwormPRO detects WSL2 automatically (via `/proc/version`) and uses `powershell.exe` to access the Windows clipboard through .NET's `System.Windows.Forms.Clipboard`. This is built into WSL2's Windows interop — `powershell.exe` is available by default.
 
 The clipboard data is transferred as base64-encoded PNG over stdout, so no file path conversion or temp files are needed.
 
 :::info WSLg Note
-If you're running WSLg (WSL2 with GUI support), Hermes tries the PowerShell path first, then falls back to `wl-paste`. WSLg's clipboard bridge only supports BMP format for images — Hermes auto-converts BMP to PNG using Pillow (if installed) or ImageMagick's `convert` command.
+If you're running WSLg (WSL2 with GUI support), BookwormPRO tries the PowerShell path first, then falls back to `wl-paste`. WSLg's clipboard bridge only supports BMP format for images — BookwormPRO auto-converts BMP to PNG using Pillow (if installed) or ImageMagick's `convert` command.
 :::
 
 #### Verify WSL2 clipboard access
@@ -147,9 +147,9 @@ powershell.exe -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms;
 
 ## SSH & Remote Sessions
 
-**Clipboard image paste does not fully work over SSH.** When you SSH into a remote machine, the Hermes CLI runs on the remote host. Clipboard tools (`xclip`, `wl-paste`, `powershell.exe`, `osascript`) read the clipboard of the machine they run on — which is the remote server, not your local machine. Your local clipboard image is therefore inaccessible from the remote side.
+**Clipboard image paste does not fully work over SSH.** When you SSH into a remote machine, the BookwormPRO CLI runs on the remote host. Clipboard tools (`xclip`, `wl-paste`, `powershell.exe`, `osascript`) read the clipboard of the machine they run on — which is the remote server, not your local machine. Your local clipboard image is therefore inaccessible from the remote side.
 
-Text can sometimes still bridge through terminal paste or OSC52, but image clipboard access and local screenshot temp paths remain tied to the machine running Hermes.
+Text can sometimes still bridge through terminal paste or OSC52, but image clipboard access and local screenshot temp paths remain tied to the machine running BookwormPRO.
 
 ### Workarounds for SSH
 
@@ -159,7 +159,7 @@ Text can sometimes still bridge through terminal paste or OSC52, but image clipb
 
 3. **X11 forwarding** — Connect with `ssh -X` to forward X11. This lets `xclip` on the remote machine access your local X11 clipboard. Requires an X server running locally (XQuartz on macOS, built-in on Linux X11 desktops). Slow for large images.
 
-4. **Use a messaging platform** — Send images to Hermes via Telegram, Discord, Slack, or WhatsApp. These platforms handle image upload natively and are not affected by clipboard/terminal limitations.
+4. **Use a messaging platform** — Send images to BookwormPRO via Telegram, Discord, Slack, or WhatsApp. These platforms handle image upload natively and are not affected by clipboard/terminal limitations.
 
 ## Why Terminals Can't Paste Images
 
@@ -173,7 +173,7 @@ Terminals are **text-based** interfaces. When you press Ctrl+V (or Cmd+V), the t
 
 If the clipboard contains only an image (no text), the terminal has nothing to send. There is no standard terminal escape sequence for binary image data. The terminal simply does nothing.
 
-This is why Hermes uses a separate clipboard check — instead of receiving image data through the terminal paste event, it calls OS-level tools (`osascript`, `powershell.exe`, `xclip`, `wl-paste`) directly via subprocess to read the clipboard independently.
+This is why BookwormPRO uses a separate clipboard check — instead of receiving image data through the terminal paste event, it calls OS-level tools (`osascript`, `powershell.exe`, `xclip`, `wl-paste`) directly via subprocess to read the clipboard independently.
 
 ## Supported Models
 

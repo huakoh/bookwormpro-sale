@@ -4,15 +4,15 @@ sidebar_position: 7
 
 # Profile Commands Reference
 
-This page covers all commands related to [Hermes profiles](../user-guide/profiles.md). For general CLI commands, see [CLI Commands Reference](./cli-commands.md).
+This page covers all commands related to [BookwormPRO profiles](../user-guide/profiles.md). For general CLI commands, see [CLI Commands Reference](./cli-commands.md).
 
-## `hermes profile`
+## `bookworm profile`
 
 ```bash
-hermes profile <subcommand>
+bookworm profile <subcommand>
 ```
 
-Top-level command for managing profiles. Running `hermes profile` without a subcommand shows help.
+Top-level command for managing profiles. Running `bookworm profile` without a subcommand shows help.
 
 | Subcommand | Description |
 |------------|-------------|
@@ -26,10 +26,10 @@ Top-level command for managing profiles. Running `hermes profile` without a subc
 | `export` | Export a profile to a tar.gz archive. |
 | `import` | Import a profile from a tar.gz archive. |
 
-## `hermes profile list`
+## `bookworm profile list`
 
 ```bash
-hermes profile list
+bookworm profile list
 ```
 
 Lists all profiles. The currently active profile is marked with `*`.
@@ -37,7 +37,7 @@ Lists all profiles. The currently active profile is marked with `*`.
 **Example:**
 
 ```bash
-$ hermes profile list
+$ bookworm profile list
   default
 * work
   dev
@@ -46,13 +46,13 @@ $ hermes profile list
 
 No options.
 
-## `hermes profile use`
+## `bookworm profile use`
 
 ```bash
-hermes profile use <name>
+bookworm profile use <name>
 ```
 
-Sets `<name>` as the active profile. All subsequent `hermes` commands (without `-p`) will use this profile.
+Sets `<name>` as the active profile. All subsequent `bookworm` commands (without `-p`) will use this profile.
 
 | Argument | Description |
 |----------|-------------|
@@ -61,14 +61,14 @@ Sets `<name>` as the active profile. All subsequent `hermes` commands (without `
 **Example:**
 
 ```bash
-hermes profile use work
-hermes profile use default
+bookworm profile use work
+bookworm profile use default
 ```
 
-## `hermes profile create`
+## `bookworm profile create`
 
 ```bash
-hermes profile create <name> [options]
+bookworm profile create <name> [options]
 ```
 
 Creates a new profile.
@@ -87,22 +87,22 @@ Creating a profile does **not** make that profile directory the default project/
 
 ```bash
 # Blank profile — needs full setup
-hermes profile create mybot
+bookworm profile create mybot
 
 # Clone config only from current profile
-hermes profile create work --clone
+bookworm profile create work --clone
 
 # Clone everything from current profile
-hermes profile create backup --clone-all
+bookworm profile create backup --clone-all
 
 # Clone config from a specific profile
-hermes profile create work2 --clone --clone-from work
+bookworm profile create work2 --clone --clone-from work
 ```
 
-## `hermes profile delete`
+## `bookworm profile delete`
 
 ```bash
-hermes profile delete <name> [options]
+bookworm profile delete <name> [options]
 ```
 
 Deletes a profile and removes its shell alias.
@@ -115,23 +115,23 @@ Deletes a profile and removes its shell alias.
 **Example:**
 
 ```bash
-hermes profile delete mybot
-hermes profile delete mybot --yes
+bookworm profile delete mybot
+bookworm profile delete mybot --yes
 ```
 
 :::warning
 This permanently deletes the profile's entire directory including all config, memories, sessions, and skills. Cannot delete the currently active profile.
 :::
 
-## `hermes profile show`
+## `bookworm profile show`
 
 ```bash
-hermes profile show <name>
+bookworm profile show <name>
 ```
 
 Displays details about a profile including its home directory, configured model, gateway status, skills count, and configuration file status.
 
-This shows the profile's Hermes home directory, not the terminal working directory. Terminal commands start from `terminal.cwd` (or the launch directory on the local backend when `cwd: "."`).
+This shows the profile's BookwormPRO home directory, not the terminal working directory. Terminal commands start from `terminal.cwd` (or the launch directory on the local backend when `cwd: "."`).
 
 | Argument | Description |
 |----------|-------------|
@@ -140,9 +140,9 @@ This shows the profile's Hermes home directory, not the terminal working directo
 **Example:**
 
 ```bash
-$ hermes profile show work
+$ bookworm profile show work
 Profile: work
-Path:    ~/.hermes/profiles/work
+Path:    ~/.bookwormpro/profiles/work
 Model:   anthropic/claude-sonnet-4 (anthropic)
 Gateway: stopped
 Skills:  12
@@ -151,13 +151,13 @@ SOUL.md: exists
 Alias:   ~/.local/bin/work
 ```
 
-## `hermes profile alias`
+## `bookworm profile alias`
 
 ```bash
-hermes profile alias <name> [options]
+bookworm profile alias <name> [options]
 ```
 
-Regenerates the shell alias script at `~/.local/bin/<name>`. Useful if the alias was accidentally deleted or if you need to update it after moving your Hermes installation.
+Regenerates the shell alias script at `~/.local/bin/<name>`. Useful if the alias was accidentally deleted or if you need to update it after moving your BookwormPRO installation.
 
 | Argument / Option | Description |
 |-------------------|-------------|
@@ -168,20 +168,20 @@ Regenerates the shell alias script at `~/.local/bin/<name>`. Useful if the alias
 **Example:**
 
 ```bash
-hermes profile alias work
+bookworm profile alias work
 # Creates/updates ~/.local/bin/work
 
-hermes profile alias work --name mywork
+bookworm profile alias work --name mywork
 # Creates ~/.local/bin/mywork
 
-hermes profile alias work --remove
+bookworm profile alias work --remove
 # Removes the wrapper script
 ```
 
-## `hermes profile rename`
+## `bookworm profile rename`
 
 ```bash
-hermes profile rename <old-name> <new-name>
+bookworm profile rename <old-name> <new-name>
 ```
 
 Renames a profile. Updates the directory and shell alias.
@@ -194,15 +194,15 @@ Renames a profile. Updates the directory and shell alias.
 **Example:**
 
 ```bash
-hermes profile rename mybot assistant
-# ~/.hermes/profiles/mybot → ~/.hermes/profiles/assistant
+bookworm profile rename mybot assistant
+# ~/.bookwormpro/profiles/mybot → ~/.bookwormpro/profiles/assistant
 # ~/.local/bin/mybot → ~/.local/bin/assistant
 ```
 
-## `hermes profile export`
+## `bookworm profile export`
 
 ```bash
-hermes profile export <name> [options]
+bookworm profile export <name> [options]
 ```
 
 Exports a profile as a compressed tar.gz archive.
@@ -215,16 +215,16 @@ Exports a profile as a compressed tar.gz archive.
 **Example:**
 
 ```bash
-hermes profile export work
+bookworm profile export work
 # Creates work.tar.gz in the current directory
 
-hermes profile export work -o ./work-2026-03-29.tar.gz
+bookworm profile export work -o ./work-2026-03-29.tar.gz
 ```
 
-## `hermes profile import`
+## `bookworm profile import`
 
 ```bash
-hermes profile import <archive> [options]
+bookworm profile import <archive> [options]
 ```
 
 Imports a profile from a tar.gz archive.
@@ -237,20 +237,20 @@ Imports a profile from a tar.gz archive.
 **Example:**
 
 ```bash
-hermes profile import ./work-2026-03-29.tar.gz
+bookworm profile import ./work-2026-03-29.tar.gz
 # Infers profile name from the archive
 
-hermes profile import ./work-2026-03-29.tar.gz --name work-restored
+bookworm profile import ./work-2026-03-29.tar.gz --name work-restored
 ```
 
-## `hermes -p` / `hermes --profile`
+## `bookworm -p` / `bookworm --profile`
 
 ```bash
-hermes -p <name> <command> [options]
-hermes --profile <name> <command> [options]
+bookworm -p <name> <command> [options]
+bookworm --profile <name> <command> [options]
 ```
 
-Global flag to run any Hermes command under a specific profile without changing the sticky default. This overrides the active profile for the duration of the command.
+Global flag to run any BookwormPRO command under a specific profile without changing the sticky default. This overrides the active profile for the duration of the command.
 
 | Option | Description |
 |--------|-------------|
@@ -259,16 +259,16 @@ Global flag to run any Hermes command under a specific profile without changing 
 **Examples:**
 
 ```bash
-hermes -p work chat -q "Check the server status"
-hermes --profile dev gateway start
-hermes -p personal skills list
-hermes -p work config edit
+bookworm -p work chat -q "Check the server status"
+bookworm --profile dev gateway start
+bookworm -p personal skills list
+bookworm -p work config edit
 ```
 
-## `hermes completion`
+## `bookworm completion`
 
 ```bash
-hermes completion <shell>
+bookworm completion <shell>
 ```
 
 Generates shell completion scripts. Includes completions for profile names and profile subcommands.
@@ -281,17 +281,17 @@ Generates shell completion scripts. Includes completions for profile names and p
 
 ```bash
 # Install completions
-hermes completion bash >> ~/.bashrc
-hermes completion zsh >> ~/.zshrc
+bookworm completion bash >> ~/.bashrc
+bookworm completion zsh >> ~/.zshrc
 
 # Reload shell
 source ~/.bashrc
 ```
 
 After installation, tab completion works for:
-- `hermes profile <TAB>` — subcommands (list, use, create, etc.)
-- `hermes profile use <TAB>` — profile names
-- `hermes -p <TAB>` — profile names
+- `bookworm profile <TAB>` — subcommands (list, use, create, etc.)
+- `bookworm profile use <TAB>` — profile names
+- `bookworm -p <TAB>` — profile names
 
 ## See also
 

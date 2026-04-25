@@ -580,7 +580,7 @@ Vocabulary: ['Hello', 'hello', 'HELLO', 'world', 'WORLD']
 ```python
 tokenizer.pre_tokenizer = ByteLevel()
 
-"Hello 🌍 👋" → byte-level representation (always works)
+"Hello 🌍 [结束]" → byte-level representation (always works)
 ```
 
 **Unicode normalization**:

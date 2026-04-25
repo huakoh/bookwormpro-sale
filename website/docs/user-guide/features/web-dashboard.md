@@ -6,12 +6,12 @@ description: "Browser-based dashboard for managing configuration, API keys, sess
 
 # Web Dashboard
 
-The web dashboard is a browser-based UI for managing your Hermes Agent installation. Instead of editing YAML files or running CLI commands, you can configure settings, manage API keys, and monitor sessions from a clean web interface.
+The web dashboard is a browser-based UI for managing your BookwormPRO installation. Instead of editing YAML files or running CLI commands, you can configure settings, manage API keys, and monitor sessions from a clean web interface.
 
 ## Quick Start
 
 ```bash
-hermes dashboard
+bookworm dashboard
 ```
 
 This starts a local web server and opens `http://127.0.0.1:9119` in your browser. The dashboard runs entirely on your machine — no data leaves localhost.
@@ -26,26 +26,26 @@ This starts a local web server and opens `http://127.0.0.1:9119` in your browser
 
 ```bash
 # Custom port
-hermes dashboard --port 8080
+bookworm dashboard --port 8080
 
 # Bind to all interfaces (use with caution on shared networks)
-hermes dashboard --host 0.0.0.0
+bookworm dashboard --host 0.0.0.0
 
 # Start without opening browser
-hermes dashboard --no-open
+bookworm dashboard --no-open
 ```
 
 ## Prerequisites
 
-The default `hermes-agent` install does not ship the HTTP stack or PTY helper — those are optional extras. The **web dashboard** needs FastAPI and Uvicorn (`web` extra). The **Chat** tab also needs `ptyprocess` to spawn the embedded TUI behind a pseudo-terminal (`pty` extra on POSIX). Install both with:
+The default `bookwormpro` install does not ship the HTTP stack or PTY helper — those are optional extras. The **web dashboard** needs FastAPI and Uvicorn (`web` extra). The **Chat** tab also needs `ptyprocess` to spawn the embedded TUI behind a pseudo-terminal (`pty` extra on POSIX). Install both with:
 
 ```bash
-pip install 'hermes-agent[web,pty]'
+pip install 'bookwormpro[web,pty]'
 ```
 
-The `web` extra pulls in FastAPI/Uvicorn; `pty` pulls in `ptyprocess` (POSIX) or `pywinpty` (native Windows — note that the embedded TUI itself still requires WSL). `pip install hermes-agent[all]` includes both extras and is the easiest path if you also want messaging/voice/etc.
+The `web` extra pulls in FastAPI/Uvicorn; `pty` pulls in `ptyprocess` (POSIX) or `pywinpty` (native Windows — note that the embedded TUI itself still requires WSL). `pip install bookwormpro[all]` includes both extras and is the easiest path if you also want messaging/voice/etc.
 
-When you run `hermes dashboard` without the dependencies, it will tell you what to install. If the frontend hasn't been built yet and `npm` is available, it builds automatically on first launch.
+When you run `bookworm dashboard` without the dependencies, it will tell you what to install. If the frontend hasn't been built yet and `npm` is available, it builds automatically on first launch.
 
 ## Pages
 
@@ -62,12 +62,12 @@ The status page auto-refreshes every 5 seconds.
 
 ### Chat
 
-The **Chat** tab embeds the full Hermes TUI (the same interface you get from `hermes --tui`) directly in the browser. Everything you can do in the terminal TUI — slash commands, model picker, tool-call cards, markdown streaming, clarify/sudo/approval prompts, skin theming — works identically here, because the dashboard is running the real TUI binary and rendering its ANSI output through [xterm.js](https://xtermjs.org/) with its WebGL renderer for pixel-perfect cell layout.
+The **Chat** tab embeds the full BookwormPRO TUI (the same interface you get from `bookworm --tui`) directly in the browser. Everything you can do in the terminal TUI — slash commands, model picker, tool-call cards, markdown streaming, clarify/sudo/approval prompts, skin theming — works identically here, because the dashboard is running the real TUI binary and rendering its ANSI output through [xterm.js](https://xtermjs.org/) with its WebGL renderer for pixel-perfect cell layout.
 
 **How it works:**
 
 - `/api/pty` opens a WebSocket authenticated with the dashboard's session token
-- The server spawns `hermes --tui` behind a POSIX pseudo-terminal
+- The server spawns `bookworm --tui` behind a POSIX pseudo-terminal
 - Keystrokes travel to the PTY; ANSI output streams back to the browser
 - xterm.js's WebGL renderer paints each cell to an integer-pixel grid; mouse tracking (SGR 1006), wide characters (Unicode 11), and box-drawing glyphs all render natively
 - Resizing the browser window resizes the TUI via the `@xterm/addon-fit` addon
@@ -76,8 +76,8 @@ The **Chat** tab embeds the full Hermes TUI (the same interface you get from `he
 
 **Prerequisites:**
 
-- Node.js (same requirement as `hermes --tui`; the TUI bundle is built on first launch)
-- `ptyprocess` — installed by the `pty` extra (`pip install 'hermes-agent[web,pty]'`, or `[all]` covers both)
+- Node.js (same requirement as `bookworm --tui`; the TUI bundle is built on first launch)
+- `ptyprocess` — installed by the `pty` extra (`pip install 'bookwormpro[web,pty]'`, or `[all]` covers both)
 - POSIX kernel (Linux, macOS, or WSL). Native Windows Python is not supported — use WSL.
 
 Close the browser tab and the PTY is reaped cleanly on the server. Re-opening spawns a fresh session.
@@ -105,7 +105,7 @@ Fields with known valid values (terminal backend, skin, approval mode, etc.) ren
 - **Import** — uploads a JSON config file to replace the current values
 
 :::tip
-Config changes take effect on the next agent session or gateway restart. The web dashboard edits the same `config.yaml` file that `hermes config set` and the gateway read from.
+Config changes take effect on the next agent session or gateway restart. The web dashboard edits the same `config.yaml` file that `bookworm config set` and the gateway read from.
 :::
 
 ### API Keys
@@ -167,7 +167,7 @@ Create and manage scheduled cron jobs that run agent prompts on a recurring sche
 
 ### Skills
 
-Browse, search, and toggle skills and toolsets. Skills are loaded from `~/.hermes/skills/` and grouped by category.
+Browse, search, and toggle skills and toolsets. Skills are loaded from `~/.bookwormpro/skills/` and grouped by category.
 
 - **Search** — filter skills and toolsets by name, description, or category
 - **Category filter** — click category pills to narrow the list (e.g. MLOps, MCP, Red Teaming, AI)
@@ -187,7 +187,7 @@ You → /reload
   Reloaded .env (3 var(s) updated)
 ```
 
-This re-reads `~/.hermes/.env` into the running process's environment. Useful when you've added a new provider key via the dashboard and want to use it immediately.
+This re-reads `~/.bookwormpro/.env` into the running process's environment. Useful when you've added a new provider key via the dashboard and want to use it immediately.
 
 ## REST API
 
@@ -305,7 +305,7 @@ If you're contributing to the web dashboard frontend:
 
 ```bash
 # Terminal 1: start the backend API
-hermes dashboard --no-open
+bookworm dashboard --no-open
 
 # Terminal 2: start the Vite dev server with HMR
 cd web/
@@ -315,11 +315,11 @@ npm run dev
 
 The Vite dev server at `http://localhost:5173` proxies `/api` requests to the FastAPI backend at `http://127.0.0.1:9119`.
 
-The frontend is built with React 19, TypeScript, Tailwind CSS v4, and shadcn/ui-style components. Production builds output to `hermes_cli/web_dist/` which the FastAPI server serves as a static SPA.
+The frontend is built with React 19, TypeScript, Tailwind CSS v4, and shadcn/ui-style components. Production builds output to `bwm_cli/web_dist/` which the FastAPI server serves as a static SPA.
 
 ## Automatic Build on Update
 
-When you run `hermes update`, the web frontend is automatically rebuilt if `npm` is available. This keeps the dashboard in sync with code updates. If `npm` isn't installed, the update skips the frontend build and `hermes dashboard` will build it on first launch.
+When you run `bookworm update`, the web frontend is automatically rebuilt if `npm` is available. This keeps the dashboard in sync with code updates. If `npm` isn't installed, the update skips the frontend build and `bookworm dashboard` will build it on first launch.
 
 ## Themes
 
@@ -337,23 +337,23 @@ Each built-in ships its own palette, typography, and layout — switching produc
 
 | Theme | Palette | Typography | Layout |
 |-------|---------|------------|--------|
-| **Hermes Teal** (`default`) | Dark teal + cream | System stack, 15px | 0.5rem radius, comfortable |
+| **BookwormPRO Teal** (`default`) | Dark teal + cream | System stack, 15px | 0.5rem radius, comfortable |
 | **Midnight** (`midnight`) | Deep blue-violet | Inter + JetBrains Mono, 14px | 0.75rem radius, comfortable |
 | **Ember** (`ember`) | Warm crimson / bronze | Spectral (serif) + IBM Plex Mono, 15px | 0.25rem radius, comfortable |
 | **Mono** (`mono`) | Grayscale | IBM Plex Sans + IBM Plex Mono, 13px | 0 radius, compact |
 | **Cyberpunk** (`cyberpunk`) | Neon green on black | Share Tech Mono everywhere, 14px | 0 radius, compact |
 | **Rosé** (`rose`) | Pink and ivory | Fraunces (serif) + DM Mono, 16px | 1rem radius, spacious |
 
-Themes that reference Google Fonts (everything except Hermes Teal) load the stylesheet on demand — the first time you switch to them, a `<link>` tag is injected into `<head>`.
+Themes that reference Google Fonts (everything except BookwormPRO Teal) load the stylesheet on demand — the first time you switch to them, a `<link>` tag is injected into `<head>`.
 
 ### Custom themes
 
-Drop a YAML file in `~/.hermes/dashboard-themes/` and it appears in the picker automatically. The file can be as minimal as a name plus the fields you want to override — every missing field inherits a sane default.
+Drop a YAML file in `~/.bookwormpro/dashboard-themes/` and it appears in the picker automatically. The file can be as minimal as a name plus the fields you want to override — every missing field inherits a sane default.
 
 Minimal example (colors only, bare hex shorthand):
 
 ```yaml
-# ~/.hermes/dashboard-themes/neon.yaml
+# ~/.bookwormpro/dashboard-themes/neon.yaml
 name: neon
 label: Neon
 description: Pure magenta on black
@@ -365,7 +365,7 @@ colors:
 Full example (every knob):
 
 ```yaml
-# ~/.hermes/dashboard-themes/ocean.yaml
+# ~/.bookwormpro/dashboard-themes/ocean.yaml
 name: ocean
 label: Ocean Deep
 description: Deep sea blues with coral accents
@@ -521,11 +521,11 @@ customCSS: |
   }
 ```
 
-The CSS is injected as a single scoped `<style data-hermes-theme-css>` tag on theme apply and cleaned up on theme switch. Capped at 32 KiB per theme.
+The CSS is injected as a single scoped `<style data-bookworm-theme-css>` tag on theme apply and cleaned up on theme switch. Capped at 32 KiB per theme.
 
 ## Dashboard plugins
 
-Plugins live in `~/.hermes/plugins/<name>/dashboard/` (user) or repo `plugins/<name>/dashboard/` (bundled). Each ships a `manifest.json` plus a plain JS bundle that uses the plugin SDK exposed on `window.__HERMES_PLUGIN_SDK__`.
+Plugins live in `~/.bookwormpro/plugins/<name>/dashboard/` (user) or repo `plugins/<name>/dashboard/` (bundled). Each ships a `manifest.json` plus a plain JS bundle that uses the plugin SDK exposed on `window.__HERMES_PLUGIN_SDK__`.
 
 ### Manifest
 
@@ -563,7 +563,7 @@ Plugins inject components into named shell locations by calling `window.__HERMES
 | Slot | Location |
 |------|----------|
 | `backdrop` | Inside the backdrop layer stack |
-| `header-left` | Before the Hermes brand in the top bar |
+| `header-left` | Before the BookwormPRO brand in the top bar |
 | `header-right` | Before the theme/language switchers |
 | `header-banner` | Full-width strip below the nav |
 | `sidebar` | Cockpit sidebar rail (only rendered when `layoutVariant === "cockpit"`) |
@@ -578,13 +578,13 @@ Exposed on `window.__HERMES_PLUGIN_SDK__`:
 
 - `React` + `hooks` (useState, useEffect, useCallback, useMemo, useRef, useContext, createContext)
 - `components` — Card, Badge, Button, Input, Label, Select, Separator, Tabs, **PluginSlot**
-- `api` — Hermes API client, plus raw `fetchJSON`
+- `api` — BookwormPRO API client, plus raw `fetchJSON`
 - `utils` — `cn()`, `timeAgo()`, `isoTimeAgo()`
 - `useI18n` — i18n hook for multi-language plugins
 
 ### Demo: Strike Freedom Cockpit
 
-`plugins/strike-freedom-cockpit/` ships a complete skin demo showing every extension point — cockpit layout variant, theme-supplied hero/crest assets, notched card corners via `componentStyles`, scanlines via `customCSS`, and a slot-only plugin that populates the sidebar, header, and footer. Copy the theme YAML into `~/.hermes/dashboard-themes/` and the plugin directory into `~/.hermes/plugins/` to try it.
+`plugins/strike-freedom-cockpit/` ships a complete skin demo showing every extension point — cockpit layout variant, theme-supplied hero/crest assets, notched card corners via `componentStyles`, scanlines via `customCSS`, and a slot-only plugin that populates the sidebar, header, and footer. Copy the theme YAML into `~/.bookwormpro/dashboard-themes/` and the plugin directory into `~/.bookwormpro/plugins/` to try it.
 
 ### Theme API
 

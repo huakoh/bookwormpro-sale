@@ -1,4 +1,4 @@
-import { Typography } from "@nous-research/ui";
+import { Typography } from "@bookwormpro-research/ui";
 import { useSidebarStatus } from "@/hooks/useSidebarStatus";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
@@ -23,7 +23,7 @@ export function SidebarFooter() {
       </Typography>
 
       <a
-        href="https://nousresearch.com"
+        href="https://bookwormpro.local"
         target="_blank"
         rel="noopener noreferrer"
         className={cn(

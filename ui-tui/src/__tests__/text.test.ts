@@ -13,33 +13,33 @@ import {
 
 describe('isToolTrailResultLine', () => {
   it('detects completion markers', () => {
-    expect(isToolTrailResultLine('foo ✓')).toBe(true)
-    expect(isToolTrailResultLine('foo ✗')).toBe(true)
+    expect(isToolTrailResultLine('foo [成功]')).toBe(true)
+    expect(isToolTrailResultLine('foo [失败]')).toBe(true)
     expect(isToolTrailResultLine('drafting x…')).toBe(false)
   })
 })
 
 describe('lastCotTrailIndex', () => {
   it('finds last non-result line', () => {
-    expect(lastCotTrailIndex(['a ✓', 'thinking…'])).toBe(1)
-    expect(lastCotTrailIndex(['only result ✓'])).toBe(-1)
+    expect(lastCotTrailIndex(['a [成功]', 'thinking…'])).toBe(1)
+    expect(lastCotTrailIndex(['only result [成功]'])).toBe(-1)
   })
 })
 
 describe('sameToolTrailGroup', () => {
   it('matches bare check lines', () => {
-    expect(sameToolTrailGroup('searching', 'searching ✓')).toBe(true)
-    expect(sameToolTrailGroup('searching', 'searching ✗')).toBe(true)
+    expect(sameToolTrailGroup('searching', 'searching [成功]')).toBe(true)
+    expect(sameToolTrailGroup('searching', 'searching [失败]')).toBe(true)
   })
 
   it('matches contextual lines', () => {
-    expect(sameToolTrailGroup('searching', 'searching: * ✓')).toBe(true)
-    expect(sameToolTrailGroup('searching', 'searching: foo ✓')).toBe(true)
+    expect(sameToolTrailGroup('searching', 'searching: * [成功]')).toBe(true)
+    expect(sameToolTrailGroup('searching', 'searching: foo [成功]')).toBe(true)
   })
 
   it('rejects other tools', () => {
-    expect(sameToolTrailGroup('searching', 'reading ✓')).toBe(false)
-    expect(sameToolTrailGroup('searching', 'searching extra ✓')).toBe(false)
+    expect(sameToolTrailGroup('searching', 'reading [成功]')).toBe(false)
+    expect(sameToolTrailGroup('searching', 'searching extra [成功]')).toBe(false)
   })
 })
 

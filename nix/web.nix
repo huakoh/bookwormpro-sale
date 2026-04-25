@@ -1,4 +1,4 @@
-# nix/web.nix — Hermes Web Dashboard (Vite/React) frontend build
+# nix/web.nix — BookwormPRO Web Dashboard (Vite/React) frontend build
 { pkgs, hermesNpmLib, ... }:
 let
   src = ../web;
@@ -7,10 +7,10 @@ let
     hash = "sha256-4Z8KQ69QhO83X6zff+5urWBv6MME686MhTTMdwSl65o=";
   };
 
-  npm = hermesNpmLib.mkNpmPassthru { folder = "web"; attr = "web"; pname = "hermes-web"; };
+  npm = hermesNpmLib.mkNpmPassthru { folder = "web"; attr = "web"; pname = "bookworm-web"; };
 in
 pkgs.buildNpmPackage (npm // {
-  pname = "hermes-web";
+  pname = "bookworm-web";
   version = "0.0.0";
   inherit src npmDeps;
 

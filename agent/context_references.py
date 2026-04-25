@@ -226,7 +226,7 @@ async def _expand_reference(
             content = await _fetch_url_content(ref.target, url_fetcher=url_fetcher)
             if not content:
                 return f"{ref.raw}: no content extracted", None
-            return None, f"🌐 {ref.raw} ({estimate_tokens_rough(content)} tokens)\n{content}"
+            return None, f"[网页] {ref.raw} ({estimate_tokens_rough(content)} tokens)\n{content}"
     except Exception as exc:
         return f"{ref.raw}: {exc}", None
 
@@ -257,7 +257,7 @@ def _expand_file_reference(
 
     lang = _code_fence_language(path)
     label = ref.raw
-    return None, f"📄 {label} ({estimate_tokens_rough(text)} tokens)\n```{lang}\n{text}\n```"
+    return None, f"[文档] {label} ({estimate_tokens_rough(text)} tokens)\n```{lang}\n{text}\n```"
 
 
 def _expand_folder_reference(
@@ -299,7 +299,7 @@ def _expand_git_reference(
     content = result.stdout.strip()
     if not content:
         content = "(no output)"
-    return None, f"🧾 {label} ({estimate_tokens_rough(content)} tokens)\n```diff\n{content}\n```"
+    return None, f"[转储] {label} ({estimate_tokens_rough(content)} tokens)\n```diff\n{content}\n```"
 
 
 async def _fetch_url_content(
@@ -340,7 +340,7 @@ def _resolve_path(cwd: Path, target: str, *, allowed_root: Path | None = None) -
 
 
 def _ensure_reference_path_allowed(path: Path) -> None:
-    from hermes_constants import get_hermes_home
+    from bwm_constants import get_hermes_home
     home = Path(os.path.expanduser("~")).resolve()
     hermes_home = get_hermes_home().resolve()
 
@@ -357,7 +357,7 @@ def _ensure_reference_path_allowed(path: Path) -> None:
             path.relative_to(blocked_dir)
         except ValueError:
             continue
-        raise ValueError("path is a sensitive credential or internal Hermes path and cannot be attached")
+        raise ValueError("path is a sensitive credential or internal BookwormPRO path and cannot be attached")
 
 
 def _strip_trailing_punctuation(value: str) -> str:

@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@hermes/ink": ["src/types/hermes-ink.d.ts"]
+      "@bookworm/ink": ["src/types/bookworm-ink.d.ts"]
     }
   }
 }

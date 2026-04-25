@@ -1,4 +1,4 @@
-# Streaming LLM Response Support for Hermes Agent
+# Streaming LLM Response Support for BookwormPRO
 
 ## Overview
 
@@ -62,7 +62,7 @@ streaming:
 ### Environment variables
 
 ```
-HERMES_STREAMING_ENABLED=true    # Master switch via env
+BOOKWORMPRO_STREAMING_ENABLED=true    # Master switch via env
 ```
 
 ### How the flag is read
@@ -266,7 +266,7 @@ try:
 except Exception:
     pass
 # Env var override
-if os.getenv("HERMES_STREAMING_ENABLED", "").lower() in ("true", "1", "yes"):
+if os.getenv("BOOKWORMPRO_STREAMING_ENABLED", "").lower() in ("true", "1", "yes"):
     _streaming_enabled = True
 ```
 
@@ -393,12 +393,12 @@ carries metadata; adding one more field is low-risk.
 
 | Platform | Edit support | Rate limits | Streaming approach |
 |----------|-------------|-------------|-------------------|
-| Telegram | ✅ edit_message_text | ~20 edits/min | Edit every 1.5s |
-| Discord | ✅ message.edit | 5 edits/5s per message | Edit every 1.2s |
-| Slack | ✅ chat.update | Tier 3 (~50/min) | Edit every 1.5s |
-| WhatsApp | ❌ no edit support | N/A | Skip streaming, use normal path |
-| HomeAssistant | ❌ no edit | N/A | Skip streaming |
-| API Server | ✅ SSE native | No limit | Real SSE events |
+| Telegram | [成功] edit_message_text | ~20 edits/min | Edit every 1.5s |
+| Discord | [成功] message.edit | 5 edits/5s per message | Edit every 1.2s |
+| Slack | [成功] chat.update | Tier 3 (~50/min) | Edit every 1.5s |
+| WhatsApp | [失败] no edit support | N/A | Skip streaming, use normal path |
+| HomeAssistant | [失败] no edit | N/A | Skip streaming |
+| API Server | [成功] SSE native | No limit | Real SSE events |
 
 WhatsApp and HomeAssistant fall back to non-streaming automatically because
 they don't support message editing.
@@ -655,7 +655,7 @@ The 1.5s edit interval is conservative enough for all platforms. If we get
 | `gateway/platforms/base.py` | 2 | +check for _streamed_msg_id in response handler |
 | `cli.py` | 3 | +streaming setup, +token display, +response box integration |
 | `gateway/platforms/api_server.py` | 4 | +real SSE writer, +streaming callback wiring |
-| `hermes_cli/config.py` | 1 | +streaming config defaults |
+| `bwm_cli/config.py` | 1 | +streaming config defaults |
 | `cli-config.yaml.example` | 1 | +streaming section |
 | `tests/test_streaming.py` | 1-4 | NEW — ~380 lines of tests |
 
@@ -701,5 +701,5 @@ streaming:
 
 ```bash
 # Environment variable override
-HERMES_STREAMING_ENABLED=true
+BOOKWORMPRO_STREAMING_ENABLED=true
 ```

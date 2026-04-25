@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [lightning, torch, transformers]
 metadata:
-  hermes:
+  bookworm:
     tags: [PyTorch Lightning, Training Framework, Distributed Training, DDP, FSDP, DeepSpeed, High-Level API, Callbacks, Best Practices, Scalable]
 
 ---
@@ -340,7 +340,7 @@ trainer = L.Trainer(accelerator='gpu', devices=1)
 ## Resources
 
 - Docs: https://lightning.ai/docs/pytorch/stable/
-- GitHub: https://github.com/Lightning-AI/pytorch-lightning ⭐ 29,000+
+- GitHub: https://github.com/Lightning-AI/pytorch-lightning * 29,000+
 - Version: 2.5.5+
 - Examples: https://github.com/Lightning-AI/pytorch-lightning/tree/master/examples
 - Discord: https://discord.gg/lightning-ai

@@ -2,7 +2,7 @@
 
 ---
 
-## 📦 Package Metadata
+## [包] Package Metadata
 - **Package Name**: 
 - **Registry**: [NPM / PyPI / RubyGems / etc.]
 - **Affected Versions**: 
@@ -20,7 +20,7 @@
 
 ---
 
-## 🛠️ Analysis Summary
+## [工具] Analysis Summary
 - **Primary Mechanism**: [Typosquatting / Dependency Confusion / Maintainer Takeover]
 - **Behavior Description**: 
   - [Example: Installs a postinstall script that exfiltrates environment variables.]
@@ -28,7 +28,7 @@
 
 ---
 
-## 🔍 Evidence Registry
+## [查找] Evidence Registry
 | Evidence ID | Type | Source | Description |
 |-------------|------|--------|-------------|
 | EV-XXXX     | ioc  | NPM    | Package install script snapshot |

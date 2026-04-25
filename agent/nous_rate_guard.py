@@ -1,11 +1,11 @@
-"""Cross-session rate limit guard for Nous Portal.
+"""Cross-session rate limit guard for BookwormPRO Portal.
 
 Writes rate limit state to a shared file so all sessions (CLI, gateway,
-cron, auxiliary) can check whether Nous Portal is currently rate-limited
+cron, auxiliary) can check whether BookwormPRO Portal is currently rate-limited
 before making requests.  Prevents retry amplification when RPH is tapped.
 
-Each 429 from Nous triggers up to 9 API calls per conversation turn
-(3 SDK retries x 3 Hermes retries), and every one of those calls counts
+Each 429 from BookwormPRO triggers up to 9 API calls per conversation turn
+(3 SDK retries x 3 BookwormPRO retries), and every one of those calls counts
 against RPH.  By recording the rate limit state on first 429 and checking
 it before subsequent attempts, we eliminate the amplification effect.
 """
@@ -22,16 +22,16 @@ from typing import Any, Mapping, Optional
 logger = logging.getLogger(__name__)
 
 _STATE_SUBDIR = "rate_limits"
-_STATE_FILENAME = "nous.json"
+_STATE_FILENAME = "bookwormpro.json"
 
 
 def _state_path() -> str:
-    """Return the path to the Nous rate limit state file."""
+    """Return the path to the BookwormPRO rate limit state file."""
     try:
-        from hermes_constants import get_hermes_home
+        from bwm_constants import get_hermes_home
         base = get_hermes_home()
     except ImportError:
-        base = os.path.join(os.path.expanduser("~"), ".hermes")
+        base = os.path.join(os.path.expanduser("~"), ".bookwormpro")
     return os.path.join(base, _STATE_SUBDIR, _STATE_FILENAME)
 
 
@@ -73,7 +73,7 @@ def record_nous_rate_limit(
     error_context: Optional[dict[str, Any]] = None,
     default_cooldown: float = 300.0,
 ) -> None:
-    """Record that Nous Portal is rate-limited.
+    """Record that BookwormPRO Portal is rate-limited.
 
     Parses the reset time from response headers or error context.
     Falls back to ``default_cooldown`` (5 minutes) if no reset info
@@ -128,15 +128,15 @@ def record_nous_rate_limit(
             raise
 
         logger.info(
-            "Nous rate limit recorded: resets in %.0fs (at %.0f)",
+            "BookwormPRO rate limit recorded: resets in %.0fs (at %.0f)",
             reset_at - now, reset_at,
         )
     except Exception as exc:
-        logger.debug("Failed to write Nous rate limit state: %s", exc)
+        logger.debug("Failed to write BookwormPRO rate limit state: %s", exc)
 
 
 def nous_rate_limit_remaining() -> Optional[float]:
-    """Check if Nous Portal is currently rate-limited.
+    """Check if BookwormPRO Portal is currently rate-limited.
 
     Returns:
         Seconds remaining until reset, or None if not rate-limited.
@@ -160,13 +160,13 @@ def nous_rate_limit_remaining() -> Optional[float]:
 
 
 def clear_nous_rate_limit() -> None:
-    """Clear the rate limit state (e.g., after a successful Nous request)."""
+    """Clear the rate limit state (e.g., after a successful BookwormPRO request)."""
     try:
         os.unlink(_state_path())
     except FileNotFoundError:
         pass
     except OSError as exc:
-        logger.debug("Failed to clear Nous rate limit state: %s", exc)
+        logger.debug("Failed to clear BookwormPRO rate limit state: %s", exc)
 
 
 def format_remaining(seconds: float) -> str:

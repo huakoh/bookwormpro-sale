@@ -45,11 +45,11 @@ from utils import base_url_host_matches, base_url_hostname
 import fire
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn, TimeRemainingColumn
 from rich.console import Console
-from hermes_constants import OPENROUTER_BASE_URL, get_hermes_home
+from bwm_constants import OPENROUTER_BASE_URL, get_hermes_home
 from agent.retry_utils import jittered_backoff
 
-# Load .env from HERMES_HOME first, then project root as a dev fallback.
-from hermes_cli.env_loader import load_hermes_dotenv
+# Load .env from BOOKWORMPRO_HOME first, then project root as a dev fallback.
+from bwm_cli.env_loader import load_hermes_dotenv
 
 _hermes_home = get_hermes_home()
 _project_env = Path(__file__).parent / ".env"
@@ -367,7 +367,7 @@ class TrajectoryCompressor:
                 self.config.tokenizer_name,
                 trust_remote_code=self.config.trust_remote_code
             )
-            print(f"✅ Loaded tokenizer: {self.config.tokenizer_name}")
+            print(f"[成功] Loaded tokenizer: {self.config.tokenizer_name}")
         except Exception as e:
             raise RuntimeError(f"Failed to load tokenizer '{self.config.tokenizer_name}': {e}")
     
@@ -391,7 +391,7 @@ class TrajectoryCompressor:
             if client is None:
                 raise RuntimeError(
                     f"Provider '{provider}' is not configured. "
-                    f"Check your API key or run: hermes setup")
+                    f"Check your API key or run: bookworm setup")
             self.client = None  # Not used directly
             self.async_client = None  # Not used directly
         else:
@@ -413,7 +413,7 @@ class TrajectoryCompressor:
             self.async_client = None
             self._async_client_api_key = api_key
 
-        print(f"✅ Initialized summarizer client: {self.config.summarization_model}")
+        print(f"[成功] Initialized summarizer client: {self.config.summarization_model}")
         print(f"   Max concurrent requests: {self.config.max_concurrent_requests}")
 
     def _get_async_client(self):
@@ -437,8 +437,8 @@ class TrajectoryCompressor:
         url = self.config.base_url or ""
         if base_url_host_matches(url, "openrouter.ai"):
             return "openrouter"
-        if base_url_host_matches(url, "nousresearch.com"):
-            return "nous"
+        if base_url_host_matches(url, "bookwormpro.local"):
+            return "bookwormpro"
         if (
             base_url_hostname(url) == "chatgpt.com"
             and "/backend-api/codex" in url.lower()
@@ -1018,13 +1018,13 @@ Write only the summary, starting with "[CONTEXT SUMMARY]:" prefix."""
         total_entries = len(all_entries)
         
         console.print(f"\n{'='*60}")
-        console.print(f"📂 Input: {input_dir}")
-        console.print(f"📂 Output: {output_dir}")
-        console.print(f"📄 Files to process: {len(jsonl_files)}")
-        console.print(f"📊 Total trajectories: {total_entries:,}")
-        console.print(f"🎯 Target max tokens: {self.config.target_max_tokens:,}")
-        console.print(f"📝 Summary target tokens: {self.config.summary_target_tokens}")
-        console.print(f"⚡ Max concurrent API calls: {self.config.max_concurrent_requests}")
+        console.print(f"[目录] Input: {input_dir}")
+        console.print(f"[目录] Output: {output_dir}")
+        console.print(f"[文档] Files to process: {len(jsonl_files)}")
+        console.print(f"[状态] Total trajectories: {total_entries:,}")
+        console.print(f"[最终] Target max tokens: {self.config.target_max_tokens:,}")
+        console.print(f"[查询] Summary target tokens: {self.config.summary_target_tokens}")
+        console.print(f"* Max concurrent API calls: {self.config.max_concurrent_requests}")
         console.print(f"{'='*60}\n")
         
         # Create semaphore for rate limiting
@@ -1078,7 +1078,7 @@ Write only the summary, starting with "[CONTEXT SUMMARY]:" prefix."""
                         progress.advance(main_task)
                         progress.update(
                             status_task,
-                            description=f"[dim]✅ {compressed_count} compressed | ⏭️ {skipped_count} skipped | ⏱️ {timeout_count} timeout | 🔄 {api_calls} API calls | ⚡ {in_flight} in-flight[/dim]"
+                            description=f"[dim][成功] {compressed_count} compressed | ⏭️ {skipped_count} skipped | [耗时] {timeout_count} timeout | [调用] {api_calls} API calls | * {in_flight} in-flight[/dim]"
                         )
                 
                 except asyncio.TimeoutError:
@@ -1091,7 +1091,7 @@ Write only the summary, starting with "[CONTEXT SUMMARY]:" prefix."""
                         progress.advance(main_task)
                         progress.update(
                             status_task,
-                            description=f"[dim]✅ {compressed_count} compressed | ⏭️ {skipped_count} skipped | ⏱️ {timeout_count} timeout | 🔄 {api_calls} API calls | ⚡ {in_flight} in-flight[/dim]"
+                            description=f"[dim][成功] {compressed_count} compressed | ⏭️ {skipped_count} skipped | [耗时] {timeout_count} timeout | [调用] {api_calls} API calls | * {in_flight} in-flight[/dim]"
                         )
                     
                     # Skip this entry entirely (don't include in output)
@@ -1176,7 +1176,7 @@ Write only the summary, starting with "[CONTEXT SUMMARY]:" prefix."""
             metrics_path = output_dir / self.config.metrics_output_file
             with open(metrics_path, 'w') as f:
                 json.dump(self.aggregate_metrics.to_dict(), f, indent=2)
-            console.print(f"\n💾 Metrics saved to {metrics_path}")
+            console.print(f"\n[保存] Metrics saved to {metrics_path}")
     
     def _print_summary(self):
         """Print comprehensive compression summary statistics."""
@@ -1230,7 +1230,7 @@ Write only the summary, starting with "[CONTEXT SUMMARY]:" prefix."""
         print(f"╠{'═'*70}╣")
         
         # Turns section
-        print(f"║{'':2}💬 CONVERSATION TURNS{' '*48}║")
+        print(f"║{'':2}[对话] CONVERSATION TURNS{' '*48}║")
         print(f"║{'─'*70}║")
         print(f"║{'':4}Before Compression:     {m['turns']['total_before']:>15,} turns{' '*22}║")
         print(f"║{'':4}After Compression:      {m['turns']['total_after']:>15,} turns{' '*22}║")
@@ -1251,7 +1251,7 @@ Write only the summary, starting with "[CONTEXT SUMMARY]:" prefix."""
         print(f"╠{'═'*70}╣")
         
         # Summarization API section
-        print(f"║{'':2}🤖 SUMMARIZATION API{' '*49}║")
+        print(f"║{'':2}[模型] SUMMARIZATION API{' '*49}║")
         print(f"║{'─'*70}║")
         print(f"║{'':4}API Calls Made:         {m['summarization']['total_api_calls']:>15,}{' '*27}║")
         print(f"║{'':4}Errors:                 {m['summarization']['total_errors']:>15,}{' '*27}║")
@@ -1268,7 +1268,7 @@ Write only the summary, starting with "[CONTEXT SUMMARY]:" prefix."""
         
         throughput = total / max(duration, 0.001)
         
-        print(f"║{'':2}⏱️  PROCESSING TIME{' '*51}║")
+        print(f"║{'':2}[耗时]  PROCESSING TIME{' '*51}║")
         print(f"║{'─'*70}║")
         print(f"║{'':4}Duration:               {time_str:>20}{' '*22}║")
         print(f"║{'':4}Throughput:             {throughput:>15.1f} traj/sec{' '*18}║")
@@ -1282,7 +1282,7 @@ Write only the summary, starting with "[CONTEXT SUMMARY]:" prefix."""
             ratios = self.aggregate_metrics.compression_ratios
             tokens_saved_list = self.aggregate_metrics.tokens_saved_list
             
-            print(f"\n📊 Distribution Summary:")
+            print(f"\n[状态] Distribution Summary:")
             print(f"   Compression ratios: min={min(ratios):.2%}, max={max(ratios):.2%}, median={sorted(ratios)[len(ratios)//2]:.2%}")
             print(f"   Tokens saved:       min={min(tokens_saved_list):,}, max={max(tokens_saved_list):,}, median={sorted(tokens_saved_list)[len(tokens_saved_list)//2]:,}")
 
@@ -1337,10 +1337,10 @@ def main(
     # Load configuration
     config_path = Path(config)
     if config_path.exists():
-        print(f"📋 Loading config from {config}")
+        print(f"[汇总] Loading config from {config}")
         compression_config = CompressionConfig.from_yaml(config)
     else:
-        print(f"⚠️  Config not found at {config}, using defaults")
+        print(f"[警告]  Config not found at {config}, using defaults")
         compression_config = CompressionConfig()
     
     # Apply CLI overrides
@@ -1352,20 +1352,20 @@ def main(
     # Validate sample_percent
     if sample_percent is not None:
         if sample_percent <= 0 or sample_percent > 100:
-            print(f"❌ sample_percent must be between 1 and 100, got {sample_percent}")
+            print(f"[失败] sample_percent must be between 1 and 100, got {sample_percent}")
             return
         print(f"🎲 Will sample {sample_percent}% of trajectories (seed={seed})")
     
     # Setup paths and determine input type
     input_path = Path(input)
     if not input_path.exists():
-        print(f"❌ Input not found: {input}")
+        print(f"[失败] Input not found: {input}")
         return
     
     is_file_input = input_path.is_file()
     
     if is_file_input:
-        print(f"📄 Input mode: Single JSONL file")
+        print(f"[文档] Input mode: Single JSONL file")
         
         # For file input, default output is file with _compressed suffix
         if output:
@@ -1382,7 +1382,7 @@ def main(
                     try:
                         entries.append(json.loads(line))
                     except json.JSONDecodeError as e:
-                        print(f"⚠️  Skipping invalid JSON at line {line_num}: {e}")
+                        print(f"[警告]  Skipping invalid JSON at line {line_num}: {e}")
         
         total_entries = len(entries)
         print(f"   Loaded {total_entries:,} trajectories from {input_path.name}")
@@ -1395,9 +1395,9 @@ def main(
             print(f"   Sampled {len(entries):,} trajectories ({sample_percent}% of {total_entries:,})")
         
         if dry_run:
-            print(f"\n🔍 DRY RUN MODE - analyzing without writing")
-            print(f"📄 Would process: {len(entries):,} trajectories")
-            print(f"📄 Would output to: {output_path}")
+            print(f"\n[查找] DRY RUN MODE - analyzing without writing")
+            print(f"[文档] Would process: {len(entries):,} trajectories")
+            print(f"[文档] Would output to: {output_path}")
             return
         
         # Create a temporary directory for processing
@@ -1429,10 +1429,10 @@ def main(
             if metrics_file.exists():
                 metrics_output = output_path.parent / (output_path.stem + "_metrics.json")
                 shutil.copy(metrics_file, metrics_output)
-                print(f"💾 Metrics saved to {metrics_output}")
+                print(f"[保存] Metrics saved to {metrics_output}")
         
-        print(f"\n✅ Compression complete!")
-        print(f"📄 Output: {output_path}")
+        print(f"\n[成功] Compression complete!")
+        print(f"[文档] Output: {output_path}")
         
     else:
         # Directory input - original behavior
@@ -1445,7 +1445,7 @@ def main(
         
         # If sampling is requested for directory mode, we need to handle it differently
         if sample_percent is not None:
-            print(f"\n⚠️  Sampling from directory: will sample {sample_percent}% from each file")
+            print(f"\n[警告]  Sampling from directory: will sample {sample_percent}% from each file")
             
             # Create a temp directory with sampled files
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -1482,7 +1482,7 @@ def main(
                 print(f"   Sampled {total_sampled:,} from {total_original:,} total trajectories")
                 
                 if dry_run:
-                    print(f"\n🔍 DRY RUN MODE - analyzing without writing")
+                    print(f"\n[查找] DRY RUN MODE - analyzing without writing")
                     print(f"📁 Would process: {temp_input_dir}")
                     print(f"📁 Would output to: {output_path}")
                     return
@@ -1492,7 +1492,7 @@ def main(
                 compressor.process_directory(temp_input_dir, output_path)
         else:
             if dry_run:
-                print(f"\n🔍 DRY RUN MODE - analyzing without writing")
+                print(f"\n[查找] DRY RUN MODE - analyzing without writing")
                 print(f"📁 Would process: {input_path}")
                 print(f"📁 Would output to: {output_path}")
                 return
@@ -1501,7 +1501,7 @@ def main(
             compressor = TrajectoryCompressor(compression_config)
             compressor.process_directory(input_path, output_path)
         
-        print("\n✅ Compression complete!")
+        print("\n[成功] Compression complete!")
 
 
 if __name__ == "__main__":

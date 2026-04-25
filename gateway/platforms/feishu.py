@@ -37,7 +37,7 @@ For bots specifically:
                         puts in ``mentions[].id.open_id`` when someone
                         @-mentions the bot.  Used for mention gating only.
 
-In single-bot mode (what Hermes currently supports), open_id works as a
+In single-bot mode (what BookwormPRO currently supports), open_id works as a
 de-facto unique user identifier since there is only one app context.
 
 Session-key participant isolation prefers ``union_id`` (via user_id_alt)
@@ -140,7 +140,7 @@ from gateway.platforms.base import (
     cache_image_from_bytes,
 )
 from gateway.status import acquire_scoped_lock, release_scoped_lock
-from hermes_constants import get_hermes_home
+from bwm_constants import get_hermes_home
 
 logger = logging.getLogger(__name__)
 
@@ -1410,24 +1410,24 @@ class FeishuAdapter(BasePlatformAdapter):
             bot_name=os.getenv("FEISHU_BOT_NAME", "").strip(),
             dedup_cache_size=max(
                 32,
-                int(os.getenv("HERMES_FEISHU_DEDUP_CACHE_SIZE", str(_DEFAULT_DEDUP_CACHE_SIZE))),
+                int(os.getenv("BOOKWORMPRO_FEISHU_DEDUP_CACHE_SIZE", str(_DEFAULT_DEDUP_CACHE_SIZE))),
             ),
             text_batch_delay_seconds=float(
-                os.getenv("HERMES_FEISHU_TEXT_BATCH_DELAY_SECONDS", str(_DEFAULT_TEXT_BATCH_DELAY_SECONDS))
+                os.getenv("BOOKWORMPRO_FEISHU_TEXT_BATCH_DELAY_SECONDS", str(_DEFAULT_TEXT_BATCH_DELAY_SECONDS))
             ),
             text_batch_split_delay_seconds=float(
-                os.getenv("HERMES_FEISHU_TEXT_BATCH_SPLIT_DELAY_SECONDS", "2.0")
+                os.getenv("BOOKWORMPRO_FEISHU_TEXT_BATCH_SPLIT_DELAY_SECONDS", "2.0")
             ),
             text_batch_max_messages=max(
                 1,
-                int(os.getenv("HERMES_FEISHU_TEXT_BATCH_MAX_MESSAGES", str(_DEFAULT_TEXT_BATCH_MAX_MESSAGES))),
+                int(os.getenv("BOOKWORMPRO_FEISHU_TEXT_BATCH_MAX_MESSAGES", str(_DEFAULT_TEXT_BATCH_MAX_MESSAGES))),
             ),
             text_batch_max_chars=max(
                 1,
-                int(os.getenv("HERMES_FEISHU_TEXT_BATCH_MAX_CHARS", str(_DEFAULT_TEXT_BATCH_MAX_CHARS))),
+                int(os.getenv("BOOKWORMPRO_FEISHU_TEXT_BATCH_MAX_CHARS", str(_DEFAULT_TEXT_BATCH_MAX_CHARS))),
             ),
             media_batch_delay_seconds=float(
-                os.getenv("HERMES_FEISHU_MEDIA_BATCH_DELAY_SECONDS", str(_DEFAULT_MEDIA_BATCH_DELAY_SECONDS))
+                os.getenv("BOOKWORMPRO_FEISHU_MEDIA_BATCH_DELAY_SECONDS", str(_DEFAULT_MEDIA_BATCH_DELAY_SECONDS))
             ),
             webhook_host=str(
                 extra.get("webhook_host") or os.getenv("FEISHU_WEBHOOK_HOST", _DEFAULT_WEBHOOK_HOST)
@@ -1530,7 +1530,7 @@ class FeishuAdapter(BasePlatformAdapter):
             if not acquired:
                 owner_pid = existing.get("pid") if isinstance(existing, dict) else None
                 message = (
-                    "Another local Hermes gateway is already using this Feishu app_id"
+                    "Another local BookwormPRO gateway is already using this Feishu app_id"
                     + (f" (PID {owner_pid})." if owner_pid else ".")
                     + " Stop the other gateway before starting a second Feishu websocket client."
                 )
@@ -1752,7 +1752,7 @@ class FeishuAdapter(BasePlatformAdapter):
             card = {
                 "config": {"wide_screen_mode": True},
                 "header": {
-                    "title": {"content": "⚠️ Command Approval Required", "tag": "plain_text"},
+                    "title": {"content": "[警告] Command Approval Required", "tag": "plain_text"},
                     "template": "orange",
                 },
                 "elements": [
@@ -1763,10 +1763,10 @@ class FeishuAdapter(BasePlatformAdapter):
                     {
                         "tag": "action",
                         "actions": [
-                            _btn("✅ Allow Once", "approve_once", "primary"),
-                            _btn("✅ Session", "approve_session"),
-                            _btn("✅ Always", "approve_always"),
-                            _btn("❌ Deny", "deny", "danger"),
+                            _btn("[成功] Allow Once", "approve_once", "primary"),
+                            _btn("[成功] Session", "approve_session"),
+                            _btn("[成功] Always", "approve_always"),
+                            _btn("[失败] Deny", "deny", "danger"),
                         ],
                     },
                 ],
@@ -1796,7 +1796,7 @@ class FeishuAdapter(BasePlatformAdapter):
     @staticmethod
     def _build_resolved_approval_card(*, choice: str, user_name: str) -> Dict[str, Any]:
         """Build raw card JSON for a resolved approval action."""
-        icon = "❌" if choice == "deny" else "✅"
+        icon = "[失败]" if choice == "deny" else "[成功]"
         label = _APPROVAL_LABEL_MAP.get(choice, "Resolved")
         return {
             "config": {"wide_screen_mode": True},
@@ -2216,7 +2216,7 @@ class FeishuAdapter(BasePlatformAdapter):
         )
 
     def _on_message_read_event(self, data: P2ImMessageMessageReadV1) -> None:
-        """Ignore read-receipt events that Hermes does not act on."""
+        """Ignore read-receipt events that BookwormPRO does not act on."""
         event = getattr(data, "event", None)
         message = getattr(event, "message", None)
         message_id = getattr(message, "message_id", None) or ""
@@ -2954,7 +2954,7 @@ class FeishuAdapter(BasePlatformAdapter):
             return web.Response(status=401, text="Invalid signature")
 
         if payload.get("encrypt"):
-            logger.error("[Feishu] Encrypted webhook payloads are not supported by Hermes webhook mode")
+            logger.error("[Feishu] Encrypted webhook payloads are not supported by BookwormPRO webhook mode")
             self._record_webhook_anomaly(remote_ip, "400-encrypted")
             return web.json_response({"code": 400, "msg": "encrypted webhook payloads are not supported"}, status=400)
 
@@ -3448,7 +3448,7 @@ class FeishuAdapter(BasePlatformAdapter):
         return "group"
 
     async def _resolve_sender_profile(self, sender_id: Any) -> Dict[str, Optional[str]]:
-        """Map Feishu's three-tier user IDs onto Hermes' SessionSource fields.
+        """Map Feishu's three-tier user IDs onto BookwormPRO' SessionSource fields.
 
         Preference order for the primary ``user_id`` field:
           1. user_id  (tenant-scoped, most stable — requires permission scope)
@@ -3645,7 +3645,7 @@ class FeishuAdapter(BasePlatformAdapter):
         return self._post_mentions_bot(normalized.mentions)
 
     def _is_self_sent_bot_message(self, event: Any) -> bool:
-        """Return True only for Feishu events emitted by this Hermes bot."""
+        """Return True only for Feishu events emitted by this BookwormPRO bot."""
         sender = getattr(event, "sender", None)
         sender_type = str(getattr(sender, "sender_type", "") or "").strip().lower()
         if sender_type not in {"bot", "app"}:
@@ -4301,7 +4301,7 @@ class FeishuAdapter(BasePlatformAdapter):
 #
 # Device-code flow: user scans a QR code with Feishu/Lark mobile app and the
 # platform creates a fully configured bot application automatically.
-# Called by `hermes gateway setup` via _setup_feishu() in hermes_cli/gateway.py.
+# Called by `bookworm gateway setup` via _setup_feishu() in bwm_cli/gateway.py.
 # =============================================================================
 
 
@@ -4365,9 +4365,9 @@ def _begin_registration(domain: str = "feishu") -> dict:
         raise RuntimeError("Feishu / Lark registration did not return a device_code")
     qr_url = res.get("verification_uri_complete", "")
     if "?" in qr_url:
-        qr_url += "&from=hermes&tp=hermes"
+        qr_url += "&from=bookworm&tp=bookworm"
     else:
-        qr_url += "?from=hermes&tp=hermes"
+        qr_url += "?from=bookworm&tp=bookworm"
     return {
         "device_code": device_code,
         "qr_url": qr_url,

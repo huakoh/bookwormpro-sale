@@ -146,7 +146,7 @@ except Exception as e:
 
 # Plugin tool discovery (user/project/pip plugins)
 try:
-    from hermes_cli.plugins import discover_plugins
+    from bwm_cli.plugins import discover_plugins
     discover_plugins()
 except Exception as e:
     logger.debug("Plugin discovery failed: %s", e)
@@ -226,15 +226,15 @@ def get_tool_definitions(
                 resolved = resolve_toolset(toolset_name)
                 tools_to_include.update(resolved)
                 if not quiet_mode:
-                    print(f"✅ Enabled toolset '{toolset_name}': {', '.join(resolved) if resolved else 'no tools'}")
+                    print(f"[成功] Enabled toolset '{toolset_name}': {', '.join(resolved) if resolved else 'no tools'}")
             elif toolset_name in _LEGACY_TOOLSET_MAP:
                 legacy_tools = _LEGACY_TOOLSET_MAP[toolset_name]
                 tools_to_include.update(legacy_tools)
                 if not quiet_mode:
-                    print(f"✅ Enabled legacy toolset '{toolset_name}': {', '.join(legacy_tools)}")
+                    print(f"[成功] Enabled legacy toolset '{toolset_name}': {', '.join(legacy_tools)}")
             else:
                 if not quiet_mode:
-                    print(f"⚠️  Unknown toolset: {toolset_name}")
+                    print(f"[警告]  Unknown toolset: {toolset_name}")
 
     elif disabled_toolsets:
         from toolsets import get_all_toolsets
@@ -254,7 +254,7 @@ def get_tool_definitions(
                     print(f"🚫 Disabled legacy toolset '{toolset_name}': {', '.join(legacy_tools)}")
             else:
                 if not quiet_mode:
-                    print(f"⚠️  Unknown toolset: {toolset_name}")
+                    print(f"[警告]  Unknown toolset: {toolset_name}")
     else:
         from toolsets import get_all_toolsets
         for ts_name in get_all_toolsets():
@@ -336,9 +336,9 @@ def get_tool_definitions(
     if not quiet_mode:
         if filtered_tools:
             tool_names = [t["function"]["name"] for t in filtered_tools]
-            print(f"🛠️  Final tool selection ({len(filtered_tools)} tools): {', '.join(tool_names)}")
+            print(f"[工具]  Final tool selection ({len(filtered_tools)} tools): {', '.join(tool_names)}")
         else:
-            print("🛠️  No tools selected (all filtered out or unavailable)")
+            print("[工具]  No tools selected (all filtered out or unavailable)")
 
     global _last_resolved_tool_names
     _last_resolved_tool_names = [t["function"]["name"] for t in filtered_tools]
@@ -525,7 +525,7 @@ def handle_function_call(
         if not skip_pre_tool_call_hook:
             block_message: Optional[str] = None
             try:
-                from hermes_cli.plugins import get_pre_tool_call_block_message
+                from bwm_cli.plugins import get_pre_tool_call_block_message
                 block_message = get_pre_tool_call_block_message(
                     function_name,
                     function_args,
@@ -542,7 +542,7 @@ def handle_function_call(
             # Still fire the hook for observers — just don't check for blocking
             # (the caller already did that).
             try:
-                from hermes_cli.plugins import invoke_hook
+                from bwm_cli.plugins import invoke_hook
                 invoke_hook(
                     "pre_tool_call",
                     tool_name=function_name,
@@ -580,7 +580,7 @@ def handle_function_call(
             )
 
         try:
-            from hermes_cli.plugins import invoke_hook
+            from bwm_cli.plugins import invoke_hook
             invoke_hook(
                 "post_tool_call",
                 tool_name=function_name,
@@ -600,7 +600,7 @@ def handle_function_call(
         # is appended back into conversation context. Fail-open; the first
         # valid string return wins; non-string returns are ignored.
         try:
-            from hermes_cli.plugins import invoke_hook
+            from bwm_cli.plugins import invoke_hook
             hook_results = invoke_hook(
                 "transform_tool_result",
                 tool_name=function_name,

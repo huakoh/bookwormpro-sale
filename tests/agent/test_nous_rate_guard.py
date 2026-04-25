@@ -1,4 +1,4 @@
-"""Tests for agent/nous_rate_guard.py — cross-session Nous Portal rate limit guard."""
+"""Tests for agent/nous_rate_guard.py — cross-session BookwormPRO Portal rate limit guard."""
 
 import json
 import os
@@ -10,9 +10,9 @@ import pytest
 @pytest.fixture
 def rate_guard_env(tmp_path, monkeypatch):
     """Isolate rate guard state to a temp directory."""
-    hermes_home = str(tmp_path / ".hermes")
+    hermes_home = str(tmp_path / ".bookwormpro")
     os.makedirs(hermes_home, exist_ok=True)
-    monkeypatch.setenv("HERMES_HOME", hermes_home)
+    monkeypatch.setenv("BOOKWORMPRO_HOME", hermes_home)
     # Clear any cached module-level imports
     return hermes_home
 
@@ -236,7 +236,7 @@ class TestAuxiliaryClientIntegration:
         import agent.auxiliary_client as aux
         monkeypatch.setattr(aux, "_read_nous_auth", lambda: {
             "access_token": "test-token",
-            "inference_base_url": "https://api.nous.test/v1",
+            "inference_base_url": "https://api.bookwormpro.test/v1",
         })
 
         result = aux._try_nous()

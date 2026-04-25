@@ -43,7 +43,7 @@ def _diff_ansi() -> dict[str, str]:
     plus = "\033[38;2;255;255;255;48;2;20;90;20m"
 
     try:
-        from hermes_cli.skin_engine import get_active_skin
+        from bwm_cli.skin_engine import get_active_skin
         skin = get_active_skin()
 
         def _hex_fg(key: str, fallback_rgb: tuple[int, int, int]) -> str:
@@ -118,7 +118,7 @@ def get_tool_preview_max_len() -> int:
 def _get_skin():
     """Get the active skin config, or None if not available."""
     try:
-        from hermes_cli.skin_engine import get_active_skin
+        from bwm_cli.skin_engine import get_active_skin
         return get_active_skin()
     except Exception:
         return None
@@ -132,7 +132,7 @@ def get_skin_tool_prefix() -> str:
     return "┊"
 
 
-def get_tool_emoji(tool_name: str, default: str = "⚡") -> str:
+def get_tool_emoji(tool_name: str, default: str = "*") -> str:
     """Get the display emoji for a tool.
 
     Resolution order:
@@ -446,7 +446,7 @@ def _emit_inline_diff(diff_text: str, print_fn) -> bool:
 
 
 def _render_inline_unified_diff(diff: str) -> list[str]:
-    """Render unified diff lines in Hermes' inline transcript style."""
+    """Render unified diff lines in BookwormPRO' inline transcript style."""
     rendered: list[str] = []
     from_file = None
     to_file = None
@@ -581,7 +581,7 @@ class KawaiiSpinner:
         'star': ['✶', '✷', '✸', '✹', '✺', '✹', '✸', '✷'],
         'moon': ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'],
         'pulse': ['◜', '◠', '◝', '◞', '◡', '◟'],
-        'brain': ['🧠', '💭', '💡', '✨', '💫', '🌟', '💡', '💭'],
+        'brain': ['🧠', '💭', '[提示]', '*', '💫', '*', '[提示]', '💭'],
         'sparkle': ['⁺', '˚', '*', '✧', '✦', '✧', '*', '˚'],
     }
 
@@ -725,7 +725,7 @@ class KawaiiSpinner:
         wings = skin.get_spinner_wings() if skin else []
 
         while self.running:
-            if os.getenv("HERMES_SPINNER_PAUSE"):
+            if os.getenv("BOOKWORMPRO_SPINNER_PAUSE"):
                 time.sleep(0.1)
                 continue
             frame = self.spinner_frames[self.frame_idx % len(self.spinner_frames)]
@@ -869,21 +869,21 @@ def get_cute_tool_message(
         return f"{line}{failure_suffix}"
 
     if tool_name == "web_search":
-        return _wrap(f"┊ 🔍 search    {_trunc(args.get('query', ''), 42)}  {dur}")
+        return _wrap(f"┊ [查找] search    {_trunc(args.get('query', ''), 42)}  {dur}")
     if tool_name == "web_extract":
         urls = args.get("urls", [])
         if urls:
             url = urls[0] if isinstance(urls, list) else str(urls)
             domain = url.replace("https://", "").replace("http://", "").split("/")[0]
             extra = f" +{len(urls)-1}" if len(urls) > 1 else ""
-            return _wrap(f"┊ 📄 fetch     {_trunc(domain, 35)}{extra}  {dur}")
-        return _wrap(f"┊ 📄 fetch     pages  {dur}")
+            return _wrap(f"┊ [文档] fetch     {_trunc(domain, 35)}{extra}  {dur}")
+        return _wrap(f"┊ [文档] fetch     pages  {dur}")
     if tool_name == "web_crawl":
         url = args.get("url", "")
         domain = url.replace("https://", "").replace("http://", "").split("/")[0]
         return _wrap(f"┊ 🕸️  crawl     {_trunc(domain, 35)}  {dur}")
     if tool_name == "terminal":
-        return _wrap(f"┊ 💻 $         {_trunc(args.get('command', ''), 42)}  {dur}")
+        return _wrap(f"┊ [系统] $         {_trunc(args.get('command', ''), 42)}  {dur}")
     if tool_name == "process":
         action = args.get("action", "?")
         sid = args.get("session_id", "")[:12]
@@ -895,7 +895,7 @@ def get_cute_tool_message(
     if tool_name == "write_file":
         return _wrap(f"┊ ✍️  write     {_path(args.get('path', ''))}  {dur}")
     if tool_name == "patch":
-        return _wrap(f"┊ 🔧 patch     {_path(args.get('path', ''))}  {dur}")
+        return _wrap(f"┊ [工具] patch     {_path(args.get('path', ''))}  {dur}")
     if tool_name == "search_files":
         pattern = _trunc(args.get("pattern", ""), 35)
         target = args.get("target", "content")
@@ -904,7 +904,7 @@ def get_cute_tool_message(
     if tool_name == "browser_navigate":
         url = args.get("url", "")
         domain = url.replace("https://", "").replace("http://", "").split("/")[0]
-        return _wrap(f"┊ 🌐 navigate  {_trunc(domain, 35)}  {dur}")
+        return _wrap(f"┊ [网页] navigate  {_trunc(domain, 35)}  {dur}")
     if tool_name == "browser_snapshot":
         mode = "full" if args.get("full") else "compact"
         return _wrap(f"┊ 📸 snapshot  {mode}  {dur}")
@@ -928,13 +928,13 @@ def get_cute_tool_message(
         todos_arg = args.get("todos")
         merge = args.get("merge", False)
         if todos_arg is None:
-            return _wrap(f"┊ 📋 plan      reading tasks  {dur}")
+            return _wrap(f"┊ [汇总] plan      reading tasks  {dur}")
         elif merge:
-            return _wrap(f"┊ 📋 plan      update {len(todos_arg)} task(s)  {dur}")
+            return _wrap(f"┊ [汇总] plan      update {len(todos_arg)} task(s)  {dur}")
         else:
-            return _wrap(f"┊ 📋 plan      {len(todos_arg)} task(s)  {dur}")
+            return _wrap(f"┊ [汇总] plan      {len(todos_arg)} task(s)  {dur}")
     if tool_name == "session_search":
-        return _wrap(f"┊ 🔍 recall    \"{_trunc(args.get('query', ''), 35)}\"  {dur}")
+        return _wrap(f"┊ [查找] recall    \"{_trunc(args.get('query', ''), 35)}\"  {dur}")
     if tool_name == "memory":
         action = args.get("action", "?")
         target = args.get("target", "")
@@ -954,7 +954,7 @@ def get_cute_tool_message(
     if tool_name == "skill_view":
         return _wrap(f"┊ 📚 skill     {_trunc(args.get('name', ''), 30)}  {dur}")
     if tool_name == "image_generate":
-        return _wrap(f"┊ 🎨 create    {_trunc(args.get('prompt', ''), 35)}  {dur}")
+        return _wrap(f"┊ [样式] create    {_trunc(args.get('prompt', ''), 35)}  {dur}")
     if tool_name == "text_to_speech":
         return _wrap(f"┊ 🔊 speak     {_trunc(args.get('text', ''), 30)}  {dur}")
     if tool_name == "vision_analyze":
@@ -992,7 +992,7 @@ def get_cute_tool_message(
         return _wrap(f"┊ 🔀 delegate  {_trunc(args.get('goal', ''), 35)}  {dur}")
 
     preview = build_tool_preview(tool_name, args) or ""
-    return _wrap(f"┊ ⚡ {tool_name[:9]:9} {_trunc(preview, 35)}  {dur}")
+    return _wrap(f"┊ * {tool_name[:9]:9} {_trunc(preview, 35)}  {dur}")
 
 
 # =========================================================================

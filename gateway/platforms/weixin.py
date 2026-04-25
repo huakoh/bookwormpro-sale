@@ -1,7 +1,7 @@
 """
 Weixin platform adapter.
 
-Connects Hermes Agent to WeChat personal accounts via Tencent's iLink Bot API.
+Connects BookwormPRO to WeChat personal accounts via Tencent's iLink Bot API.
 
 Design notes:
 - Long-poll ``getupdates`` drives inbound delivery.
@@ -63,7 +63,7 @@ from gateway.platforms.base import (
     cache_document_from_bytes,
     cache_image_from_bytes,
 )
-from hermes_constants import get_hermes_home
+from bwm_constants import get_hermes_home
 from utils import atomic_json_write
 
 ILINK_BASE_URL = "https://ilinkai.weixin.qq.com"
@@ -1111,7 +1111,7 @@ async def qr_login(
 
 
 class WeixinAdapter(BasePlatformAdapter):
-    """Native Hermes adapter for Weixin personal accounts."""
+    """Native BookwormPRO adapter for Weixin personal accounts."""
 
     MAX_MESSAGE_LENGTH = 4000
 
@@ -1605,7 +1605,7 @@ class WeixinAdapter(BasePlatformAdapter):
             # Deliver text content.
             chunks = [c for c in self._split_text(self.format_message(final_content)) if c and c.strip()]
             for idx, chunk in enumerate(chunks):
-                client_id = f"hermes-weixin-{uuid.uuid4().hex}"
+                client_id = f"bookworm-weixin-{uuid.uuid4().hex}"
                 await self._send_text_chunk(
                     chat_id=chat_id,
                     chunk=chunk,
@@ -1843,7 +1843,7 @@ class WeixinAdapter(BasePlatformAdapter):
 
         last_message_id = None
         if caption:
-            last_message_id = f"hermes-weixin-{uuid.uuid4().hex}"
+            last_message_id = f"bookworm-weixin-{uuid.uuid4().hex}"
             await _send_message(
                 self._send_session,
                 base_url=self._base_url,
@@ -1854,7 +1854,7 @@ class WeixinAdapter(BasePlatformAdapter):
                 client_id=last_message_id,
             )
 
-        last_message_id = f"hermes-weixin-{uuid.uuid4().hex}"
+        last_message_id = f"bookworm-weixin-{uuid.uuid4().hex}"
         await _api_post(
             self._send_session,
             base_url=self._base_url,

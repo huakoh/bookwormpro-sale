@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hermes Agent Release Script
+"""BookwormPRO Release Script
 
 Generates changelogs and creates GitHub releases with CalVer tags.
 
@@ -30,7 +30,7 @@ from datetime import datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-VERSION_FILE = REPO_ROOT / "hermes_cli" / "__init__.py"
+VERSION_FILE = REPO_ROOT / "bwm_cli" / "__init__.py"
 PYPROJECT_FILE = REPO_ROOT / "pyproject.toml"
 
 # ──────────────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ PYPROJECT_FILE = REPO_ROOT / "pyproject.toml"
 AUTHOR_MAP = {
     # teknium (multiple emails)
     "teknium1@gmail.com": "teknium1",
-    "teknium@nousresearch.com": "teknium1",
+    "teknium@bookwormpro.local": "teknium1",
     "127238744+teknium1@users.noreply.github.com": "teknium1",
     "343873859@qq.com": "DrStrangerUJN",
     "uzmpsk.dilekakbas@gmail.com": "dlkakbs",
@@ -136,7 +136,7 @@ AUTHOR_MAP = {
     "samherring99@gmail.com": "samherring99",
     "desaiaum08@gmail.com": "Aum08Desai",
     "shannon.sands.1979@gmail.com": "shannonsands",
-    "shannon@nousresearch.com": "shannonsands",
+    "shannon@bookwormpro.local": "shannonsands",
     "abdi.moya@gmail.com": "AxDSan",
     "eri@plasticlabs.ai": "Erosika",
     "hjcpuro@gmail.com": "hjc-puro",
@@ -229,13 +229,13 @@ AUTHOR_MAP = {
     "shokatalishaikh95@gmail.com": "areu01or00",
     "bryan@intertwinesys.com": "bryanyoung",
     "christo.mitov@gmail.com": "christomitov",
-    "hermes@nousresearch.com": "NousResearch",
+    "bookworm@bookwormpro.local": "BookwormPRO",
     "reginaldasr@gmail.com": "ReginaldasR",
     "ntconguit@gmail.com": "0xharryriddle",
     "agent@wildcat.local": "ericnicolaides",
     "georgex8001@gmail.com": "georgex8001",
     "stefan@dimagents.ai": "dimitrovi",
-    "hermes@noushq.ai": "benbarclay",
+    "bookworm@noushq.ai": "benbarclay",
     "chinmingcock@gmail.com": "ChimingLiu",
     "openclaw@sparklab.ai": "openclaw",
     "semihcvlk53@gmail.com": "Himess",
@@ -271,7 +271,7 @@ AUTHOR_MAP = {
     "angelos@oikos.lan.home.malaiwah.com": "angelos",
     "aptx4561@gmail.com": "cokemine",
     "arilotter@gmail.com": "ethernet8023",
-    "ben@nousresearch.com": "benbarclay",
+    "ben@bookwormpro.local": "benbarclay",
     "birdiegyal@gmail.com": "yyovil",
     "boschi1997@gmail.com": "nicoloboschi",
     "chef.ya@gmail.com": "cherifya",
@@ -288,7 +288,7 @@ AUTHOR_MAP = {
     "dylan.socolobsky@lambdaclass.com": "dsocolobsky",
     "ignacio.avecilla@lambdaclass.com": "IAvecilla",
     "duerzy@gmail.com": "duerzy",
-    "emozilla@nousresearch.com": "emozilla",
+    "emozilla@bookwormpro.local": "emozilla",
     "fancydirty@gmail.com": "fancydirty",
     "farion1231@gmail.com": "farion1231",
     "floptopbot33@gmail.com": "flobo3",
@@ -303,7 +303,7 @@ AUTHOR_MAP = {
     "hmbown@gmail.com": "Hmbown",
     "iacobs@m0n5t3r.info": "m0n5t3r",
     "jiayuw794@gmail.com": "JiayuuWang",
-    "jonny@nousresearch.com": "jquesnelle",
+    "jonny@bookwormpro.local": "jquesnelle",
     "juan.ovalle@mistral.ai": "jjovalle99",
     "julien.talbot@ergonomia.re": "Julientalbot",
     "kagura.chen28@gmail.com": "kagura-agent",
@@ -622,7 +622,7 @@ def build_release_artifacts(semver: str) -> list[Path]:
         text=True,
     )
     if result.returncode != 0:
-        print("  ⚠ Could not build Python release artifacts.")
+        print("  [警告] Could not build Python release artifacts.")
         stderr = result.stderr.strip()
         stdout = result.stdout.strip()
         if stderr:
@@ -635,7 +635,7 @@ def build_release_artifacts(semver: str) -> list[Path]:
     artifacts = sorted(p for p in dist_dir.iterdir() if p.is_file())
     matching = [p for p in artifacts if semver in p.name]
     if not matching:
-        print("  ⚠ Built artifacts did not match the expected release version.")
+        print("  [警告] Built artifacts did not match the expected release version.")
         return []
     return matching
 
@@ -717,7 +717,7 @@ def parse_coauthors(body: str) -> list:
         return []
     # AI/bot emails to ignore in co-author trailers
     _ignored_emails = {"noreply@anthropic.com", "noreply@github.com",
-                       "cursoragent@cursor.com", "hermes@nousresearch.com"}
+                       "cursoragent@cursor.com", "bookworm@bookwormpro.local"}
     _ignored_names = re.compile(r"^(Claude|Copilot|Cursor Agent|GitHub Actions?|dependabot|renovate)", re.IGNORECASE)
     pattern = re.compile(r"Co-authored-by:\s*(.+?)\s*<([^>]+)>", re.IGNORECASE)
     results = []
@@ -789,7 +789,7 @@ def get_pr_number(subject: str) -> str:
     return None
 
 
-def generate_changelog(commits, tag_name, semver, repo_url="https://github.com/NousResearch/hermes-agent",
+def generate_changelog(commits, tag_name, semver, repo_url="https://github.com/huakoh/BookwormPRO",
                        prev_tag=None, first_release=False):
     """Generate markdown changelog from categorized commits."""
     lines = []
@@ -797,14 +797,14 @@ def generate_changelog(commits, tag_name, semver, repo_url="https://github.com/N
     # Header
     now = datetime.now()
     date_str = now.strftime("%B %d, %Y")
-    lines.append(f"# Hermes Agent v{semver} ({tag_name})")
+    lines.append(f"# BookwormPRO v{semver} ({tag_name})")
     lines.append("")
     lines.append(f"**Release Date:** {date_str}")
     lines.append("")
 
     if first_release:
-        lines.append("> 🎉 **First official release!** This marks the beginning of regular weekly releases")
-        lines.append("> for Hermes Agent. See below for everything included in this initial release.")
+        lines.append("> [完成] **First official release!** This marks the beginning of regular weekly releases")
+        lines.append("> for BookwormPRO. See below for everything included in this initial release.")
         lines.append("")
 
     # Group commits by category
@@ -823,14 +823,14 @@ def generate_changelog(commits, tag_name, semver, repo_url="https://github.com/N
 
     # Category display order and emoji
     category_order = [
-        ("breaking", "⚠️ Breaking Changes"),
-        ("features", "✨ Features"),
-        ("improvements", "🔧 Improvements"),
+        ("breaking", "[警告] Breaking Changes"),
+        ("features", "* Features"),
+        ("improvements", "[工具] Improvements"),
         ("fixes", "🐛 Bug Fixes"),
         ("docs", "📚 Documentation"),
         ("tests", "🧪 Tests"),
-        ("chore", "🏗️ Infrastructure"),
-        ("other", "📦 Other Changes"),
+        ("chore", "[构建]️ Infrastructure"),
+        ("other", "[包] Other Changes"),
     ]
 
     for cat_key, cat_title in category_order:
@@ -894,7 +894,7 @@ def generate_changelog(commits, tag_name, semver, repo_url="https://github.com/N
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Hermes Agent Release Tool")
+    parser = argparse.ArgumentParser(description="BookwormPRO Release Tool")
     parser.add_argument("--bump", choices=["major", "minor", "patch"],
                         help="Which semver component to bump")
     parser.add_argument("--publish", action="store_true",
@@ -941,7 +941,7 @@ def main():
             return
 
     print(f"{'='*60}")
-    print(f"  Hermes Agent Release Preview")
+    print(f"  BookwormPRO Release Preview")
     print(f"{'='*60}")
     print(f"  CalVer tag:      {tag_name}")
     print(f"  SemVer:          v{current_version} → v{new_version}")
@@ -973,38 +973,38 @@ def main():
         # Update version files
         if args.bump:
             update_version_files(new_version, calver_date)
-            print(f"  ✓ Updated version files to v{new_version} ({calver_date})")
+            print(f"  [成功] Updated version files to v{new_version} ({calver_date})")
 
             # Commit version bump
             add_result = git_result("add", str(VERSION_FILE), str(PYPROJECT_FILE))
             if add_result.returncode != 0:
-                print(f"  ✗ Failed to stage version files: {add_result.stderr.strip()}")
+                print(f"  [失败] Failed to stage version files: {add_result.stderr.strip()}")
                 return
 
             commit_result = git_result(
                 "commit", "-m", f"chore: bump version to v{new_version} ({calver_date})"
             )
             if commit_result.returncode != 0:
-                print(f"  ✗ Failed to commit version bump: {commit_result.stderr.strip()}")
+                print(f"  [失败] Failed to commit version bump: {commit_result.stderr.strip()}")
                 return
-            print(f"  ✓ Committed version bump")
+            print(f"  [成功] Committed version bump")
 
         # Create annotated tag
         tag_result = git_result(
             "tag", "-a", tag_name, "-m",
-            f"Hermes Agent v{new_version} ({calver_date})\n\nWeekly release"
+            f"BookwormPRO v{new_version} ({calver_date})\n\nWeekly release"
         )
         if tag_result.returncode != 0:
-            print(f"  ✗ Failed to create tag {tag_name}: {tag_result.stderr.strip()}")
+            print(f"  [失败] Failed to create tag {tag_name}: {tag_result.stderr.strip()}")
             return
-        print(f"  ✓ Created tag {tag_name}")
+        print(f"  [成功] Created tag {tag_name}")
 
         # Push
         push_result = git_result("push", "origin", "HEAD", "--tags")
         if push_result.returncode == 0:
-            print(f"  ✓ Pushed to origin")
+            print(f"  [成功] Pushed to origin")
         else:
-            print(f"  ✗ Failed to push to origin: {push_result.stderr.strip()}")
+            print(f"  [失败] Failed to push to origin: {push_result.stderr.strip()}")
             print("    Continue manually after fixing access:")
             print("    git push origin HEAD --tags")
 
@@ -1012,7 +1012,7 @@ def main():
         # (e.g. Homebrew) can target them without relying on CalVer tag names.
         artifacts = build_release_artifacts(new_version)
         if artifacts:
-            print("  ✓ Built release artifacts:")
+            print("  [成功] Built release artifacts:")
             for artifact in artifacts:
                 print(f"    - {artifact.relative_to(REPO_ROOT)}")
 
@@ -1022,7 +1022,7 @@ def main():
 
         gh_cmd = [
             "gh", "release", "create", tag_name,
-            "--title", f"Hermes Agent v{new_version} ({calver_date})",
+            "--title", f"BookwormPRO v{new_version} ({calver_date})",
             "--notes-file", str(changelog_file),
         ]
         gh_cmd.extend(str(path) for path in artifacts)
@@ -1039,20 +1039,20 @@ def main():
 
         if result and result.returncode == 0:
             changelog_file.unlink(missing_ok=True)
-            print(f"  ✓ GitHub release created: {result.stdout.strip()}")
-            print(f"\n  🎉 Release v{new_version} ({tag_name}) published!")
+            print(f"  [成功] GitHub release created: {result.stdout.strip()}")
+            print(f"\n  [完成] Release v{new_version} ({tag_name}) published!")
         else:
             if result is None:
-                print("  ✗ GitHub release skipped: `gh` CLI not found.")
+                print("  [失败] GitHub release skipped: `gh` CLI not found.")
             else:
-                print(f"  ✗ GitHub release failed: {result.stderr.strip()}")
+                print(f"  [失败] GitHub release failed: {result.stderr.strip()}")
             print(f"    Release notes kept at: {changelog_file}")
             print(f"    Tag was created locally. Create the release manually:")
             print(
-                f"    gh release create {tag_name} --title 'Hermes Agent v{new_version} ({calver_date})' "
+                f"    gh release create {tag_name} --title 'BookwormPRO v{new_version} ({calver_date})' "
                 f"--notes-file .release_notes.md {' '.join(str(path) for path in artifacts)}"
             )
-            print(f"\n  ✓ Release artifacts prepared for manual publish: v{new_version} ({tag_name})")
+            print(f"\n  [成功] Release artifacts prepared for manual publish: v{new_version} ({tag_name})")
     else:
         print(f"\n{'='*60}")
         print(f"  Dry run complete. To publish, add --publish")

@@ -10,12 +10,12 @@
 # Distribution: browser 97%, web 20%, vision 12%, terminal 15%
 #
 # Prerequisites:
-#   - OPENROUTER_API_KEY in ~/.hermes/.env
-#   - BROWSERBASE_API_KEY in ~/.hermes/.env (for browser tools)
+#   - OPENROUTER_API_KEY in ~/.bookwormpro/.env
+#   - BROWSERBASE_API_KEY in ~/.bookwormpro/.env (for browser tools)
 #   - A dataset JSONL file with one {"prompt": "..."} per line
 #
 # Usage:
-#   cd ~/.hermes/hermes-agent
+#   cd ~/.bookwormpro/bookwormpro
 #   bash datagen-config-examples/run_browser_tasks.sh
 #
 # Output: data/browser_tasks_example/trajectories.jsonl
@@ -24,7 +24,7 @@
 mkdir -p logs
 
 LOG_FILE="logs/browser_tasks_$(date +%Y%m%d_%H%M%S).log"
-echo "📝 Logging to: $LOG_FILE"
+echo "[查询] Logging to: $LOG_FILE"
 
 # Point to the example dataset in this directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -51,7 +51,7 @@ IMPORTANT GUIDELINES:
 4. GENERAL: Use browser tools to click, fill forms, and extract information. Use terminal for local file operations. Verify your actions and handle errors gracefully." \
   2>&1 | tee "$LOG_FILE"
 
-echo "✅ Done. Log: $LOG_FILE"
+echo "[成功] Done. Log: $LOG_FILE"
 
 # =============================================================================
 # Common options you can add:

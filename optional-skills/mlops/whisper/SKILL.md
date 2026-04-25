@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [openai-whisper, transformers, torch]
 metadata:
-  hermes:
+  bookworm:
     tags: [Whisper, Speech Recognition, ASR, Multimodal, Multilingual, OpenAI, Speech-To-Text, Transcription, Translation, Audio Processing]
 
 ---
@@ -81,12 +81,12 @@ model = whisper.load_model("turbo")  # Fastest, good quality
 
 | Model | Parameters | English-only | Multilingual | Speed | VRAM |
 |-------|------------|--------------|--------------|-------|------|
-| tiny | 39M | ✓ | ✓ | ~32x | ~1 GB |
-| base | 74M | ✓ | ✓ | ~16x | ~1 GB |
-| small | 244M | ✓ | ✓ | ~6x | ~2 GB |
-| medium | 769M | ✓ | ✓ | ~2x | ~5 GB |
-| large | 1550M | ✗ | ✓ | 1x | ~10 GB |
-| turbo | 809M | ✗ | ✓ | ~8x | ~6 GB |
+| tiny | 39M | [成功] | [成功] | ~32x | ~1 GB |
+| base | 74M | [成功] | [成功] | ~16x | ~1 GB |
+| small | 244M | [成功] | [成功] | ~6x | ~2 GB |
+| medium | 769M | [成功] | [成功] | ~2x | ~5 GB |
+| large | 1550M | [失败] | [成功] | 1x | ~10 GB |
+| turbo | 809M | [失败] | [成功] | ~8x | ~6 GB |
 
 **Recommendation**: Use `turbo` for best speed/quality, `base` for prototyping
 
@@ -311,7 +311,7 @@ Full list: 99 languages total
 
 ## Resources
 
-- **GitHub**: https://github.com/openai/whisper ⭐ 72,900+
+- **GitHub**: https://github.com/openai/whisper * 72,900+
 - **Paper**: https://arxiv.org/abs/2212.04356
 - **Model Card**: https://github.com/openai/whisper/blob/main/model-card.md
 - **Colab**: Available in repo

@@ -44,7 +44,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from hermes_constants import get_hermes_home
+from bwm_constants import get_hermes_home
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +52,9 @@ logger = logging.getLogger(__name__)
 # Path Configuration
 # ============================================================================
 
-# Path to tinker-atropos submodule (relative to hermes-agent root)
-HERMES_ROOT = Path(__file__).parent.parent
-TINKER_ATROPOS_ROOT = HERMES_ROOT / "tinker-atropos"
+# Path to tinker-atropos submodule (relative to bookwormpro root)
+BOOKWORMPRO_ROOT = Path(__file__).parent.parent
+TINKER_ATROPOS_ROOT = BOOKWORMPRO_ROOT / "tinker-atropos"
 ENVIRONMENTS_DIR = TINKER_ATROPOS_ROOT / "tinker_atropos" / "environments"
 CONFIGS_DIR = TINKER_ATROPOS_ROOT / "configs"
 LOGS_DIR = get_hermes_home() / "logs" / "rl_training"
@@ -733,7 +733,7 @@ async def rl_start_training() -> str:
     # Check API keys
     if not os.getenv("TINKER_API_KEY"):
         return json.dumps({
-            "error": "TINKER_API_KEY not set. Add it to ~/.hermes/.env",
+            "error": "TINKER_API_KEY not set. Add it to ~/.bookwormpro/.env",
         }, indent=2)
     
     # Find environment file
@@ -1190,8 +1190,8 @@ async def rl_test_inference(
             try:
                 await asyncio.wait_for(
                     asyncio.gather(
-                        read_stream(process.stdout, stdout_lines, "📊 "),
-                        read_stream(process.stderr, stderr_lines, "⚠️ "),
+                        read_stream(process.stdout, stdout_lines, "[状态] "),
+                        read_stream(process.stderr, stderr_lines, "[警告] "),
                     ),
                     timeout=600,  # 10 minute timeout per model
                 )
@@ -1224,14 +1224,14 @@ async def rl_test_inference(
                 model_results["stderr"] = stderr_text[-1000:]
                 model_results["stdout"] = stdout_text[-1000:]
                 model_results["log_file"] = str(log_file)
-                print(f"\n  ❌ Error: {model_results['error']}")
+                print(f"\n  [失败] Error: {model_results['error']}")
                 # Print last few lines of stderr for debugging
                 if stderr_lines:
                     print("  Last errors:")
                     for line in stderr_lines[-5:]:
                         print(f"    {line}")
             else:
-                print("\n  ✅ Process completed successfully")
+                print("\n  [成功] Process completed successfully")
                 print(f"  Output file: {output_file}")
                 print(f"  File exists: {output_file.exists()}")
                 

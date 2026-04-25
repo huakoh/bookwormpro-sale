@@ -167,12 +167,12 @@
 
 | Feature | FA1 | FA2 | FA3 |
 |---------|-----|-----|-----|
-| Basic attention | ✅ | ✅ | ✅ |
-| Causal masking | ✅ | ✅ | ✅ |
-| Multi-query attention | ❌ | ✅ | ✅ |
-| Sliding window | ❌ | ✅ | ✅ |
-| Paged KV cache | ❌ | ✅ | ✅ |
-| FP8 support | ❌ | ❌ | ✅ (H100 only) |
+| Basic attention | [成功] | [成功] | [成功] |
+| Causal masking | [成功] | [成功] | [成功] |
+| Multi-query attention | [失败] | [成功] | [成功] |
+| Sliding window | [失败] | [成功] | [成功] |
+| Paged KV cache | [失败] | [成功] | [成功] |
+| FP8 support | [失败] | [失败] | [成功] (H100 only) |
 | Work partitioning | Basic | Advanced | Optimal |
 
 ## Real-world model benchmarks

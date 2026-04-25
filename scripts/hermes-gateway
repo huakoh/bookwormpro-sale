@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Hermes Gateway - Standalone messaging platform integration.
+BookwormPRO Gateway - Standalone messaging platform integration.
 
 This is the proper entry point for running the gateway as a service.
 NOT tied to the CLI - runs independently.
 
 Usage:
     # Run in foreground (for testing)
-    ./scripts/hermes-gateway
+    ./scripts/bookworm-gateway
     
     # Install as systemd service
-    ./scripts/hermes-gateway install
+    ./scripts/bookworm-gateway install
     
     # Manage the service
-    ./scripts/hermes-gateway start
-    ./scripts/hermes-gateway stop
-    ./scripts/hermes-gateway restart
-    ./scripts/hermes-gateway status
+    ./scripts/bookworm-gateway start
+    ./scripts/bookworm-gateway stop
+    ./scripts/bookworm-gateway restart
+    ./scripts/bookworm-gateway status
     
     # Uninstall
-    ./scripts/hermes-gateway uninstall
+    ./scripts/bookworm-gateway uninstall
 """
 
 import argparse
@@ -45,8 +45,8 @@ if env_path.exists():
 # Service Configuration
 # =============================================================================
 
-SERVICE_NAME = "hermes-gateway"
-SERVICE_DESCRIPTION = "Hermes Agent Gateway - Messaging Platform Integration"
+SERVICE_NAME = "bookworm-gateway"
+SERVICE_DESCRIPTION = "BookwormPRO Gateway - Messaging Platform Integration"
 
 def get_systemd_unit_path() -> Path:
     """Get the path for the systemd user service file."""
@@ -54,7 +54,7 @@ def get_systemd_unit_path() -> Path:
 
 def get_launchd_plist_path() -> Path:
     """Get the path for the launchd plist file (macOS)."""
-    return Path.home() / "Library" / "LaunchAgents" / f"ai.hermes.gateway.plist"
+    return Path.home() / "Library" / "LaunchAgents" / f"ai.bookwormpro.gateway.plist"
 
 def get_python_path() -> str:
     """Get the path to the Python interpreter."""
@@ -116,7 +116,7 @@ def install_systemd():
     # Enable the service (start on boot)
     subprocess.run(["systemctl", "--user", "enable", SERVICE_NAME], check=True)
     
-    print(f"✓ Service installed and enabled")
+    print(f"[成功] Service installed and enabled")
     print(f"")
     print(f"To start the service:")
     print(f"  systemctl --user start {SERVICE_NAME}")
@@ -138,11 +138,11 @@ def uninstall_systemd():
     # Remove the unit file
     if unit_path.exists():
         unit_path.unlink()
-        print(f"✓ Removed {unit_path}")
+        print(f"[成功] Removed {unit_path}")
     
     # Reload systemd
     subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
-    print(f"✓ Service uninstalled")
+    print(f"[成功] Service uninstalled")
 
 def systemd_status():
     """Show systemd service status."""
@@ -151,17 +151,17 @@ def systemd_status():
 def systemd_start():
     """Start the systemd service."""
     subprocess.run(["systemctl", "--user", "start", SERVICE_NAME], check=True)
-    print(f"✓ Service started")
+    print(f"[成功] Service started")
 
 def systemd_stop():
     """Stop the systemd service."""
     subprocess.run(["systemctl", "--user", "stop", SERVICE_NAME], check=True)
-    print(f"✓ Service stopped")
+    print(f"[成功] Service stopped")
 
 def systemd_restart():
     """Restart the systemd service."""
     subprocess.run(["systemctl", "--user", "restart", SERVICE_NAME], check=True)
-    print(f"✓ Service restarted")
+    print(f"[成功] Service restarted")
 
 
 # =============================================================================
@@ -173,14 +173,14 @@ def generate_launchd_plist() -> str:
     python_path = get_python_path()
     script_path = get_gateway_script_path()
     working_dir = str(PROJECT_DIR)
-    log_dir = Path.home() / ".hermes" / "logs"
+    log_dir = Path.home() / ".bookwormpro" / "logs"
     
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>ai.hermes.gateway</string>
+    <string>ai.bookwormpro.gateway</string>
     
     <key>ProgramArguments</key>
     <array>
@@ -222,7 +222,7 @@ def install_launchd():
     plist_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Ensure log directory exists
-    log_dir = Path.home() / ".hermes" / "logs"
+    log_dir = Path.home() / ".bookwormpro" / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"Installing launchd service to: {plist_path}")
@@ -231,14 +231,14 @@ def install_launchd():
     # Load the service
     subprocess.run(["launchctl", "load", str(plist_path)], check=True)
     
-    print(f"✓ Service installed and loaded")
+    print(f"[成功] Service installed and loaded")
     print(f"")
     print(f"To view logs:")
-    print(f"  tail -f ~/.hermes/logs/gateway.log")
+    print(f"  tail -f ~/.bookwormpro/logs/gateway.log")
     print(f"")
     print(f"To manage the service:")
-    print(f"  launchctl start ai.hermes.gateway")
-    print(f"  launchctl stop ai.hermes.gateway")
+    print(f"  launchctl start ai.bookwormpro.gateway")
+    print(f"  launchctl stop ai.bookwormpro.gateway")
 
 def uninstall_launchd():
     """Uninstall the launchd service (macOS)."""
@@ -250,23 +250,23 @@ def uninstall_launchd():
     # Remove the plist file
     if plist_path.exists():
         plist_path.unlink()
-        print(f"✓ Removed {plist_path}")
+        print(f"[成功] Removed {plist_path}")
     
-    print(f"✓ Service uninstalled")
+    print(f"[成功] Service uninstalled")
 
 def launchd_status():
     """Show launchd service status."""
-    subprocess.run(["launchctl", "list", "ai.hermes.gateway"])
+    subprocess.run(["launchctl", "list", "ai.bookwormpro.gateway"])
 
 def launchd_start():
     """Start the launchd service."""
-    subprocess.run(["launchctl", "start", "ai.hermes.gateway"], check=True)
-    print(f"✓ Service started")
+    subprocess.run(["launchctl", "start", "ai.bookwormpro.gateway"], check=True)
+    print(f"[成功] Service started")
 
 def launchd_stop():
     """Stop the launchd service."""
-    subprocess.run(["launchctl", "stop", "ai.hermes.gateway"], check=True)
-    print(f"✓ Service stopped")
+    subprocess.run(["launchctl", "stop", "ai.bookwormpro.gateway"], check=True)
+    print(f"[成功] Service stopped")
 
 def launchd_restart():
     """Restart the launchd service."""
@@ -295,7 +295,7 @@ def is_windows() -> bool:
 def run_gateway():
     """Run the gateway in foreground."""
     from gateway.run import start_gateway
-    print("Starting Hermes Gateway...")
+    print("Starting BookwormPRO Gateway...")
     print("Press Ctrl+C to stop.")
     print()
     asyncio.run(start_gateway())
@@ -307,24 +307,24 @@ def run_gateway():
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Hermes Gateway - Messaging Platform Integration",
+        description="BookwormPRO Gateway - Messaging Platform Integration",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
     # Run in foreground (for testing)
-    ./scripts/hermes-gateway run
+    ./scripts/bookworm-gateway run
     
     # Install as system service
-    ./scripts/hermes-gateway install
+    ./scripts/bookworm-gateway install
     
     # Manage the service
-    ./scripts/hermes-gateway start
-    ./scripts/hermes-gateway stop
-    ./scripts/hermes-gateway restart
-    ./scripts/hermes-gateway status
+    ./scripts/bookworm-gateway start
+    ./scripts/bookworm-gateway stop
+    ./scripts/bookworm-gateway restart
+    ./scripts/bookworm-gateway status
     
     # Uninstall
-    ./scripts/hermes-gateway uninstall
+    ./scripts/bookworm-gateway uninstall
 
 Configuration:
     Set environment variables in .env file or system environment:
@@ -332,7 +332,7 @@ Configuration:
     - DISCORD_BOT_TOKEN
     - WHATSAPP_ENABLED
     
-    Or create ~/.hermes/gateway.json for advanced configuration.
+    Or create ~/.bookwormpro/gateway.json for advanced configuration.
 """
     )
     
@@ -363,7 +363,7 @@ Configuration:
             install_launchd()
         else:
             print("Service installation not supported on this platform.")
-            print("Please run manually: ./scripts/hermes-gateway run")
+            print("Please run manually: ./scripts/bookworm-gateway run")
             sys.exit(1)
     
     elif args.command == "uninstall":

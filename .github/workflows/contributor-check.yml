@@ -55,7 +55,7 @@ jobs:
 
           if [ -n "$MISSING" ]; then
             echo ""
-            echo "⚠️  New contributor email(s) not in AUTHOR_MAP:"
+            echo "[警告]  New contributor email(s) not in AUTHOR_MAP:"
             echo -e "$MISSING"
             echo ""
             echo "Please add mappings to scripts/release.py AUTHOR_MAP:"
@@ -69,5 +69,5 @@ jobs:
             echo "  gh api 'search/users?q=EMAIL+in:email' --jq '.items[0].login'"
             exit 1
           else
-            echo "✅ All contributor emails are mapped in AUTHOR_MAP."
+            echo "[成功] All contributor emails are mapped in AUTHOR_MAP."
           fi

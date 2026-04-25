@@ -17,14 +17,14 @@ Search and download GIFs from Tenor using curl. No dependencies beyond curl and 
 | Source | Bundled (installed by default) |
 | Path | `skills/media/gif-search` |
 | Version | `1.1.0` |
-| Author | Hermes Agent |
+| Author | BookwormPRO |
 | License | MIT |
 | Tags | `GIF`, `Media`, `Search`, `Tenor`, `API` |
 
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that BookwormPRO loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
 :::
 
 # GIF Search (Tenor API)
@@ -33,7 +33,7 @@ Search and download GIFs directly via the Tenor API using curl. No extra tools n
 
 ## Setup
 
-Set your Tenor API key in your environment (add to `~/.hermes/.env`):
+Set your Tenor API key in your environment (add to `~/.bookwormpro/.env`):
 
 ```bash
 TENOR_API_KEY=your_key_here
@@ -98,4 +98,4 @@ Each result has multiple formats under `.media_formats`:
 
 - URL-encode the query: spaces as `+`, special chars as `%XX`
 - For sending in chat, `tinygif` URLs are lighter weight
-- GIF URLs can be used directly in markdown: `![alt](https://github.com/NousResearch/hermes-agent/blob/main/skills/media/gif-search/url)`
+- GIF URLs can be used directly in markdown: `![alt](https://github.com/huakoh/BookwormPRO/blob/main/skills/media/gif-search/url)`

@@ -1,4 +1,4 @@
-import { Box, NoSelect, ScrollBox, type ScrollBoxHandle, Text, useInput, useStdout } from '@hermes/ink'
+import { Box, NoSelect, ScrollBox, type ScrollBoxHandle, Text, useInput, useStdout } from '@bookworm/ink'
 import { useStore } from '@nanostores/react'
 import { type ReactNode, type RefObject, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -81,9 +81,9 @@ const FILTER_PREDICATES: Record<FilterMode, (n: SubagentNode) => boolean> = {
 const STATUS_GLYPH: Record<Status, { color: (t: Theme) => string; glyph: string }> = {
   running: { color: t => t.color.amber, glyph: '●' },
   queued: { color: t => t.color.dim, glyph: '○' },
-  completed: { color: t => t.color.statusGood, glyph: '✓' },
+  completed: { color: t => t.color.statusGood, glyph: '[成功]' },
   interrupted: { color: t => t.color.warn, glyph: '■' },
-  failed: { color: t => t.color.error, glyph: '✗' }
+  failed: { color: t => t.color.error, glyph: '[失败]' }
 }
 
 // Heatmap palette — cold → hot, resolved against the active theme.
@@ -424,7 +424,7 @@ function Detail({ id, node, t }: { id?: string; node: SubagentNode; t: Theme }) 
         <Field
           name="subtree"
           t={t}
-          value={`${agg.descendantCount} agent${agg.descendantCount === 1 ? '' : 's'} · d${agg.maxDepthFromHere} · ⚡${agg.activeCount}`}
+          value={`${agg.descendantCount} agent${agg.descendantCount === 1 ? '' : 's'} · d${agg.maxDepthFromHere} · *${agg.activeCount}`}
         />
         {item.durationSeconds ? <Field name="elapsed" t={t} value={fmtDur(item.durationSeconds)} /> : null}
         {item.iteration != null ? <Field name="iteration" t={t} value={String(item.iteration)} /> : null}

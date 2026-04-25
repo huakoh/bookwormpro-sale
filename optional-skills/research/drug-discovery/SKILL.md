@@ -11,7 +11,7 @@ version: 1.0.0
 author: bennytimz
 license: MIT
 metadata:
-  hermes:
+  bookworm:
     tags: [science, chemistry, pharmacology, research, health]
 prerequisites:
   commands: [curl, python3]
@@ -101,16 +101,16 @@ hba  = int(props.get('HBondAcceptorCount', 0))
 rot  = int(props.get('RotatableBondCount', 0))
 tpsa = float(props.get('TPSA', 0))
 print('=== Lipinski Rule of Five (Ro5) ===')
-print(f'  MW   {mw:.1f} Da    {\"✓\" if mw<=500 else \"✗ VIOLATION (>500)\"}')
-print(f'  LogP {logp:.2f}       {\"✓\" if logp<=5 else \"✗ VIOLATION (>5)\"}')
-print(f'  HBD  {hbd}           {\"✓\" if hbd<=5 else \"✗ VIOLATION (>5)\"}')
-print(f'  HBA  {hba}           {\"✓\" if hba<=10 else \"✗ VIOLATION (>10)\"}')
+print(f'  MW   {mw:.1f} Da    {\"[成功]\" if mw<=500 else \"[失败] VIOLATION (>500)\"}')
+print(f'  LogP {logp:.2f}       {\"[成功]\" if logp<=5 else \"[失败] VIOLATION (>5)\"}')
+print(f'  HBD  {hbd}           {\"[成功]\" if hbd<=5 else \"[失败] VIOLATION (>5)\"}')
+print(f'  HBA  {hba}           {\"[成功]\" if hba<=10 else \"[失败] VIOLATION (>10)\"}')
 viol = sum([mw>500, logp>5, hbd>5, hba>10])
 print(f'  Violations: {viol}/4  {\"→ Likely orally bioavailable\" if viol<=1 else \"→ Poor oral bioavailability predicted\"}')
 print()
 print('=== Veber Oral Bioavailability Rules ===')
-print(f'  TPSA         {tpsa:.1f} Å²   {\"✓\" if tpsa<=140 else \"✗ VIOLATION (>140)\"}')
-print(f'  Rot. bonds   {rot}           {\"✓\" if rot<=10 else \"✗ VIOLATION (>10)\"}')
+print(f'  TPSA         {tpsa:.1f} Å²   {\"[成功]\" if tpsa<=140 else \"[失败] VIOLATION (>140)\"}')
+print(f'  Rot. bonds   {rot}           {\"[成功]\" if rot<=10 else \"[失败] VIOLATION (>10)\"}')
 print(f'  Both rules met: {\"Yes → good oral absorption predicted\" if tpsa<=140 and rot<=10 else \"No → reduced oral absorption\"}')
 "
 ```

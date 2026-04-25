@@ -137,16 +137,16 @@ dataset_mixer:
 ### Quality Indicators
 
 **Good preference data**:
-- ✅ Clear quality difference between chosen/rejected
-- ✅ Diverse prompts
-- ✅ Minimal noise/annotation errors
-- ✅ Appropriate difficulty level
+- [成功] Clear quality difference between chosen/rejected
+- [成功] Diverse prompts
+- [成功] Minimal noise/annotation errors
+- [成功] Appropriate difficulty level
 
 **Poor preference data**:
-- ❌ Ambiguous preferences
-- ❌ Repetitive prompts
-- ❌ Annotation noise
-- ❌ Too easy/hard prompts
+- [失败] Ambiguous preferences
+- [失败] Repetitive prompts
+- [失败] Annotation noise
+- [失败] Too easy/hard prompts
 
 ### Quality Filtering
 
@@ -467,7 +467,7 @@ for ex in samples:
     print(f"Prompt: {ex['prompt']}")
     print(f"Chosen: {ex['chosen'][:100]}...")
     print(f"Rejected: {ex['rejected'][:100]}...")
-    print(f"Preference clear: {'✓' if len(ex['chosen']) > len(ex['rejected']) else '?'}")
+    print(f"Preference clear: {'[成功]' if len(ex['chosen']) > len(ex['rejected']) else '?'}")
     print()
 ```
 

@@ -137,15 +137,15 @@ def provider_with_config(tmp_path, monkeypatch):
 
 
 def test_normalize_retain_tags_accepts_csv_and_dedupes():
-    assert _normalize_retain_tags("agent:fakeassistantname, source_system:hermes-agent, agent:fakeassistantname") == [
+    assert _normalize_retain_tags("agent:fakeassistantname, source_system:bookwormpro, agent:fakeassistantname") == [
         "agent:fakeassistantname",
-        "source_system:hermes-agent",
+        "source_system:bookwormpro",
     ]
 
 
 def test_normalize_retain_tags_accepts_json_array_string():
-    value = json.dumps(["agent:fakeassistantname", "source_system:hermes-agent"])
-    assert _normalize_retain_tags(value) == ["agent:fakeassistantname", "source_system:hermes-agent"]
+    value = json.dumps(["agent:fakeassistantname", "source_system:bookwormpro"])
+    assert _normalize_retain_tags(value) == ["agent:fakeassistantname", "source_system:bookwormpro"]
 
 
 # ---------------------------------------------------------------------------
@@ -196,12 +196,12 @@ class TestConfig:
         assert provider._recall_tags is None
         assert provider._bank_mission == ""
         assert provider._bank_retain_mission is None
-        assert provider._retain_context == "conversation between Hermes Agent and the User"
+        assert provider._retain_context == "conversation between BookwormPRO and the User"
 
     def test_custom_config_values(self, provider_with_config):
         p = provider_with_config(
             retain_tags=["tag1", "tag2"],
-            retain_source="hermes",
+            retain_source="bookworm",
             retain_user_prefix="User (fakeusername)",
             retain_assistant_prefix="Assistant (fakeassistantname)",
             recall_tags=["recall-tag"],
@@ -219,7 +219,7 @@ class TestConfig:
         )
         assert p._tags == ["tag1", "tag2"]
         assert p._retain_tags == ["tag1", "tag2"]
-        assert p._retain_source == "hermes"
+        assert p._retain_source == "bookworm"
         assert p._retain_user_prefix == "User (fakeusername)"
         assert p._retain_assistant_prefix == "Assistant (fakeassistantname)"
         assert p._recall_tags == ["recall-tag"]
@@ -248,25 +248,25 @@ class TestConfig:
 
         cfg = _load_config()
         assert cfg["apiKey"] == "env-key"
-        assert cfg["banks"]["hermes"]["bankId"] == "env-bank"
-        assert cfg["banks"]["hermes"]["budget"] == "high"
+        assert cfg["banks"]["bookworm"]["bankId"] == "env-bank"
+        assert cfg["banks"]["bookworm"]["budget"] == "high"
 
 
 class TestPostSetup:
     def test_local_embedded_setup_materializes_profile_env(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / "hermes-home"
+        hermes_home = tmp_path / "bookworm-home"
         user_home = tmp_path / "user-home"
         user_home.mkdir()
         monkeypatch.setenv("HOME", str(user_home))
 
         selections = iter([1, 0])  # local_embedded, openai
-        monkeypatch.setattr("hermes_cli.memory_setup._curses_select", lambda *args, **kwargs: next(selections))
+        monkeypatch.setattr("bwm_cli.memory_setup._curses_select", lambda *args, **kwargs: next(selections))
         monkeypatch.setattr("shutil.which", lambda name: None)
         monkeypatch.setattr("builtins.input", lambda prompt="": "")
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
         monkeypatch.setattr("getpass.getpass", lambda prompt="": "sk-local-test")
         saved_configs = []
-        monkeypatch.setattr("hermes_cli.config.save_config", lambda cfg: saved_configs.append(cfg.copy()))
+        monkeypatch.setattr("bwm_cli.config.save_config", lambda cfg: saved_configs.append(cfg.copy()))
 
         provider = HindsightMemoryProvider()
         provider.post_setup(str(hermes_home), {"memory": {}})
@@ -274,7 +274,7 @@ class TestPostSetup:
         assert saved_configs[-1]["memory"]["provider"] == "hindsight"
         assert (hermes_home / ".env").read_text() == "HINDSIGHT_LLM_API_KEY=sk-local-test\nHINDSIGHT_TIMEOUT=120\n"
 
-        profile_env = user_home / ".hindsight" / "profiles" / "hermes.env"
+        profile_env = user_home / ".hindsight" / "profiles" / "bookworm.env"
         assert profile_env.exists()
         assert profile_env.read_text() == (
             "HINDSIGHT_API_LLM_PROVIDER=openai\n"
@@ -284,41 +284,41 @@ class TestPostSetup:
         )
 
     def test_local_embedded_setup_respects_existing_profile_name(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / "hermes-home"
+        hermes_home = tmp_path / "bookworm-home"
         user_home = tmp_path / "user-home"
         user_home.mkdir()
         monkeypatch.setenv("HOME", str(user_home))
 
         selections = iter([1, 0])  # local_embedded, openai
-        monkeypatch.setattr("hermes_cli.memory_setup._curses_select", lambda *args, **kwargs: next(selections))
+        monkeypatch.setattr("bwm_cli.memory_setup._curses_select", lambda *args, **kwargs: next(selections))
         monkeypatch.setattr("shutil.which", lambda name: None)
         monkeypatch.setattr("builtins.input", lambda prompt="": "")
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
         monkeypatch.setattr("getpass.getpass", lambda prompt="": "sk-local-test")
-        monkeypatch.setattr("hermes_cli.config.save_config", lambda cfg: None)
+        monkeypatch.setattr("bwm_cli.config.save_config", lambda cfg: None)
 
         provider = HindsightMemoryProvider()
         provider.save_config({"profile": "coder"}, str(hermes_home))
         provider.post_setup(str(hermes_home), {"memory": {}})
 
         coder_env = user_home / ".hindsight" / "profiles" / "coder.env"
-        hermes_env = user_home / ".hindsight" / "profiles" / "hermes.env"
+        hermes_env = user_home / ".hindsight" / "profiles" / "bookworm.env"
         assert coder_env.exists()
         assert not hermes_env.exists()
 
     def test_local_embedded_setup_preserves_existing_key_when_input_left_blank(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / "hermes-home"
+        hermes_home = tmp_path / "bookworm-home"
         user_home = tmp_path / "user-home"
         user_home.mkdir()
         monkeypatch.setenv("HOME", str(user_home))
 
         selections = iter([1, 0])  # local_embedded, openai
-        monkeypatch.setattr("hermes_cli.memory_setup._curses_select", lambda *args, **kwargs: next(selections))
+        monkeypatch.setattr("bwm_cli.memory_setup._curses_select", lambda *args, **kwargs: next(selections))
         monkeypatch.setattr("shutil.which", lambda name: None)
         monkeypatch.setattr("builtins.input", lambda prompt="": "")
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
         monkeypatch.setattr("getpass.getpass", lambda prompt="": "")
-        monkeypatch.setattr("hermes_cli.config.save_config", lambda cfg: None)
+        monkeypatch.setattr("bwm_cli.config.save_config", lambda cfg: None)
 
         env_path = hermes_home / ".env"
         env_path.parent.mkdir(parents=True, exist_ok=True)
@@ -327,7 +327,7 @@ class TestPostSetup:
         provider = HindsightMemoryProvider()
         provider.post_setup(str(hermes_home), {"memory": {}})
 
-        profile_env = user_home / ".hindsight" / "profiles" / "hermes.env"
+        profile_env = user_home / ".hindsight" / "profiles" / "bookworm.env"
         assert profile_env.exists()
         assert "HINDSIGHT_API_LLM_API_KEY=existing-key\n" in profile_env.read_text()
 
@@ -528,7 +528,7 @@ class TestSyncTurn:
     def test_sync_turn_retains_metadata_rich_turn(self, provider_with_config):
         p = provider_with_config(
             retain_tags=["conv", "session1"],
-            retain_source="hermes",
+            retain_source="bookworm",
             retain_user_prefix="User (fakeusername)",
             retain_assistant_prefix="Assistant (fakeassistantname)",
         )
@@ -555,7 +555,7 @@ class TestSyncTurn:
         assert call_kwargs["retain_async"] is True
         assert len(call_kwargs["items"]) == 1
         item = call_kwargs["items"][0]
-        assert item["context"] == "conversation between Hermes Agent and the User"
+        assert item["context"] == "conversation between BookwormPRO and the User"
         assert item["tags"] == ["conv", "session1", "session:session-1"]
         content = json.loads(item["content"])
         assert len(content) == 1
@@ -563,7 +563,7 @@ class TestSyncTurn:
         assert content[0][0]["content"] == "User (fakeusername): hello"
         assert content[0][1]["role"] == "assistant"
         assert content[0][1]["content"] == "Assistant (fakeassistantname): hi there"
-        assert item["metadata"]["source"] == "hermes"
+        assert item["metadata"]["source"] == "bookworm"
         assert item["metadata"]["session_id"] == "session-1"
         assert item["metadata"]["platform"] == "discord"
         assert item["metadata"]["user_id"] == "fakeusername-123"
@@ -604,7 +604,7 @@ class TestSyncTurn:
         assert call_kwargs["document_id"].startswith("test-session-")
         assert call_kwargs["retain_async"] is True
         assert len(call_kwargs["items"]) == 1
-        assert call_kwargs["items"][0]["context"] == "conversation between Hermes Agent and the User"
+        assert call_kwargs["items"][0]["context"] == "conversation between BookwormPRO and the User"
 
     def test_sync_turn_custom_context(self, provider_with_config):
         p = provider_with_config(retain_context="my-agent")
@@ -804,7 +804,7 @@ class TestConfigSchema:
 
 class TestBankIdTemplate:
     def test_sanitize_bank_segment_passthrough(self):
-        assert _sanitize_bank_segment("hermes") == "hermes"
+        assert _sanitize_bank_segment("bookworm") == "bookworm"
         assert _sanitize_bank_segment("my-agent_1") == "my-agent_1"
 
     def test_sanitize_bank_segment_strips_unsafe(self):
@@ -818,33 +818,33 @@ class TestBankIdTemplate:
 
     def test_resolve_empty_template_uses_fallback(self):
         result = _resolve_bank_id_template(
-            "", fallback="hermes", profile="coder"
+            "", fallback="bookworm", profile="coder"
         )
-        assert result == "hermes"
+        assert result == "bookworm"
 
     def test_resolve_with_profile(self):
         result = _resolve_bank_id_template(
-            "hermes-{profile}", fallback="hermes",
+            "bookworm-{profile}", fallback="bookworm",
             profile="coder", workspace="", platform="", user="", session="",
         )
-        assert result == "hermes-coder"
+        assert result == "bookworm-coder"
 
     def test_resolve_with_multiple_placeholders(self):
         result = _resolve_bank_id_template(
             "{workspace}-{profile}-{platform}",
-            fallback="hermes",
+            fallback="bookworm",
             profile="coder", workspace="myorg", platform="cli",
             user="", session="",
         )
         assert result == "myorg-coder-cli"
 
     def test_resolve_collapses_empty_placeholders(self):
-        # When user is empty, "hermes-{user}" becomes "hermes-" -> trimmed to "hermes"
+        # When user is empty, "bookworm-{user}" becomes "bookworm-" -> trimmed to "bookworm"
         result = _resolve_bank_id_template(
-            "hermes-{user}", fallback="default",
+            "bookworm-{user}", fallback="default",
             profile="", workspace="", platform="", user="", session="",
         )
-        assert result == "hermes"
+        assert result == "bookworm"
 
     def test_resolve_collapses_double_dashes(self):
         # Two empty placeholders with a dash between them should collapse
@@ -863,7 +863,7 @@ class TestBankIdTemplate:
 
     def test_resolve_sanitizes_placeholder_values(self):
         result = _resolve_bank_id_template(
-            "user-{user}", fallback="hermes",
+            "user-{user}", fallback="bookworm",
             profile="", workspace="", platform="",
             user="josh@example.com", session="",
         )
@@ -872,10 +872,10 @@ class TestBankIdTemplate:
     def test_resolve_invalid_template_returns_fallback(self):
         # Unknown placeholder should fall back without raising
         result = _resolve_bank_id_template(
-            "hermes-{unknown}", fallback="hermes",
+            "bookworm-{unknown}", fallback="bookworm",
             profile="", workspace="", platform="", user="", session="",
         )
-        assert result == "hermes"
+        assert result == "bookworm"
 
     def test_provider_uses_bank_id_template_from_config(self, tmp_path, monkeypatch):
         config = {
@@ -883,7 +883,7 @@ class TestBankIdTemplate:
             "apiKey": "k",
             "api_url": "http://x",
             "bank_id": "fallback-bank",
-            "bank_id_template": "hermes-{profile}",
+            "bank_id_template": "bookworm-{profile}",
         }
         config_path = tmp_path / "hindsight" / "config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -896,10 +896,10 @@ class TestBankIdTemplate:
             hermes_home=str(tmp_path),
             platform="cli",
             agent_identity="coder",
-            agent_workspace="hermes",
+            agent_workspace="bookworm",
         )
-        assert p._bank_id == "hermes-coder"
-        assert p._bank_id_template == "hermes-{profile}"
+        assert p._bank_id == "bookworm-coder"
+        assert p._bank_id_template == "bookworm-{profile}"
 
     def test_provider_without_template_uses_static_bank_id(self, tmp_path, monkeypatch):
         config = {
@@ -927,8 +927,8 @@ class TestBankIdTemplate:
             "mode": "cloud",
             "apiKey": "k",
             "api_url": "http://x",
-            "bank_id": "hermes-fallback",
-            "bank_id_template": "hermes-{profile}",
+            "bank_id": "bookworm-fallback",
+            "bank_id_template": "bookworm-{profile}",
         }
         config_path = tmp_path / "hindsight" / "config.json"
         config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -936,9 +936,9 @@ class TestBankIdTemplate:
         monkeypatch.setattr("plugins.memory.hindsight.get_hermes_home", lambda: tmp_path)
 
         p = HindsightMemoryProvider()
-        # No agent_identity passed — template renders to "hermes-" which collapses to "hermes"
+        # No agent_identity passed — template renders to "bookworm-" which collapses to "bookworm"
         p.initialize(session_id="s1", hermes_home=str(tmp_path), platform="cli")
-        assert p._bank_id == "hermes"
+        assert p._bank_id == "bookworm"
 
 
 # ---------------------------------------------------------------------------

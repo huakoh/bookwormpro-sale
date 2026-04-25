@@ -1,0 +1,15 @@
+"""
+BookwormPRO CLI - Unified command-line interface for BookwormPRO.
+
+Provides subcommands for:
+- bookworm chat          - Interactive chat (same as ./bookworm)
+- bookworm gateway       - Run gateway in foreground
+- bookworm gateway start - Start gateway service
+- bookworm gateway stop  - Stop gateway service  
+- bookworm setup         - Interactive setup wizard
+- bookworm status        - Show status of all components
+- bookworm cron          - Manage cron jobs
+"""
+
+__version__ = "0.11.0"
+__release_date__ = "2026.4.23"

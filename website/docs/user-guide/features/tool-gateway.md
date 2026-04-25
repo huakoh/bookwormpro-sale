@@ -1,17 +1,17 @@
 ---
-title: "Nous Tool Gateway"
-description: "Route web search, image generation, text-to-speech, and browser automation through your Nous subscription — no extra API keys needed"
+title: "BookwormPRO Tool Gateway"
+description: "Route web search, image generation, text-to-speech, and browser automation through your BookwormPRO subscription — no extra API keys needed"
 sidebar_label: "Tool Gateway"
 sidebar_position: 2
 ---
 
-# Nous Tool Gateway
+# BookwormPRO Tool Gateway
 
 :::tip Get Started
-The Tool Gateway is included with paid Nous Portal subscriptions. **[Manage your subscription →](https://portal.nousresearch.com/manage-subscription)**
+The Tool Gateway is included with paid BookwormPRO Portal subscriptions. **[Manage your subscription →](/manage-subscription)**
 :::
 
-The **Tool Gateway** lets paid [Nous Portal](https://portal.nousresearch.com) subscribers use web search, image generation, text-to-speech, and browser automation through their existing subscription — no need to sign up for separate API keys from Firecrawl, FAL, OpenAI, or Browser Use.
+The **Tool Gateway** lets paid [BookwormPRO Portal]() subscribers use web search, image generation, text-to-speech, and browser automation through their existing subscription — no need to sign up for separate API keys from Firecrawl, FAL, OpenAI, or Browser Use.
 
 ## What's Included
 
@@ -22,31 +22,31 @@ The **Tool Gateway** lets paid [Nous Portal](https://portal.nousresearch.com) su
 | **Text-to-speech** | Convert text to speech via OpenAI TTS | `VOICE_TOOLS_OPENAI_KEY`, `ELEVENLABS_API_KEY` |
 | **Browser automation** | Control cloud browsers via Browser Use | `BROWSER_USE_API_KEY`, `BROWSERBASE_API_KEY` |
 
-All four tools bill to your Nous subscription. You can enable any combination — for example, use the gateway for web and image generation while keeping your own ElevenLabs key for TTS.
+All four tools bill to your BookwormPRO subscription. You can enable any combination — for example, use the gateway for web and image generation while keeping your own ElevenLabs key for TTS.
 
 ## Eligibility
 
-The Tool Gateway is available to **paid** [Nous Portal](https://portal.nousresearch.com/manage-subscription) subscribers. Free-tier accounts do not have access — [upgrade your subscription](https://portal.nousresearch.com/manage-subscription) to unlock it.
+The Tool Gateway is available to **paid** [BookwormPRO Portal](/manage-subscription) subscribers. Free-tier accounts do not have access — [upgrade your subscription](/manage-subscription) to unlock it.
 
 To check your status:
 
 ```bash
-hermes status
+bookworm status
 ```
 
-Look for the **Nous Tool Gateway** section. It shows which tools are active via the gateway, which use direct keys, and which aren't configured.
+Look for the **BookwormPRO Tool Gateway** section. It shows which tools are active via the gateway, which use direct keys, and which aren't configured.
 
 ## Enabling the Tool Gateway
 
 ### During model setup
 
-When you run `hermes model` and select Nous Portal as your provider, Hermes automatically offers to enable the Tool Gateway:
+When you run `bookworm model` and select BookwormPRO Portal as your provider, BookwormPRO automatically offers to enable the Tool Gateway:
 
 ```
-Your Nous subscription includes the Tool Gateway.
+Your BookwormPRO subscription includes the Tool Gateway.
 
   The Tool Gateway gives you access to web search, image generation,
-  text-to-speech, and browser automation through your Nous subscription.
+  text-to-speech, and browser automation through your BookwormPRO subscription.
   No need to sign up for separate API keys — just pick the tools you want.
 
   ○ Web search & extract (Firecrawl) — not configured
@@ -62,19 +62,19 @@ Select **Enable Tool Gateway** and you're done.
 
 If you already have direct API keys for some tools, the prompt adapts — you can enable the gateway for all tools (your existing keys are kept in `.env` but not used at runtime), enable only for unconfigured tools, or skip entirely.
 
-### Via `hermes tools`
+### Via `bookworm tools`
 
 You can also enable the gateway tool-by-tool through the interactive tool configuration:
 
 ```bash
-hermes tools
+bookworm tools
 ```
 
-Select a tool category (Web, Browser, Image Generation, or TTS), then choose **Nous Subscription** as the provider. This sets `use_gateway: true` for that tool in your config.
+Select a tool category (Web, Browser, Image Generation, or TTS), then choose **BookwormPRO Subscription** as the provider. This sets `use_gateway: true` for that tool in your config.
 
 ### Manual configuration
 
-Set the `use_gateway` flag directly in `~/.hermes/config.yaml`:
+Set the `use_gateway` flag directly in `~/.bookwormpro/config.yaml`:
 
 ```yaml
 web:
@@ -95,14 +95,14 @@ browser:
 
 ## How It Works
 
-When `use_gateway: true` is set for a tool, the runtime routes API calls through the Nous Tool Gateway instead of using direct API keys:
+When `use_gateway: true` is set for a tool, the runtime routes API calls through the BookwormPRO Tool Gateway instead of using direct API keys:
 
 1. **Web tools** — `web_search` and `web_extract` use the gateway's Firecrawl endpoint
 2. **Image generation** — `image_generate` uses the gateway's FAL endpoint
 3. **TTS** — `text_to_speech` uses the gateway's OpenAI Audio endpoint
 4. **Browser** — `browser_navigate` and other browser tools use the gateway's Browser Use endpoint
 
-The gateway authenticates using your Nous Portal credentials (stored in `~/.hermes/auth.json` after `hermes model`).
+The gateway authenticates using your BookwormPRO Portal credentials (stored in `~/.bookwormpro/auth.json` after `bookworm model`).
 
 ### Precedence
 
@@ -118,7 +118,7 @@ This means you can switch between gateway and direct keys at any time without de
 To stop using the gateway for a specific tool:
 
 ```bash
-hermes tools    # Select the tool → choose a direct provider
+bookworm tools    # Select the tool → choose a direct provider
 ```
 
 Or set `use_gateway: false` in config:
@@ -129,34 +129,34 @@ web:
   use_gateway: false  # Now uses FIRECRAWL_API_KEY from .env
 ```
 
-When you select a non-gateway provider in `hermes tools`, the `use_gateway` flag is automatically set to `false` to prevent contradictory config.
+When you select a non-gateway provider in `bookworm tools`, the `use_gateway` flag is automatically set to `false` to prevent contradictory config.
 
 ## Checking Status
 
 ```bash
-hermes status
+bookworm status
 ```
 
-The **Nous Tool Gateway** section shows:
+The **BookwormPRO Tool Gateway** section shows:
 
 ```
-◆ Nous Tool Gateway
-  Nous Portal   ✓ managed tools available
-  Web tools       ✓ active via Nous subscription
-  Image gen       ✓ active via Nous subscription
-  TTS             ✓ active via Nous subscription
+◆ BookwormPRO Tool Gateway
+  BookwormPRO Portal   [成功] managed tools available
+  Web tools       [成功] active via BookwormPRO subscription
+  Image gen       [成功] active via BookwormPRO subscription
+  TTS             [成功] active via BookwormPRO subscription
   Browser         ○ active via Browser Use key
   Modal           ○ available via subscription (optional)
 ```
 
-Tools marked "active via Nous subscription" are routed through the gateway. Tools with their own keys show which provider is active.
+Tools marked "active via BookwormPRO subscription" are routed through the gateway. Tools with their own keys show which provider is active.
 
 ## Advanced: Self-Hosted Gateway
 
-For self-hosted or custom gateway deployments, you can override the gateway endpoints via environment variables in `~/.hermes/.env`:
+For self-hosted or custom gateway deployments, you can override the gateway endpoints via environment variables in `~/.bookwormpro/.env`:
 
 ```bash
-TOOL_GATEWAY_DOMAIN=nousresearch.com     # Base domain for gateway routing
+TOOL_GATEWAY_DOMAIN=bookwormpro.local     # Base domain for gateway routing
 TOOL_GATEWAY_SCHEME=https                 # HTTP or HTTPS (default: https)
 TOOL_GATEWAY_USER_TOKEN=your-token        # Auth token (normally auto-populated)
 FIRECRAWL_GATEWAY_URL=https://...         # Override for the Firecrawl endpoint specifically
@@ -176,7 +176,7 @@ Yes. The `use_gateway` flag is per-tool. You can mix and match — for example, 
 
 ### What if my subscription expires?
 
-Tools that were routed through the gateway will stop working until you [renew your subscription](https://portal.nousresearch.com/manage-subscription) or switch to direct API keys via `hermes tools`.
+Tools that were routed through the gateway will stop working until you [renew your subscription](/manage-subscription) or switch to direct API keys via `bookworm tools`.
 
 ### Does the gateway work with the messaging gateway?
 
@@ -184,4 +184,4 @@ Yes. The Tool Gateway routes tool API calls regardless of whether you're using t
 
 ### Is Modal included?
 
-Modal (serverless terminal backend) is available as an optional add-on through the Nous subscription. It's not enabled by the Tool Gateway prompt — configure it separately via `hermes setup terminal` or in `config.yaml`.
+Modal (serverless terminal backend) is available as an optional add-on through the BookwormPRO subscription. It's not enabled by the Tool Gateway prompt — configure it separately via `bookworm setup terminal` or in `config.yaml`.

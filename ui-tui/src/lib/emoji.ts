@@ -39,7 +39,7 @@ export function ensureEmojiPresentation(text: string): string {
       // selector.  VS16 means the user (or a prior pass) already requested
       // emoji presentation; VS15 is an explicit text-presentation request so
       // leave it alone and don't pile VS16 on top of it.  Inject before ZWJ
-      // and KEYCAP so ZWJ-joined sequences (e.g. ❤️‍🔥) and digit keycaps
+      // and KEYCAP so ZWJ-joined sequences (e.g. ❤️‍*) and digit keycaps
       // both render as emoji rather than text.
       if (next !== VS16 && next !== VS15) {
         out ??= ''

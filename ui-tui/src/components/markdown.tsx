@@ -1,4 +1,4 @@
-import { Box, Link, Text } from '@hermes/ink'
+import { Box, Link, Text } from '@bookworm/ink'
 import { memo, type ReactNode, useMemo } from 'react'
 
 import { ensureEmojiPresentation } from '../lib/emoji.js'
@@ -479,7 +479,7 @@ function MdImpl({ compact, t, text }: MdProps) {
         start('list')
 
         const task = bullet[2]!.match(TASK_RE)
-        const marker = task ? (task[1]!.toLowerCase() === 'x' ? '☑' : '☐') : '•'
+        const marker = task ? (task[1]!.toLowerCase() === 'x' ? '[成功]' : '☐') : '•'
 
         nodes.push(
           <Text key={key}>

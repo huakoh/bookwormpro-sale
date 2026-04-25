@@ -6,7 +6,7 @@ author: Orchestra Research
 license: MIT
 dependencies: [guidance, transformers]
 metadata:
-  hermes:
+  bookworm:
     tags: [Prompt Engineering, Guidance, Constrained Generation, Structured Output, JSON Validation, Grammar, Microsoft Research, Format Enforcement, Multi-Step Workflows]
 
 ---
@@ -456,20 +456,20 @@ print(f"Location: {lm['location']}")
 ### 1. Use Regex for Format Validation
 
 ```python
-# ✅ Good: Regex ensures valid format
+# [成功] Good: Regex ensures valid format
 lm += "Email: " + gen("email", regex=r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 
-# ❌ Bad: Free generation may produce invalid emails
+# [失败] Bad: Free generation may produce invalid emails
 lm += "Email: " + gen("email", max_tokens=50)
 ```
 
 ### 2. Use select() for Fixed Categories
 
 ```python
-# ✅ Good: Guaranteed valid category
+# [成功] Good: Guaranteed valid category
 lm += "Status: " + select(["pending", "approved", "rejected"], name="status")
 
-# ❌ Bad: May generate typos or invalid values
+# [失败] Bad: May generate typos or invalid values
 lm += "Status: " + gen("status", max_tokens=20)
 ```
 
@@ -484,17 +484,17 @@ lm += "The capital is " + gen("capital")  # Automatic healing
 ### 4. Use stop Sequences
 
 ```python
-# ✅ Good: Stop at newline for single-line outputs
+# [成功] Good: Stop at newline for single-line outputs
 lm += "Name: " + gen("name", stop="\n")
 
-# ❌ Bad: May generate multiple lines
+# [失败] Bad: May generate multiple lines
 lm += "Name: " + gen("name", max_tokens=50)
 ```
 
 ### 5. Create Reusable Functions
 
 ```python
-# ✅ Good: Reusable pattern
+# [成功] Good: Reusable pattern
 @guidance
 def generate_person(lm):
     lm += "Name: " + gen("name", stop="\n")
@@ -510,10 +510,10 @@ lm = generate_person(lm)
 ### 6. Balance Constraints
 
 ```python
-# ✅ Good: Reasonable constraints
+# [成功] Good: Reasonable constraints
 lm += gen("name", regex=r"[A-Za-z ]+", max_tokens=30)
 
-# ❌ Too strict: May fail or be very slow
+# [失败] Too strict: May fail or be very slow
 lm += gen("name", regex=r"^(John|Jane)$", max_tokens=10)
 ```
 
@@ -521,13 +521,13 @@ lm += gen("name", regex=r"^(John|Jane)$", max_tokens=10)
 
 | Feature | Guidance | Instructor | Outlines | LMQL |
 |---------|----------|------------|----------|------|
-| Regex Constraints | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
-| Grammar Support | ✅ CFG | ❌ No | ✅ CFG | ✅ CFG |
-| Pydantic Validation | ❌ No | ✅ Yes | ✅ Yes | ❌ No |
-| Token Healing | ✅ Yes | ❌ No | ✅ Yes | ❌ No |
-| Local Models | ✅ Yes | ⚠️ Limited | ✅ Yes | ✅ Yes |
-| API Models | ✅ Yes | ✅ Yes | ⚠️ Limited | ✅ Yes |
-| Pythonic Syntax | ✅ Yes | ✅ Yes | ✅ Yes | ❌ SQL-like |
+| Regex Constraints | [成功] Yes | [失败] No | [成功] Yes | [成功] Yes |
+| Grammar Support | [成功] CFG | [失败] No | [成功] CFG | [成功] CFG |
+| Pydantic Validation | [失败] No | [成功] Yes | [成功] Yes | [失败] No |
+| Token Healing | [成功] Yes | [失败] No | [成功] Yes | [失败] No |
+| Local Models | [成功] Yes | [警告] Limited | [成功] Yes | [成功] Yes |
+| API Models | [成功] Yes | [成功] Yes | [警告] Limited | [成功] Yes |
+| Pythonic Syntax | [成功] Yes | [成功] Yes | [成功] Yes | [失败] SQL-like |
 | Learning Curve | Low | Low | Medium | High |
 
 **When to choose Guidance:**

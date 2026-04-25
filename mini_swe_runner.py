@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-SWE Runner with Hermes Trajectory Format
+SWE Runner with BookwormPRO Trajectory Format
 
-A runner that uses Hermes-Agent's built-in execution environments
-(local, docker, modal) and outputs trajectories in the Hermes-Agent format
+A runner that uses BookwormPRO-Agent's built-in execution environments
+(local, docker, modal) and outputs trajectories in the BookwormPRO-Agent format
 compatible with batch_runner.py and trajectory_compressor.py.
 
 Features:
-- Uses Hermes-Agent's Docker, Modal, or Local environments for command execution
-- Outputs trajectories in Hermes format (from/value pairs with <tool_call>/<tool_response> XML)
+- Uses BookwormPRO-Agent's Docker, Modal, or Local environments for command execution
+- Outputs trajectories in BookwormPRO format (from/value pairs with <tool_call>/<tool_response> XML)
 - Compatible with the trajectory compression pipeline
 - Supports batch processing from JSONL prompt files
 
@@ -65,7 +65,7 @@ def _effective_temperature_for_model(
 
 
 # ============================================================================
-# Terminal Tool Definition (matches Hermes-Agent format)
+# Terminal Tool Definition (matches BookwormPRO-Agent format)
 # ============================================================================
 
 TERMINAL_TOOL_DEFINITION = {
@@ -125,7 +125,7 @@ def create_environment(
     **kwargs
 ):
     """
-    Create an execution environment using Hermes-Agent's built-in backends.
+    Create an execution environment using BookwormPRO-Agent's built-in backends.
     
     Args:
         env_type: One of "local", "docker", "modal"
@@ -154,13 +154,13 @@ def create_environment(
 
 
 # ============================================================================
-# Mini-SWE Runner with Hermes Trajectory Format
+# Mini-SWE Runner with BookwormPRO Trajectory Format
 # ============================================================================
 
 class MiniSWERunner:
     """
-    Agent runner that uses Hermes-Agent's built-in execution environments
-    and outputs trajectories in Hermes-Agent format.
+    Agent runner that uses BookwormPRO-Agent's built-in execution environments
+    and outputs trajectories in BookwormPRO-Agent format.
     """
     
     def __init__(
@@ -236,7 +236,7 @@ class MiniSWERunner:
         # Tool definition
         self.tools = [TERMINAL_TOOL_DEFINITION]
         
-        print("🤖 Mini-SWE Runner initialized")
+        print("[模型] Mini-SWE Runner initialized")
         print(f"   Model: {self.model}")
         print(f"   Environment: {self.env_type}")
         if self.env_type != "local":
@@ -245,14 +245,14 @@ class MiniSWERunner:
     
     def _create_env(self):
         """Create the execution environment."""
-        print(f"🔧 Creating {self.env_type} environment...")
+        print(f"[工具] Creating {self.env_type} environment...")
         self.env = create_environment(
             env_type=self.env_type,
             image=self.image,
             cwd=self.cwd,
             timeout=self.command_timeout
         )
-        print("✅ Environment ready")
+        print("[成功] Environment ready")
     
     def _cleanup_env(self):
         """Cleanup the execution environment."""
@@ -311,7 +311,7 @@ class MiniSWERunner:
         completed: bool
     ) -> List[Dict[str, Any]]:
         """
-        Convert internal message format to Hermes trajectory format.
+        Convert internal message format to BookwormPRO trajectory format.
         
         This produces the exact format used by batch_runner.py.
         """
@@ -425,7 +425,7 @@ class MiniSWERunner:
             Dict with trajectory, completion status, and metadata
         """
         print(f"\n{'='*60}")
-        print(f"📝 Task: {task[:80]}{'...' if len(task) > 80 else ''}")
+        print(f"[查询] Task: {task[:80]}{'...' if len(task) > 80 else ''}")
         print(f"{'='*60}")
         
         # Initialize environment
@@ -454,7 +454,7 @@ Complete the user's task step by step."""
         try:
             while api_call_count < self.max_iterations:
                 api_call_count += 1
-                print(f"\n🔄 API call #{api_call_count}/{self.max_iterations}")
+                print(f"\n[调用] API call #{api_call_count}/{self.max_iterations}")
                 
                 # Prepare API messages
                 api_messages = [{"role": "system", "content": system_prompt}] + messages
@@ -483,11 +483,11 @@ Complete the user's task step by step."""
                 
                 # Log assistant response
                 if assistant_message.content:
-                    print(f"🤖 Assistant: {assistant_message.content[:100]}...")
+                    print(f"[模型] Assistant: {assistant_message.content[:100]}...")
                 
                 # Check for tool calls
                 if assistant_message.tool_calls:
-                    print(f"🔧 Tool calls: {len(assistant_message.tool_calls)}")
+                    print(f"[工具] Tool calls: {len(assistant_message.tool_calls)}")
                     
                     # Add assistant message with tool calls
                     messages.append({
@@ -516,7 +516,7 @@ Complete the user's task step by step."""
                         command = args.get("command", "echo 'No command provided'")
                         timeout = args.get("timeout", self.command_timeout)
                         
-                        print(f"   📞 terminal: {command[:60]}...")
+                        print(f"   [调用] terminal: {command[:60]}...")
                         
                         # Execute command
                         result = self._execute_command(command, timeout)
@@ -532,7 +532,7 @@ Complete the user's task step by step."""
                         
                         # Check for task completion signal
                         if "MINI_SWE_AGENT_FINAL_OUTPUT" in result["output"]:
-                            print("   ✅ Task completion signal detected!")
+                            print("   [成功] Task completion signal detected!")
                             completed = True
                         
                         # Add tool response
@@ -542,7 +542,7 @@ Complete the user's task step by step."""
                             "tool_call_id": tc.id
                         })
                         
-                        print(f"   ✅ exit_code={result['exit_code']}, output={len(result['output'])} chars")
+                        print(f"   [成功] exit_code={result['exit_code']}, output={len(result['output'])} chars")
                     
                     # If task completed, we can stop
                     if completed:
@@ -557,17 +557,17 @@ Complete the user's task step by step."""
                         "content": final_response
                     })
                     completed = True
-                    print("🎉 Agent finished (no more tool calls)")
+                    print("[完成] Agent finished (no more tool calls)")
                     break
             
             if api_call_count >= self.max_iterations:
-                print(f"⚠️  Reached max iterations ({self.max_iterations})")
+                print(f"[警告]  Reached max iterations ({self.max_iterations})")
         
         finally:
             # Cleanup environment
             self._cleanup_env()
         
-        # Convert to Hermes trajectory format
+        # Convert to BookwormPRO trajectory format
         trajectory = self._convert_to_hermes_format(messages, task, completed)
         
         return {
@@ -598,13 +598,13 @@ Complete the user's task step by step."""
         """
         results = []
         
-        print(f"\n📦 Running batch of {len(prompts)} tasks")
+        print(f"\n[包] Running batch of {len(prompts)} tasks")
         print(f"📁 Output: {output_file}")
         
         with open(output_file, 'w', encoding='utf-8') as f:
             for i, prompt in enumerate(prompts, 1):
                 print(f"\n{'='*60}")
-                print(f"📋 Task {i}/{len(prompts)}")
+                print(f"[汇总] Task {i}/{len(prompts)}")
                 print(f"{'='*60}")
                 
                 try:
@@ -615,7 +615,7 @@ Complete the user's task step by step."""
                     f.write(json.dumps(result, ensure_ascii=False) + "\n")
                     f.flush()
                     
-                    print(f"✅ Task {i} completed (api_calls={result['api_calls']})")
+                    print(f"[成功] Task {i} completed (api_calls={result['api_calls']})")
                     
                 except Exception as e:
                     self.logger.error(f"Error on task {i}: {e}")
@@ -630,7 +630,7 @@ Complete the user's task step by step."""
                     f.write(json.dumps(error_result, ensure_ascii=False) + "\n")
                     f.flush()
         
-        print(f"\n✅ Batch complete! {len(results)} trajectories saved to {output_file}")
+        print(f"\n[成功] Batch complete! {len(results)} trajectories saved to {output_file}")
         return results
 
 
@@ -653,7 +653,7 @@ def main(
     verbose: bool = False,
 ):
     """
-    Run SWE tasks with Hermes trajectory format output.
+    Run SWE tasks with BookwormPRO trajectory format output.
     
     Args:
         task: Single task to run (use this OR prompts_file)
@@ -679,7 +679,7 @@ def main(
         # Batch from file
         python mini_swe_runner.py --prompts_file tasks.jsonl --output_file results.jsonl
     """
-    print("🚀 Mini-SWE Runner with Hermes Trajectory Format")
+    print("[启动] Mini-SWE Runner with BookwormPRO Trajectory Format")
     print("=" * 60)
     
     # Initialize runner
@@ -704,9 +704,9 @@ def main(
             f.write(json.dumps(result, ensure_ascii=False) + "\n")
         
         print(f"\n📁 Trajectory saved to: {output_file}")
-        print(f"✅ Completed: {result['completed']}")
-        print(f"📞 API calls: {result['api_calls']}")
-        print(f"💬 Turns: {len(result['conversations'])}")
+        print(f"[成功] Completed: {result['completed']}")
+        print(f"[调用] API calls: {result['api_calls']}")
+        print(f"[对话] Turns: {len(result['conversations'])}")
         
     elif prompts_file:
         # Batch mode
@@ -722,13 +722,13 @@ def main(
                         prompts.append(line)
         
         if not prompts:
-            print(f"❌ No prompts found in {prompts_file}")
+            print(f"[失败] No prompts found in {prompts_file}")
             return
         
         runner.run_batch(prompts, output_file)
     
     else:
-        print("❌ Please provide either --task or --prompts_file")
+        print("[失败] Please provide either --task or --prompts_file")
         print("   Example: python mini_swe_runner.py --task 'Create a hello world script'")
 
 

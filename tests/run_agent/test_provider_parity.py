@@ -222,7 +222,7 @@ class TestDeveloperRoleSwap:
         assert messages[0]["role"] == "system"
 
     def test_developer_role_via_nous_portal(self, monkeypatch):
-        agent = _make_agent(monkeypatch, "nous", base_url="https://inference-api.nousresearch.com/v1")
+        agent = _make_agent(monkeypatch, "bookwormpro", base_url="")
         agent.model = "gpt-5"
         messages = [
             {"role": "system", "content": "You are helpful."},
@@ -305,14 +305,14 @@ class TestBuildApiKwargsAIGateway:
 
 class TestBuildApiKwargsNousPortal:
     def test_includes_nous_product_tags(self, monkeypatch):
-        agent = _make_agent(monkeypatch, "nous", base_url="https://inference-api.nousresearch.com/v1")
+        agent = _make_agent(monkeypatch, "bookwormpro", base_url="")
         messages = [{"role": "user", "content": "hi"}]
         kwargs = agent._build_api_kwargs(messages)
         extra = kwargs.get("extra_body", {})
-        assert extra.get("tags") == ["product=hermes-agent"]
+        assert extra.get("tags") == ["product=bookwormpro"]
 
     def test_uses_chat_completions_format(self, monkeypatch):
-        agent = _make_agent(monkeypatch, "nous", base_url="https://inference-api.nousresearch.com/v1")
+        agent = _make_agent(monkeypatch, "bookwormpro", base_url="")
         messages = [{"role": "user", "content": "hi"}]
         kwargs = agent._build_api_kwargs(messages)
         assert "messages" in kwargs
@@ -612,7 +612,7 @@ class TestNormalizeCodexResponse:
         assert msg.tool_calls[0].function.name == "web_search"
 
 
-# ── Chat completions response handling (OpenRouter/Nous) ─────────────────────
+# ── Chat completions response handling (OpenRouter/BookwormPRO) ─────────────────────
 
 class TestBuildAssistantMessage:
     """Verify _build_assistant_message works for all provider response formats."""
@@ -704,13 +704,13 @@ class TestAuxiliaryClientProviderPriority:
     def test_nous_when_no_openrouter(self, monkeypatch):
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
         from agent.auxiliary_client import get_text_auxiliary_client
-        with patch("agent.auxiliary_client._read_nous_auth", return_value={"access_token": "nous-tok"}), \
+        with patch("agent.auxiliary_client._read_nous_auth", return_value={"access_token": "bookwormpro-tok"}), \
              patch("agent.auxiliary_client.OpenAI") as mock:
             client, model = get_text_auxiliary_client()
         assert model == "google/gemini-3-flash-preview"
 
     def test_custom_endpoint_when_no_nous(self, monkeypatch):
-        """Custom endpoint is used when no OpenRouter/Nous keys are available.
+        """Custom endpoint is used when no OpenRouter/BookwormPRO keys are available.
 
         Since the March 2026 config refactor, OPENAI_BASE_URL env var is no
         longer consulted — base_url comes from config.yaml via

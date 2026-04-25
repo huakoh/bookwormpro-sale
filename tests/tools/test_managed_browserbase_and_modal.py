@@ -52,10 +52,10 @@ def _enable_managed_nous_tools(monkeypatch):
     The _install_fake_tools_package() helper resets and reimports tool modules,
     so a simple monkeypatch on tool_backend_helpers doesn't survive.  We patch
     the *source* modules that the reimported modules will import from — both
-    hermes_cli.auth and hermes_cli.models — so the function body returns True.
+    bwm_cli.auth and bwm_cli.models — so the function body returns True.
     """
-    monkeypatch.setattr("hermes_cli.auth.get_nous_auth_status", lambda: {"logged_in": True})
-    monkeypatch.setattr("hermes_cli.models.check_nous_free_tier", lambda: False)
+    monkeypatch.setattr("bwm_cli.auth.get_nous_auth_status", lambda: {"logged_in": True})
+    monkeypatch.setattr("bwm_cli.models.check_nous_free_tier", lambda: False)
 
 
 def _install_fake_tools_package():
@@ -131,8 +131,8 @@ def test_browser_use_explicit_local_mode_stays_local_even_when_managed_gateway_i
     env = os.environ.copy()
     env.pop("BROWSER_USE_API_KEY", None)
     env.update({
-        "HERMES_HOME": str(tmp_path),
-        "TOOL_GATEWAY_USER_TOKEN": "nous-token",
+        "BOOKWORMPRO_HOME": str(tmp_path),
+        "TOOL_GATEWAY_USER_TOKEN": "bookwormpro-token",
         "BROWSER_USE_GATEWAY_URL": "http://127.0.0.1:3009",
     })
 
@@ -152,7 +152,7 @@ def test_browserbase_does_not_use_gateway_only_configuration():
     env.pop("BROWSERBASE_API_KEY", None)
     env.pop("BROWSERBASE_PROJECT_ID", None)
     env.update({
-        "TOOL_GATEWAY_USER_TOKEN": "nous-token",
+        "TOOL_GATEWAY_USER_TOKEN": "bookwormpro-token",
         "BROWSERBASE_GATEWAY_URL": "http://127.0.0.1:3009",
     })
 
@@ -171,7 +171,7 @@ def test_browser_use_managed_gateway_adds_idempotency_key_and_persists_external_
     env = os.environ.copy()
     env.pop("BROWSER_USE_API_KEY", None)
     env.update({
-        "TOOL_GATEWAY_USER_TOKEN": "nous-token",
+        "TOOL_GATEWAY_USER_TOKEN": "bookwormpro-token",
         "BROWSER_USE_GATEWAY_URL": "http://127.0.0.1:3009",
     })
 
@@ -198,7 +198,7 @@ def test_browser_use_managed_gateway_adds_idempotency_key_and_persists_external_
             session = provider.create_session("task-browser-use-managed")
 
     sent_headers = post.call_args.kwargs["headers"]
-    assert sent_headers["X-Browser-Use-API-Key"] == "nous-token"
+    assert sent_headers["X-Browser-Use-API-Key"] == "bookwormpro-token"
     assert sent_headers["X-Idempotency-Key"].startswith("browser-use-session-create:")
     sent_payload = post.call_args.kwargs["json"]
     assert sent_payload["timeout"] == 5
@@ -211,7 +211,7 @@ def test_browser_use_managed_gateway_reuses_pending_idempotency_key_after_timeou
     env = os.environ.copy()
     env.pop("BROWSER_USE_API_KEY", None)
     env.update({
-        "TOOL_GATEWAY_USER_TOKEN": "nous-token",
+        "TOOL_GATEWAY_USER_TOKEN": "bookwormpro-token",
         "BROWSER_USE_GATEWAY_URL": "http://127.0.0.1:3009",
     })
 
@@ -259,7 +259,7 @@ def test_browser_use_managed_gateway_preserves_pending_idempotency_key_for_in_pr
     env = os.environ.copy()
     env.pop("BROWSER_USE_API_KEY", None)
     env.update({
-        "TOOL_GATEWAY_USER_TOKEN": "nous-token",
+        "TOOL_GATEWAY_USER_TOKEN": "bookwormpro-token",
         "BROWSER_USE_GATEWAY_URL": "http://127.0.0.1:3009",
     })
 
@@ -320,7 +320,7 @@ def test_browser_use_managed_gateway_uses_new_idempotency_key_for_a_new_session_
     env = os.environ.copy()
     env.pop("BROWSER_USE_API_KEY", None)
     env.update({
-        "TOOL_GATEWAY_USER_TOKEN": "nous-token",
+        "TOOL_GATEWAY_USER_TOKEN": "bookwormpro-token",
         "BROWSER_USE_GATEWAY_URL": "http://127.0.0.1:3009",
     })
 
