@@ -48,6 +48,42 @@ bookworm              # start chatting!
 
 ---
 
+## Docker Compose (with host bridge)
+
+Run BookwormPRO in Docker and let it operate on your real Desktop and
+project files instead of an isolated sandbox.
+
+**Linux / macOS / WSL:**
+
+```bash
+git clone https://github.com/huakoh/BookwormPRO.git
+cd BookwormPRO
+./scripts/setup-host-bridge.sh    # writes .env with detected host paths
+docker compose up -d --build
+```
+
+**Windows (Docker Desktop):**
+
+```powershell
+git clone https://github.com/huakoh/BookwormPRO.git
+cd BookwormPRO
+.\scripts\setup-host-bridge.ps1
+docker compose up -d --build
+```
+
+The setup scripts auto-detect your Desktop and a workspace root and write
+them into a repo-root `.env`. The container then mounts them at
+`/host/desktop` and `/host/workspace` and exports
+`BOOKWORMPRO_HOST_BRIDGE=1` so the agent knows it can read, write, and
+delete real local files. Full background, security model, and scope-
+restriction options: [docs/host-bridge.md](docs/host-bridge.md).
+
+To disable the bridge entirely, comment the two `/host/*` volume lines
+and the `BOOKWORMPRO_HOST_BRIDGE` env var in `docker-compose.yml` — the
+agent reverts to closed-sandbox behavior.
+
+---
+
 ## Getting Started
 
 ```bash
