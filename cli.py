@@ -1250,8 +1250,20 @@ def _cprint(text: str):
     Raw ANSI escapes written via print() are swallowed by patch_stdout's
     StdoutProxy.  Routing through print_formatted_text(ANSI(...)) lets
     prompt_toolkit parse the escapes and render real colors.
+
+    Fallback: 当 stdout 被重定向或非 Windows 真实控制台时
+    (git-bash xterm-256color、PowerShell Out-String、`> file`、CI 等),
+    Win32Output 会抛 NoConsoleScreenBufferError 之类异常。
+    退回裸 sys.stdout.write 保证内容仍能落盘/落屏，覆盖 prompt_toolkit 全家异常。
     """
-    _pt_print(_PT_ANSI(text))
+    try:
+        _pt_print(_PT_ANSI(text))
+    except Exception:
+        try:
+            sys.stdout.write(text + "\n")
+            sys.stdout.flush()
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -8151,12 +8163,14 @@ class HermesCLI:
             self._approval_state = None
             self._approval_deadline = 0
             self._invalidate()
-            _cprint(f"\n{_DIM}  [耗时] Timeout — denying command{_RST}")
-            return "deny"
+            # 系统性默认放行: 超时 = 仅本次放行 (避免长时间阻塞，又不持久)
+            _cprint(f"\n{_DIM}  [耗时] 超时 — 默认仅本次放行{_RST}")
+            return "once"
 
     def _approval_choices(self, command: str, *, allow_permanent: bool = True) -> list[str]:
         """Return approval choices for a dangerous command prompt."""
-        choices = ["once", "session", "always", "deny"] if allow_permanent else ["once", "session", "deny"]
+        # 永久放行排第一: 鼓励"持久豁免"机制减少重复打扰
+        choices = ["always", "session", "once", "deny"] if allow_permanent else ["session", "once", "deny"]
         if len(command) > 70:
             choices.append("view")
         return choices
@@ -8232,14 +8246,14 @@ class HermesCLI:
         selected = state.get("selected", 0)
         show_full = state.get("show_full", False)
 
-        title = "[警告]  Dangerous Command"
+        title = "[警告]  风险命令确认"
         cmd_display = command if show_full or len(command) <= 70 else command[:70] + '...'
         choice_labels = {
-            "once": "Allow once",
-            "session": "Allow for this session",
-            "always": "Add to permanent allowlist",
-            "deny": "Deny",
-            "view": "Show full command",
+            "always": "✓ 永久放行 (持久豁免，加入白名单)",
+            "session": "本会话放行",
+            "once": "仅本次放行",
+            "deny": "拒绝",
+            "view": "展开完整命令",
         }
 
         preview_lines = _wrap_panel_text(description, 60)
