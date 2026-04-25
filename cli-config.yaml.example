@@ -407,6 +407,18 @@ prompt_caching:
 # Disabled by default in batch_runner and RL environments.
 #
 memory:
+  # ── External provider (optional, additive on top of builtin) ────────────
+  # Builtin MEMORY.md/USER.md is always on. Set `provider:` to add ONE
+  # external backend for vector search / cross-session semantic recall.
+  # Available plugins (require their own API key in .env):
+  #   honcho       — open-source Honcho server (HONCHO_API_KEY + HONCHO_BASE_URL)
+  #   mem0         — Mem0 hosted (MEM0_API_KEY)
+  #   supermemory  — Supermemory.ai (SUPERMEMORY_API_KEY)
+  #   hindsight    — Hindsight self-hosted (HINDSIGHT_BASE_URL)
+  #   byterover / holographic / openviking / retaindb — see plugins/memory/
+  # Leave commented to use builtin only.
+  # provider: honcho
+
   # Agent's personal notes: environment facts, conventions, things learned
   memory_enabled: true
   

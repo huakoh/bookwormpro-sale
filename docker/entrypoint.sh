@@ -79,6 +79,21 @@ if [ ! -f "$BOOKWORMPRO_HOME/SOUL.md" ]; then
     cp "$INSTALL_DIR/docker/SOUL.md" "$BOOKWORMPRO_HOME/SOUL.md"
 fi
 
+# Memory seed: bootstrap MEMORY.md / USER.md from templates on first run.
+# Builtin memory (tools/memory_tool.py) reads $BOOKWORMPRO_HOME/memories/{MEMORY,USER}.md
+# and freezes a snapshot into the system prompt at session start. Empty files
+# mean "no recall" — seed templates give the agent useful baseline context.
+# Idempotent: only seeds when file is missing, never overwrites user edits.
+for seed_file in MEMORY.md USER.md; do
+    src="$INSTALL_DIR/docker/seed/$seed_file"
+    dst="$BOOKWORMPRO_HOME/memories/$seed_file"
+    if [ -f "$src" ] && [ ! -f "$dst" ]; then
+        cp "$src" "$dst"
+        chown bookworm:bookworm "$dst" 2>/dev/null || true
+        chmod 640 "$dst" 2>/dev/null || true
+    fi
+done
+
 # Sync bundled skills (manifest-based so user edits are preserved)
 if [ -d "$INSTALL_DIR/skills" ]; then
     python3 "$INSTALL_DIR/tools/skills_sync.py"
