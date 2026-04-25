@@ -319,7 +319,18 @@ class LocalEnvironment(BaseEnvironment):
         Check the environment configured for this backend first so callers can
         override the temp root explicitly (for example via terminal.env or a
         custom TMPDIR), then fall back to the host process environment.
+
+        Windows: Python 看不到 git-bash 的虚拟 ``/tmp``，导致 _cwd_file/_snapshot
+        读不回来，cwd 跟踪退化为 POSIX 形式后续 Popen 拿到非法目录抛 WinError 267。
+        在 Windows 直接用 ``tempfile.gettempdir()`` (e.g. C:\\Users\\X\\AppData\\
+        Local\\Temp) 并反斜杠转正斜杠 — bash 在重定向场景接受 ``C:/.../Temp/foo``，
+        Python ``open`` 也能直接读，双向可用。
         """
+        if _IS_WINDOWS:
+            candidate = tempfile.gettempdir()
+            if candidate:
+                return candidate.replace("\\", "/").rstrip("/") or candidate
+
         for env_var in ("TMPDIR", "TMP", "TEMP"):
             candidate = self.env.get(env_var) or os.environ.get(env_var)
             if candidate and candidate.startswith("/"):
@@ -389,15 +400,46 @@ class LocalEnvironment(BaseEnvironment):
 
     def _update_cwd(self, result: dict):
         """Read CWD from temp file (local-only, no round-trip needed)."""
+        # 先让基类剥离 stdout 中的 cwd 标记 (避免回显)，但它会把 self.cwd 覆盖成
+        # bash 的 POSIX 形式。我们随后用文件读取 + Windows 路径归一覆盖回去，
+        # 保证 Popen(cwd=...) 拿到 Windows 原生路径。
+        self._extract_cwd_from_output(result)
         try:
             cwd_path = open(self._cwd_file).read().strip()
             if cwd_path:
-                self.cwd = cwd_path
+                self.cwd = self._normalize_cwd_for_host(cwd_path)
         except (OSError, FileNotFoundError):
             pass
 
-        # Still strip the marker from output so it's not visible
-        self._extract_cwd_from_output(result)
+    @staticmethod
+    def _normalize_cwd_for_host(cwd_path: str) -> str:
+        """把 bash 的 POSIX 风格 cwd 翻译回 Windows 原生路径。
+
+        bash `pwd -P` 在 git-bash/MSYS2 下返回 ``/d/repos/hermes-agent``，
+        Python 的 ``subprocess.Popen(cwd=...)`` 在 Windows 上会以
+        ``CreateProcess`` 直接调用，无法识别这种 POSIX 形式从而抛
+        ``WinError 267 目录名称无效``。仅在 Windows 上做翻译，POSIX 系统
+        透传原值。
+        """
+        if not _IS_WINDOWS or not cwd_path:
+            return cwd_path
+        # 已经是 Windows 路径 (含盘符冒号或反斜杠) 直接返回
+        if len(cwd_path) >= 2 and cwd_path[1] == ":":
+            return cwd_path
+        if "\\" in cwd_path:
+            return cwd_path
+        # /d/repos/hermes-agent → D:/repos/hermes-agent
+        if (
+            len(cwd_path) >= 3
+            and cwd_path[0] == "/"
+            and cwd_path[1].isalpha()
+            and cwd_path[2] == "/"
+        ):
+            return f"{cwd_path[1].upper()}:{cwd_path[2:]}"
+        # /cygdrive/d/... → D:/...
+        if cwd_path.startswith("/cygdrive/") and len(cwd_path) >= 12 and cwd_path[11] == "/":
+            return f"{cwd_path[10].upper()}:{cwd_path[11:]}"
+        return cwd_path
 
     def cleanup(self):
         """Clean up temp files."""

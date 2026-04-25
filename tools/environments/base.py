@@ -31,6 +31,12 @@ logger = logging.getLogger(__name__)
 # to avoid flooding production gateway logs.
 _DEBUG_INTERRUPT = bool(os.getenv("BOOKWORMPRO_DEBUG_INTERRUPT"))
 
+# Windows: select.select 只支持 socket，对 subprocess 管道 fd 会立即抛错，
+# 导致 _drain 线程退出、bash 输出永远卡在管道里、命令把 timeout 走完才返回
+# (read_file 60s 假超时即源于此)。此处保留全局开关，让 _drain 在 Windows 走
+# 阻塞 os.read，兼容现有 POSIX select 路径。
+_IS_WINDOWS = os.name == "nt"
+
 if _DEBUG_INTERRUPT:
     # AIAgent's quiet_mode path (run_agent.py) forces the `tools` logger to
     # ERROR on CLI startup, which would silently swallow every trace we emit.
@@ -478,6 +484,21 @@ class BaseEnvironment(ABC):
             fd = proc.stdout.fileno()
             idle_after_exit = 0
             try:
+                if _IS_WINDOWS:
+                    # Windows 路径: select.select 不接受非 socket 的 fd，原 select
+                    # 路径会被 except 立即吃掉、drain 退出、bash 输出堆在管道中导致
+                    # 假超时。改为阻塞 os.read，依赖 bash 关闭 stdout 时返回 b""
+                    # (EOF) 自然结束；grandchild 持管道场景由主循环 join(timeout=2)
+                    # 兜底，不会比 POSIX 路径多出风险。
+                    while True:
+                        try:
+                            chunk = os.read(fd, 4096)
+                        except (ValueError, OSError):
+                            break
+                        if not chunk:
+                            break  # EOF — bash 已关闭 stdout
+                        output_chunks.append(decoder.decode(chunk))
+                    return
                 while True:
                     try:
                         ready, _, _ = select.select([fd], [], [], 0.1)
