@@ -1588,7 +1588,7 @@ class ChatConsole:
         """
         yield self
 
-# ASCII Art - HERMES-AGENT logo (full width, single line - requires ~95 char terminal)
+# ASCII Art - BOOKWORMPRO-AGENT logo (full width, single line - requires ~95 char terminal)
 BOOKWORMPRO_AGENT_LOGO = """[bold #FFD700]██╗  ██╗███████╗██████╗ ███╗   ███╗███████╗███████╗       █████╗  ██████╗ ███████╗███╗   ██╗████████╗[/]
 [bold #FFD700]██║  ██║██╔════╝██╔══██╗████╗ ████║██╔════╝██╔════╝      ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝[/]
 [#FFBF00]███████║█████╗  ██████╔╝██╔████╔██║█████╗  ███████╗█████╗███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║[/]
@@ -1629,8 +1629,8 @@ def _build_compact_banner() -> str:
     dim_color = _skin.get_color("banner_dim", "#B8860B") if _skin else "#B8860B"
 
     if skin_name == "default":
-        line1 = "[BWM] NOUS HERMES - AI Agent Framework"
-        tiny_line = "[BWM] NOUS HERMES"
+        line1 = "BookwormPRO · AI Agent Framework"
+        tiny_line = "BookwormPRO"
     else:
         agent_name = _skin.get_branding("agent_name", "BookwormPRO") if _skin else "BookwormPRO"
         line1 = f"{agent_name} - AI Agent Framework"
@@ -2363,10 +2363,10 @@ class HermesCLI:
             duration_label = snapshot["duration"]
 
             if width < 52:
-                text = f"[BWM] {snapshot['model_short']} · {duration_label}"
+                text = f"{snapshot['model_short']} · {duration_label}"
                 return self._trim_status_bar_text(text, width)
             if width < 76:
-                parts = [f"[BWM] {snapshot['model_short']}", percent_label]
+                parts = [f"{snapshot['model_short']}", percent_label]
                 parts.append(duration_label)
                 return self._trim_status_bar_text(" · ".join(parts), width)
 
@@ -2377,14 +2377,14 @@ class HermesCLI:
             else:
                 context_label = "ctx --"
 
-            parts = [f"[BWM] {snapshot['model_short']}", context_label, percent_label]
+            parts = [f"{snapshot['model_short']}", context_label, percent_label]
             parts.append(duration_label)
             prompt_elapsed = snapshot.get("prompt_elapsed")
             if prompt_elapsed:
                 parts.append(prompt_elapsed)
             return self._trim_status_bar_text(" │ ".join(parts), width)
         except Exception:
-            return f"[BWM] {self.model if getattr(self, 'model', None) else 'BookwormPRO'}"
+            return f"{self.model if getattr(self, 'model', None) else 'BookwormPRO'}"
 
     def _get_status_bar_fragments(self):
         if not self._status_bar_visible or getattr(self, '_model_picker_state', None):
@@ -2401,7 +2401,7 @@ class HermesCLI:
 
             if width < 52:
                 frags = [
-                    ("class:status-bar", " [BWM] "),
+                    ("class:status-bar", " "),
                     ("class:status-bar-strong", snapshot["model_short"]),
                     ("class:status-bar-dim", " · "),
                     ("class:status-bar-dim", duration_label),
@@ -2412,7 +2412,7 @@ class HermesCLI:
                 percent_label = f"{percent}%" if percent is not None else "--"
                 if width < 76:
                     frags = [
-                        ("class:status-bar", " [BWM] "),
+                        ("class:status-bar", " "),
                         ("class:status-bar-strong", snapshot["model_short"]),
                         ("class:status-bar-dim", " · "),
                         (self._status_bar_context_style(percent), percent_label),
@@ -2430,7 +2430,7 @@ class HermesCLI:
 
                     bar_style = self._status_bar_context_style(percent)
                     frags = [
-                        ("class:status-bar", " [BWM] "),
+                        ("class:status-bar", " "),
                         ("class:status-bar-strong", snapshot["model_short"]),
                         ("class:status-bar-dim", " │ "),
                         ("class:status-bar-dim", context_label),
@@ -2934,10 +2934,10 @@ class HermesCLI:
             try:
                 from bwm_cli.skin_engine import get_active_skin
                 _skin = get_active_skin()
-                label = _skin.get_branding("response_label", "[BWM] BookwormPRO")
+                label = _skin.get_branding("response_label", "BookwormPRO")
                 _text_hex = _skin.get_color("banner_text", "#FFF8DC")
             except Exception:
-                label = "[BWM] BookwormPRO"
+                label = "BookwormPRO"
                 _text_hex = "#FFF8DC"
             # Build a true-color ANSI escape for the response text color
             # so streamed content matches the Rich Panel appearance.
@@ -4933,7 +4933,7 @@ class HermesCLI:
             return
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"hermes_conversation_{timestamp}.json"
+        filename = f"bookworm_conversation_{timestamp}.json"
         
         try:
             with open(filename, "w", encoding="utf-8") as f:
@@ -6069,6 +6069,8 @@ class HermesCLI:
             self._manual_compress(cmd_original)
         elif canonical == "usage":
             self._show_usage()
+        elif canonical == "cost":
+            self._show_cost()
         elif canonical == "insights":
             self._show_insights(cmd_original)
         elif canonical == "copy":
@@ -6221,7 +6223,14 @@ class HermesCLI:
                 )
                 if msg:
                     skill_name = _skill_commands[base_cmd]["name"]
-                    print(f"\n* Loading skill: {skill_name}")
+                    # 加载技能 (优先显示中文名, 落后回原名)
+                    try:
+                        from agent.display import get_tool_zh_name
+                        zh = get_tool_zh_name(skill_name)
+                        zh_display = f"{zh} ({skill_name})" if zh != skill_name else skill_name
+                    except Exception:
+                        zh_display = skill_name
+                    print(f"\n┊ 📚 加载技能 · {zh_display}")
                     if hasattr(self, '_pending_input'):
                         self._pending_input.put(msg)
                 else:
@@ -6363,11 +6372,11 @@ class HermesCLI:
                     try:
                         from bwm_cli.skin_engine import get_active_skin
                         _skin = get_active_skin()
-                        label = _skin.get_branding("response_label", "[BWM] BookwormPRO")
+                        label = _skin.get_branding("response_label", "BookwormPRO")
                         _resp_color = _skin.get_color("response_border", "#CD7F32")
                         _resp_text = _skin.get_color("banner_text", "#FFF8DC")
                     except Exception:
-                        label = "[BWM] BookwormPRO"
+                        label = "BookwormPRO"
                         _resp_color = "#CD7F32"
                         _resp_text = "#FFF8DC"
 
@@ -6498,7 +6507,7 @@ class HermesCLI:
 
                     ChatConsole().print(Panel(
                         _render_final_assistant_content(response, mode=self.final_response_markdown),
-                        title=f"[{_resp_color} bold][BWM] /btw[/]",
+                        title=f"[{_resp_color} bold]/btw[/]",
                         title_align="left",
                         border_style=_resp_color,
                         box=rich_box.HORIZONTALS,
@@ -7171,6 +7180,96 @@ class HermesCLI:
             for quiet_logger in ('tools', 'run_agent', 'trajectory_compressor', 'cron', 'bwm_cli'):
                 logging.getLogger(quiet_logger).setLevel(logging.ERROR)
 
+    def _show_cost(self):
+        """Compact 3-line rollup: session / today / month tokens + cost.
+
+        Complements /usage (session-only deep dive) and /insights (multi-day
+        breakdown) with a glanceable status line for quick budget awareness.
+        Reads session totals from the live agent and historical totals from
+        ``InsightsEngine`` (windowed at 1 and 30 days).
+        """
+        # ── Session column (live agent) ─────────────────────────────────
+        agent = getattr(self, "agent", None)
+        if agent is None or getattr(agent, "session_api_calls", 0) == 0:
+            sess_in = sess_out = sess_cost = 0.0
+            sess_status = "no calls yet"
+        else:
+            try:
+                from agent.usage_pricing import CanonicalUsage, estimate_usage_cost
+                sess_in = getattr(agent, "session_input_tokens", 0) or 0
+                sess_out = getattr(agent, "session_output_tokens", 0) or 0
+                sess_cache_r = getattr(agent, "session_cache_read_tokens", 0) or 0
+                sess_cache_w = getattr(agent, "session_cache_write_tokens", 0) or 0
+                cost_result = estimate_usage_cost(
+                    agent.model,
+                    CanonicalUsage(
+                        input_tokens=sess_in,
+                        output_tokens=sess_out,
+                        cache_read_tokens=sess_cache_r,
+                        cache_write_tokens=sess_cache_w,
+                    ),
+                    provider=getattr(agent, "provider", None),
+                    base_url=getattr(agent, "base_url", None),
+                )
+                sess_cost = float(cost_result.amount_usd or 0)
+                sess_status = cost_result.status
+            except Exception as e:
+                print(f"  [warn] Session cost calc failed: {e}")
+                sess_in = sess_out = sess_cost = 0
+                sess_status = "error"
+
+        # ── Today + Month columns (historical) ──────────────────────────
+        def _window_totals(days: int) -> tuple[int, int, float]:
+            try:
+                from bwm_state import SessionDB
+                from agent.insights import InsightsEngine
+                db = SessionDB()
+                try:
+                    rep = InsightsEngine(db).generate(days=days)
+                finally:
+                    db.close()
+                summary = (rep or {}).get("summary") or rep or {}
+                # Some report shapes nest the totals; fall back gracefully.
+                inp = summary.get("total_input_tokens") or rep.get("total_input_tokens", 0) or 0
+                out = summary.get("total_output_tokens") or rep.get("total_output_tokens", 0) or 0
+                # Prefer actual_cost when known; else estimated_cost.
+                cost = (summary.get("actual_cost")
+                        or rep.get("actual_cost")
+                        or summary.get("estimated_cost")
+                        or rep.get("estimated_cost", 0.0)
+                        or 0.0)
+                return (int(inp), int(out), float(cost))
+            except Exception:
+                return (0, 0, 0.0)
+
+        today_in, today_out, today_cost = _window_totals(1)
+        month_in, month_out, month_cost = _window_totals(30)
+
+        # ── Format ──────────────────────────────────────────────────────
+        def _k(n: int) -> str:
+            if n >= 1_000_000:
+                return f"{n / 1_000_000:.1f}M"
+            if n >= 1_000:
+                return f"{n / 1_000:.1f}K"
+            return str(int(n))
+
+        def _money(amount: float, status: str = "") -> str:
+            if amount == 0:
+                return "—"
+            prefix = "~" if status == "estimated" else ""
+            return f"{prefix}${amount:.3f}" if amount < 10 else f"{prefix}${amount:.2f}"
+
+        print()
+        print("  [成本]  Cost Rollup")
+        print(f"  {'─' * 52}")
+        print(f"  {'Session':<10} {_k(sess_in):>8} in · {_k(sess_out):>8} out  · {_money(sess_cost, sess_status):>10}")
+        print(f"  {'Today':<10} {_k(today_in):>8} in · {_k(today_out):>8} out  · {_money(today_cost):>10}")
+        print(f"  {'Month':<10} {_k(month_in):>8} in · {_k(month_out):>8} out  · {_money(month_cost):>10}")
+        print(f"  {'─' * 52}")
+        if sess_status == "estimated" or sess_status == "unknown":
+            print(f"  Note: '~' = estimated, prices may differ at provider level")
+        print()
+
     def _show_insights(self, command: str = "/insights"):
         """Show usage insights and analytics from session history."""
         # Parse optional --days flag
@@ -7361,9 +7460,10 @@ class HermesCLI:
             self._stream_box_opened = False
         self._close_reasoning_box()
 
-        from agent.display import get_tool_emoji
+        from agent.display import get_tool_emoji, get_tool_zh_name
         emoji = get_tool_emoji(tool_name, default="*")
-        _cprint(f"  ┊ {emoji} preparing {tool_name}…")
+        zh = get_tool_zh_name(tool_name)
+        _cprint(f"  ┊ {emoji} 准备 {zh}…")
 
     # ====================================================================
     # Tool progress callback (audio cues for voice mode)
@@ -7413,14 +7513,16 @@ class HermesCLI:
         if event_type != "tool.started":
             return
         if function_name and not function_name.startswith("_"):
-            from agent.display import get_tool_emoji
+            from agent.display import get_tool_emoji, get_tool_zh_name
             emoji = get_tool_emoji(function_name)
-            label = preview or function_name
+            zh = get_tool_zh_name(function_name)
+            label = preview or zh
             from agent.display import get_tool_preview_max_len
             _pl = get_tool_preview_max_len()
             if _pl > 0 and len(label) > _pl:
                 label = label[:_pl - 3] + "..."
-            self._spinner_text = f"{emoji} {label}"
+            # 中文工具名 + 一句话参数预览
+            self._spinner_text = f"{emoji} {zh} · {label}" if label != zh else f"{emoji} {zh}"
             self._tool_start_time = time.monotonic()
             # Store args for stacked scrollback line on completion
             self._pending_tool_info.setdefault(function_name, []).append(
@@ -7698,9 +7800,9 @@ class HermesCLI:
 
             # Use MP3 output for CLI playback (afplay doesn't handle OGG well).
             # The TTS tool may auto-convert MP3->OGG, but the original MP3 remains.
-            os.makedirs(os.path.join(tempfile.gettempdir(), "hermes_voice"), exist_ok=True)
+            os.makedirs(os.path.join(tempfile.gettempdir(), "bookworm_voice"), exist_ok=True)
             mp3_path = os.path.join(
-                tempfile.gettempdir(), "hermes_voice",
+                tempfile.gettempdir(), "bookworm_voice",
                 f"tts_{time.strftime('%Y%m%d_%H%M%S')}.mp3",
             )
 
@@ -8328,9 +8430,7 @@ class HermesCLI:
         if turn_route["signature"] != self._active_agent_route_signature:
             self.agent = None
 
-        # Initialize agent if needed
-        if self.agent is None:
-            _cprint(f"{_DIM}Initializing agent...{_RST}")
+        # 静默初始化（精简模式：去除"Initializing agent..."噪音）
         if not self._init_agent(
             model_override=turn_route["model"],
             runtime_override=turn_route["runtime"],
@@ -8433,7 +8533,7 @@ class HermesCLI:
                     if not _streaming_box_opened:
                         _streaming_box_opened = True
                         w = self.console.width
-                        label = " [BWM] BookwormPRO "
+                        label = " BookwormPRO "
                         fill = w - 2 - len(label)
                         _cprint(f"\n{_ACCENT}╭─{label}{'─' * max(fill - 1, 0)}╮{_RST}")
                     _cprint(f"{_STREAM_PAD}{sentence.rstrip()}")
@@ -8708,11 +8808,11 @@ class HermesCLI:
                 try:
                     from bwm_cli.skin_engine import get_active_skin
                     _skin = get_active_skin()
-                    label = _skin.get_branding("response_label", "[BWM] BookwormPRO")
+                    label = _skin.get_branding("response_label", "BookwormPRO")
                     _resp_color = _skin.get_color("response_border", "#CD7F32")
                     _resp_text = _skin.get_color("banner_text", "#FFF8DC")
                 except Exception:
-                    label = "[BWM] BookwormPRO"
+                    label = "BookwormPRO"
                     _resp_color = "#CD7F32"
                     _resp_text = "#FFF8DC"
 
@@ -8855,9 +8955,9 @@ class HermesCLI:
         else:
             try:
                 from bwm_cli.skin_engine import get_active_goodbye
-                goodbye = get_active_goodbye("Goodbye! [BWM]")
+                goodbye = get_active_goodbye("再见")
             except Exception:
-                goodbye = "Goodbye! [BWM]"
+                goodbye = "再见"
             print(goodbye)
 
     def _get_tui_prompt_symbols(self) -> tuple[str, str]:
@@ -8944,7 +9044,7 @@ class HermesCLI:
         if self._command_running:
             return _state_fragment("class:prompt-working", self._command_spinner_frame())
         if self._agent_running:
-            return _state_fragment("class:prompt-working", "[BWM]")
+            return _state_fragment("class:prompt-working", "...")
         if self._voice_mode:
             return _state_fragment("class:voice-prompt", "[语音]")
         return [("class:prompt", symbol)]
@@ -9066,30 +9166,11 @@ class HermesCLI:
             if self._preload_resumed_session():
                 self._display_resumed_history()
 
-        try:
-            from bwm_cli.skin_engine import get_active_skin
-            _welcome_skin = get_active_skin()
-            _welcome_text = _welcome_skin.get_branding("welcome", "Welcome to BookwormPRO! Type your message or /help for commands.")
-            _welcome_color = _welcome_skin.get_color("banner_text", "#FFF8DC")
-        except Exception:
-            _welcome_text = "Welcome to BookwormPRO! Type your message or /help for commands."
-            _welcome_color = "#FFF8DC"
-        self._console_print(f"[{_welcome_color}]{_welcome_text}[/]")
-        # Show a random tip to help users discover features
-        try:
-            from bwm_cli.tips import get_random_tip
-            _tip = get_random_tip()
-            try:
-                _tip_color = _welcome_skin.get_color("banner_dim", "#B8860B")
-            except Exception:
-                _tip_color = "#B8860B"
-            self._console_print(f"[dim {_tip_color}]✦ Tip: {_tip}[/]")
-        except Exception:
-            pass  # Tips are non-critical — never break startup
+        # 精简模式：隐藏欢迎语和提示，仅显示横幅
         if self.preloaded_skills and not self._startup_skills_line_shown:
             skills_label = ", ".join(self.preloaded_skills)
             self._console_print(
-                f"[bold {_accent_hex()}]Activated skills:[/] {skills_label}"
+                f"[bold {_accent_hex()}]已激活技能:[/] {skills_label}"
             )
             self._startup_skills_line_shown = True
         self._console_print()
@@ -9157,20 +9238,12 @@ class HermesCLI:
         set_approval_callback(self._approval_callback)
         set_secret_capture_callback(self._secret_capture_callback)
 
-        # Ensure tirith security scanner is available (downloads if needed).
-        # Warn the user if tirith is enabled in config but not available,
-        # so they know command security scanning is degraded.
+        # 静默尝试安装 tirith；若不可用则在扫描时降级，不打扰用户
         try:
             from tools.tirith_security import ensure_installed
-            tirith_path = ensure_installed(log_failures=False)
-            if tirith_path is None:
-                security_cfg = self.config.get("security", {}) or {}
-                tirith_enabled = security_cfg.get("tirith_enabled", True)
-                if tirith_enabled:
-                    _cprint(f"  {_DIM}[警告] tirith security scanner enabled but not available "
-                            f"— command scanning will use pattern matching only{_RST}")
+            ensure_installed(log_failures=False)
         except Exception:
-            pass  # Non-fatal — fail-open at scan time if unavailable
+            pass
         
         # Key bindings for the input area
         kb = KeyBindings()
@@ -11104,9 +11177,9 @@ def main(
             sys.exit(1)
         else:
             cli.show_banner()
-            _query_label = query or ("[image attached]" if single_query_images else "")
-            if _query_label:
-                cli.console.print(f"[bold blue]Query:[/] {_query_label}")
+            # 精简模式：去除 Query: 回显（用户已知刚输入的内容）
+            if single_query_images and not query:
+                cli.console.print("[dim](已附图)[/]")
             cli.chat(query, images=single_query_images or None)
             cli._print_exit_summary()
         return
