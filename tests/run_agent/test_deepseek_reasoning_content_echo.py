@@ -211,3 +211,112 @@ class TestNeedsKimiToolReasoning:
         )
         # model name contains 'moonshot' but host is openrouter — should be False
         assert agent._needs_kimi_tool_reasoning() is False
+
+
+class _StubToolCall:
+    def __init__(self, name: str = "terminal", arguments: str = "{}", id_: str = "c1") -> None:
+        self.id = id_
+        self.call_id = id_
+        self.type = "function"
+        self.response_item_id = None
+        self.extra_content = None
+
+        class _Fn:
+            pass
+
+        fn = _Fn()
+        fn.name = name
+        fn.arguments = arguments
+        self.function = fn
+
+
+class _StubAssistantMessage:
+    """Minimal stand-in for the OpenAI ChatCompletionMessage shape."""
+
+    def __init__(
+        self,
+        *,
+        content: str = "",
+        tool_calls=None,
+        reasoning_content=None,
+        has_reasoning_content_attr: bool = True,
+    ) -> None:
+        self.content = content
+        self.tool_calls = tool_calls or []
+        self.reasoning = None
+        if has_reasoning_content_attr:
+            self.reasoning_content = reasoning_content
+        self.reasoning_details = None
+        self.codex_reasoning_items = None
+
+
+def _make_full_agent(provider: str = "", model: str = "", base_url: str = "") -> AIAgent:
+    agent = _make_agent(provider=provider, model=model, base_url=base_url)
+    agent.verbose_logging = False
+    agent.reasoning_callback = None
+    agent.stream_delta_callback = None
+    agent._stream_callback = None
+    return agent
+
+
+class TestBuildAssistantMessageDeepSeekPin:
+    """_build_assistant_message must pin reasoning_content='' on creation
+    for DeepSeek/Kimi tool-call turns when the API returned no reasoning_content
+    attribute value (or None). Otherwise the message gets persisted poisoned and
+    every subsequent replay fails with HTTP 400.
+    """
+
+    def test_deepseek_tool_call_pins_empty_string_at_creation(self) -> None:
+        agent = _make_full_agent(provider="deepseek", model="deepseek-v4-pro")
+        assistant_message = _StubAssistantMessage(
+            content="",
+            tool_calls=[_StubToolCall()],
+            reasoning_content=None,
+        )
+        msg = agent._build_assistant_message(assistant_message, "tool_calls")
+        assert msg.get("reasoning_content") == ""
+        assert msg.get("tool_calls"), "tool_calls should still be present"
+
+    def test_kimi_tool_call_pins_empty_string_at_creation(self) -> None:
+        agent = _make_full_agent(provider="kimi-coding", model="kimi-k2")
+        assistant_message = _StubAssistantMessage(
+            content="",
+            tool_calls=[_StubToolCall()],
+            reasoning_content=None,
+        )
+        msg = agent._build_assistant_message(assistant_message, "tool_calls")
+        assert msg.get("reasoning_content") == ""
+
+    def test_deepseek_explicit_reasoning_content_preserved_at_creation(self) -> None:
+        agent = _make_full_agent(provider="deepseek", model="deepseek-v4-pro")
+        assistant_message = _StubAssistantMessage(
+            content="",
+            tool_calls=[_StubToolCall()],
+            reasoning_content="real chain of thought",
+        )
+        msg = agent._build_assistant_message(assistant_message, "tool_calls")
+        assert msg.get("reasoning_content") == "real chain of thought"
+
+    def test_deepseek_no_tool_calls_not_pinned(self) -> None:
+        agent = _make_full_agent(provider="deepseek", model="deepseek-v4-pro")
+        assistant_message = _StubAssistantMessage(
+            content="hello",
+            tool_calls=[],
+            reasoning_content=None,
+        )
+        msg = agent._build_assistant_message(assistant_message, "stop")
+        assert "reasoning_content" not in msg
+
+    def test_non_deepseek_tool_call_not_pinned(self) -> None:
+        agent = _make_full_agent(
+            provider="openrouter",
+            model="anthropic/claude-sonnet-4.6",
+            base_url="https://openrouter.ai/api/v1",
+        )
+        assistant_message = _StubAssistantMessage(
+            content="",
+            tool_calls=[_StubToolCall()],
+            reasoning_content=None,
+        )
+        msg = agent._build_assistant_message(assistant_message, "tool_calls")
+        assert "reasoning_content" not in msg
