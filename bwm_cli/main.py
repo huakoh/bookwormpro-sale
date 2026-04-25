@@ -643,7 +643,7 @@ def _exec_in_container(container_info: dict, cli_args: list):
     backend = container_info["backend"]
     container_name = container_info["container_name"]
     exec_user = container_info["exec_user"]
-    hermes_bin = container_info["hermes_bin"]
+    hermes_bin = container_info["bookworm_bin"]
 
     runtime = shutil.which(backend)
     if not runtime:
@@ -7272,6 +7272,12 @@ For more help on a command:
     )
     setup_parser.add_argument(
         "--reset", action="store_true", help="Reset configuration to defaults"
+    )
+    setup_parser.add_argument(
+        "--quick",
+        action="store_true",
+        help="Quick setup: skip the full menu and only ask for items that "
+             "are still missing (~30 seconds for new installs).",
     )
     setup_parser.set_defaults(func=cmd_setup)
 

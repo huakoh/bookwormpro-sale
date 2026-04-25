@@ -2912,6 +2912,14 @@ def run_setup_wizard(args):
         )
         return
 
+    # --quick flag: skip the full menu, jump straight into the missing-items
+    # flow. Works for new installs (asks required keys) and for returning
+    # users (fills only the gaps). ~30s onboarding for typical cases.
+    if getattr(args, "quick", False):
+        _run_quick_setup(config, hermes_home)
+        save_config(config)
+        return
+
     # Check if a specific section was requested
     section = getattr(args, "section", None)
     if section:
