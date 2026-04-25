@@ -397,3 +397,213 @@ class TestChatCompletionsCacheStats:
         r = SimpleNamespace(usage=SimpleNamespace(prompt_tokens_details=details))
         result = transport.extract_cache_stats(r)
         assert result == {"cached_tokens": 500, "creation_tokens": 100}
+
+
+# BWW relay (bww.letcareme.com) routes deepseek thinking models with Anthropic
+# block semantics over the chat completions endpoint. Assistant tool-call
+# content must be a block list [{type:thinking,...},{type:text,...}] on the
+# request side, and normalize_response must extract thinking back into
+# reasoning_content so downstream replay re-emits it.
+
+class TestBwwRelayDeepSeekRequest:
+
+    def _msg(self, content="going to call tool", reasoning="thought 1"):
+        return {
+            "role": "assistant",
+            "content": content,
+            "reasoning_content": reasoning,
+            "tool_calls": [{
+                "id": "call_1",
+                "type": "function",
+                "function": {"name": "terminal", "arguments": "{}"},
+            }],
+        }
+
+    def test_bww_deepseek_wraps_tool_call_content(self, transport):
+        msgs = [self._msg()]
+        out = transport.convert_messages(
+            msgs,
+            base_url="https://bww.letcareme.com/v1",
+            model="deepseek-v4-pro",
+        )
+        content = out[0]["content"]
+        assert isinstance(content, list)
+        assert content[0] == {"type": "thinking", "thinking": "thought 1"}
+        assert content[1] == {"type": "text", "text": "going to call tool"}
+        assert out[0]["reasoning_content"] == "thought 1"
+        assert msgs[0]["content"] == "going to call tool"
+
+    def test_bww_deepseek_empty_reasoning_still_wraps(self, transport):
+        msg = self._msg(reasoning="")
+        del msg["reasoning_content"]
+        out = transport.convert_messages(
+            [msg],
+            base_url="https://bww.letcareme.com/v1",
+            model="deepseek-v4-pro",
+        )
+        content = out[0]["content"]
+        assert isinstance(content, list)
+        assert content[0]["type"] == "thinking"
+        assert content[0]["thinking"] == ""
+
+    def test_bww_deepseek_falls_back_to_reasoning_field(self, transport):
+        msg = {
+            "role": "assistant",
+            "content": "calling",
+            "reasoning": "from openrouter",
+            "tool_calls": [{
+                "id": "call_1", "type": "function",
+                "function": {"name": "t", "arguments": "{}"},
+            }],
+        }
+        out = transport.convert_messages(
+            [msg],
+            base_url="https://bww.letcareme.com/v1",
+            model="deepseek-v4-pro",
+        )
+        assert out[0]["content"][0]["thinking"] == "from openrouter"
+
+    def test_bww_deepseek_empty_text_drops_text_block(self, transport):
+        msg = self._msg(content="")
+        out = transport.convert_messages(
+            [msg],
+            base_url="https://bww.letcareme.com/v1",
+            model="deepseek-v4-pro",
+        )
+        content = out[0]["content"]
+        assert len(content) == 1
+        assert content[0]["type"] == "thinking"
+
+    def test_bww_deepseek_idempotent_when_already_blocks(self, transport):
+        already = [
+            {"type": "thinking", "thinking": "x"},
+            {"type": "text", "text": "y"},
+        ]
+        msg = self._msg()
+        msg["content"] = already
+        out = transport.convert_messages(
+            [msg],
+            base_url="https://bww.letcareme.com/v1",
+            model="deepseek-v4-pro",
+        )
+        assert out[0]["content"] == already
+
+    def test_bww_deepseek_skips_non_tool_call_assistant(self, transport):
+        msg = {"role": "assistant", "content": "plain answer"}
+        out = transport.convert_messages(
+            [msg],
+            base_url="https://bww.letcareme.com/v1",
+            model="deepseek-v4-pro",
+        )
+        assert out[0]["content"] == "plain answer"
+
+    def test_bww_deepseek_skips_user_messages(self, transport):
+        msgs = [{"role": "user", "content": "hi"}, self._msg()]
+        out = transport.convert_messages(
+            msgs,
+            base_url="https://bww.letcareme.com/v1",
+            model="deepseek-v4-pro",
+        )
+        assert out[0]["content"] == "hi"
+        assert isinstance(out[1]["content"], list)
+
+    def test_non_bww_relay_no_transform(self, transport):
+        msgs = [self._msg()]
+        out = transport.convert_messages(
+            msgs,
+            base_url="https://api.deepseek.com/v1",
+            model="deepseek-v4-pro",
+        )
+        assert out is msgs
+        assert out[0]["content"] == "going to call tool"
+
+    def test_bww_relay_non_deepseek_no_transform(self, transport):
+        msgs = [self._msg()]
+        out = transport.convert_messages(
+            msgs,
+            base_url="https://bww.letcareme.com/v1",
+            model="claude-sonnet-4-6",
+        )
+        assert out is msgs
+        assert out[0]["content"] == "going to call tool"
+
+    def test_bww_deepseek_via_build_kwargs_threads_base_url(self, transport):
+        msgs = [self._msg()]
+        kw = transport.build_kwargs(
+            model="deepseek-v4-pro",
+            messages=msgs,
+            base_url="https://bww.letcareme.com/v1",
+        )
+        out_msg = kw["messages"][0]
+        assert isinstance(out_msg["content"], list)
+        assert out_msg["content"][0]["type"] == "thinking"
+
+
+class TestBwwRelayDeepSeekResponse:
+
+    def _resp(self, content):
+        return SimpleNamespace(
+            choices=[SimpleNamespace(
+                message=SimpleNamespace(
+                    content=content,
+                    tool_calls=None,
+                    reasoning=None,
+                    reasoning_content=None,
+                ),
+                finish_reason="stop",
+            )],
+            usage=None,
+        )
+
+    def test_blocks_extract_thinking_into_reasoning_content(self, transport):
+        content_blocks = [
+            {"type": "thinking", "thinking": "step plan"},
+            {"type": "text", "text": "final answer"},
+        ]
+        nr = transport.normalize_response(self._resp(content_blocks))
+        assert nr.content == "final answer"
+        assert nr.provider_data == {"reasoning_content": "step plan"}
+
+    def test_blocks_text_only(self, transport):
+        nr = transport.normalize_response(self._resp([
+            {"type": "text", "text": "hello"},
+        ]))
+        assert nr.content == "hello"
+        assert nr.provider_data is None
+
+    def test_blocks_thinking_only(self, transport):
+        nr = transport.normalize_response(self._resp([
+            {"type": "thinking", "thinking": "thoughts"},
+        ]))
+        assert nr.content is None
+        assert nr.provider_data == {"reasoning_content": "thoughts"}
+
+    def test_blocks_concat_multiple_text(self, transport):
+        nr = transport.normalize_response(self._resp([
+            {"type": "thinking", "thinking": "A"},
+            {"type": "text", "text": "part1 "},
+            {"type": "text", "text": "part2"},
+        ]))
+        assert nr.content == "part1 part2"
+        assert nr.provider_data == {"reasoning_content": "A"}
+
+    def test_string_content_unchanged(self, transport):
+        nr = transport.normalize_response(self._resp("plain string"))
+        assert nr.content == "plain string"
+        assert nr.provider_data is None
+
+    def test_reasoning_content_field_takes_precedence(self, transport):
+        r = SimpleNamespace(
+            choices=[SimpleNamespace(
+                message=SimpleNamespace(
+                    content=[{"type": "thinking", "thinking": "from blocks"}],
+                    tool_calls=None,
+                    reasoning=None,
+                    reasoning_content="from openai field",
+                ),
+                finish_reason="stop",
+            )],
+            usage=None,
+        )
+        nr = transport.normalize_response(r)
+        assert nr.provider_data == {"reasoning_content": "from openai field"}

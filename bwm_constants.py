@@ -338,3 +338,33 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_MODELS_URL = f"{OPENROUTER_BASE_URL}/models"
 
 AI_GATEWAY_BASE_URL = "https://ai-gateway.vercel.sh/v1"
+
+
+# ─── BWW Relay Hosts ─────────────────────────────────────────────────────────
+# Relays that expose Anthropic-protocol semantics on OpenAI-compatible endpoints.
+# DeepSeek thinking-mode models routed through these hosts require assistant
+# tool-call ``content`` to be a block list ``[{type:thinking,...},{type:text,...}]``
+# instead of a plain string — otherwise the relay rejects with HTTP 400/429
+# ``content[].thinking ... must be passed back to the API``.
+BWW_RELAY_HOSTS: tuple[str, ...] = (
+    "bww.letcareme.com",
+)
+
+
+def is_bww_relay_url(base_url: str | None) -> bool:
+    """Return True when ``base_url`` points to a BWW-style relay host.
+
+    Accepts plain hosts, ``http(s)://`` URLs, and trailing path components
+    (``/v1`` etc.).  Match is case-insensitive on the host portion.
+    """
+    if not base_url:
+        return False
+    s = str(base_url).lower()
+    return any(host in s for host in BWW_RELAY_HOSTS)
+
+
+def is_deepseek_model(model: str | None) -> bool:
+    """Return True when the model name carries a DeepSeek marker."""
+    if not model:
+        return False
+    return "deepseek" in str(model).lower()

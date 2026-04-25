@@ -16,6 +16,56 @@ from agent.moonshot_schema import is_moonshot_model, sanitize_moonshot_tools
 from agent.prompt_builder import DEVELOPER_ROLE_MODELS
 from agent.transports.base import ProviderTransport
 from agent.transports.types import NormalizedResponse, ToolCall, Usage
+from bwm_constants import is_bww_relay_url, is_deepseek_model
+
+
+def _needs_bww_deepseek_thinking(base_url: Optional[str], model: Optional[str]) -> bool:
+    """Return True when the request is routed through a BWW relay using a
+    DeepSeek thinking-mode model.
+
+    BWW relays surface DeepSeek with Anthropic-block semantics on the chat
+    completions endpoint: assistant tool-call ``content`` must be a list with
+    ``{type:thinking}`` + ``{type:text}`` blocks; sending a plain string yields
+    HTTP 400/429 ``content[].thinking ... must be passed back to the API``.
+    """
+    return is_bww_relay_url(base_url) and is_deepseek_model(model)
+
+
+def _wrap_assistant_tool_call_content_anthropic(
+    msg: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Rewrite a single assistant tool-call message into Anthropic block form.
+
+    Idempotent: if ``content`` is already a list, the message is returned
+    unchanged. Preserves ``reasoning_content`` so downstream creation/replay
+    paths keep working.
+    """
+    if msg.get("role") != "assistant":
+        return msg
+    if not msg.get("tool_calls"):
+        return msg
+    content = msg.get("content")
+    # Already a block list — assume previously transformed; leave intact.
+    if isinstance(content, list):
+        return msg
+
+    text = content if isinstance(content, str) else ""
+    reasoning = msg.get("reasoning_content")
+    if not isinstance(reasoning, str):
+        # Fall back to ``reasoning`` (OpenRouter unified field) if present.
+        alt = msg.get("reasoning")
+        reasoning = alt if isinstance(alt, str) else ""
+
+    blocks: List[Dict[str, Any]] = []
+    # Thinking block must precede text in Anthropic ordering. Empty thinking
+    # is still required by the relay — the field name itself is what's checked.
+    blocks.append({"type": "thinking", "thinking": reasoning})
+    if text:
+        blocks.append({"type": "text", "text": text})
+
+    msg = dict(msg)
+    msg["content"] = blocks
+    return msg
 
 
 class ChatCompletionsTransport(ProviderTransport):
@@ -34,7 +84,15 @@ class ChatCompletionsTransport(ProviderTransport):
         Strips Codex Responses API fields (``codex_reasoning_items`` on the
         message, ``call_id``/``response_item_id`` on tool_calls) that strict
         chat-completions providers reject with 400/422.
+
+        When the route is a BWW-style relay carrying a DeepSeek thinking-mode
+        model, also rewrites assistant tool-call ``content`` from a string to
+        an Anthropic-style block list ``[{type:thinking}, {type:text}]``.
         """
+        base_url = kwargs.get("base_url")
+        model = kwargs.get("model")
+        bww_deepseek = _needs_bww_deepseek_thinking(base_url, model)
+
         needs_sanitize = False
         for msg in messages:
             if not isinstance(msg, dict):
@@ -51,11 +109,22 @@ class ChatCompletionsTransport(ProviderTransport):
                 if needs_sanitize:
                     break
 
+        if bww_deepseek:
+            for msg in messages:
+                if (
+                    isinstance(msg, dict)
+                    and msg.get("role") == "assistant"
+                    and msg.get("tool_calls")
+                    and not isinstance(msg.get("content"), list)
+                ):
+                    needs_sanitize = True
+                    break
+
         if not needs_sanitize:
             return messages
 
         sanitized = copy.deepcopy(messages)
-        for msg in sanitized:
+        for i, msg in enumerate(sanitized):
             if not isinstance(msg, dict):
                 continue
             msg.pop("codex_reasoning_items", None)
@@ -65,6 +134,8 @@ class ChatCompletionsTransport(ProviderTransport):
                     if isinstance(tc, dict):
                         tc.pop("call_id", None)
                         tc.pop("response_item_id", None)
+            if bww_deepseek:
+                sanitized[i] = _wrap_assistant_tool_call_content_anthropic(msg)
         return sanitized
 
     def convert_tools(self, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -119,7 +190,13 @@ class ChatCompletionsTransport(ProviderTransport):
             extra_body_additions: dict | None — pre-built extra_body entries
         """
         # Codex sanitization: drop reasoning_items / call_id / response_item_id
-        sanitized = self.convert_messages(messages)
+        # base_url + model are threaded so BWW-relay DeepSeek tool-call messages
+        # get content rewritten to Anthropic block form (see convert_messages).
+        sanitized = self.convert_messages(
+            messages,
+            base_url=params.get("base_url"),
+            model=model,
+        )
 
         # Qwen portal prep AFTER codex sanitization.  If sanitize already
         # deepcopied, reuse that copy via the in-place variant to avoid a
@@ -346,6 +423,34 @@ class ChatCompletionsTransport(ProviderTransport):
         reasoning = getattr(msg, "reasoning", None)
         reasoning_content = getattr(msg, "reasoning_content", None)
 
+        # BWW-relay DeepSeek echoes Anthropic-style content blocks. When
+        # ``msg.content`` is a list of blocks, extract ``thinking`` blocks
+        # into ``reasoning_content`` (so downstream replay re-emits them)
+        # and flatten ``text`` blocks back into a plain string.
+        content_value = getattr(msg, "content", None)
+        if content_value is None and hasattr(msg, "model_extra"):
+            content_value = (msg.model_extra or {}).get("content")
+        if isinstance(content_value, list):
+            text_parts: List[str] = []
+            thinking_parts: List[str] = []
+            for block in content_value:
+                if not isinstance(block, dict):
+                    continue
+                btype = block.get("type")
+                if btype == "thinking":
+                    t = block.get("thinking") or block.get("text") or ""
+                    if isinstance(t, str) and t:
+                        thinking_parts.append(t)
+                elif btype == "text":
+                    t = block.get("text") or ""
+                    if isinstance(t, str):
+                        text_parts.append(t)
+            content_str = "".join(text_parts) if text_parts else None
+            if thinking_parts and not reasoning_content:
+                reasoning_content = "".join(thinking_parts)
+        else:
+            content_str = content_value
+
         provider_data: Dict[str, Any] = {}
         if reasoning_content:
             provider_data["reasoning_content"] = reasoning_content
@@ -354,7 +459,7 @@ class ChatCompletionsTransport(ProviderTransport):
             provider_data["reasoning_details"] = rd
 
         return NormalizedResponse(
-            content=msg.content,
+            content=content_str,
             tool_calls=tool_calls,
             finish_reason=finish_reason,
             reasoning=reasoning,
