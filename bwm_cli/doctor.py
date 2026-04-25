@@ -163,6 +163,154 @@ def _check_gateway_service_linger(issues: list[str]) -> None:
         check_warn("Could not verify systemd linger", f"({linger_detail})")
 
 
+def _check_runtime_fs_capability(issues: list[str]) -> None:
+    """Report what filesystem the agent can actually touch in this runtime.
+
+    Surfaces the native / host-bridge / container distinction up-front so
+    users know whether 'delete this Desktop file' will work before they
+    waste time hitting the trained 'sandbox' refusal.
+    """
+    print()
+    print(color("◆ Runtime Filesystem Capability", Colors.CYAN, Colors.BOLD))
+
+    try:
+        from bwm_constants import is_container, is_host_bridge_active, is_native_install, is_wsl
+    except Exception as exc:
+        check_warn("Could not import runtime detectors", f"({exc})")
+        return
+
+    if is_native_install():
+        check_ok("Native install — full host filesystem access",
+                 "(no sandbox; tools run as your user)")
+    elif is_host_bridge_active():
+        check_ok("Host bridge mounted",
+                 "(/host/desktop and /host/workspace are read-write)")
+    elif is_container():
+        check_warn("Container runtime without host bridge",
+                   "(only /opt/data is writable)")
+        check_info("To allow Desktop access: see docs/host-bridge.md")
+        issues.append("Mount host paths via docker-compose host bridge "
+                      "if you need the agent to touch local files.")
+    else:
+        check_info("Runtime: unknown environment shape")
+
+    if is_wsl():
+        check_info("WSL detected — Windows host visible at /mnt/c/")
+
+
+def _check_memory_health(issues: list[str]) -> None:
+    """Surface the persistent-memory state so users know if recall is on."""
+    print()
+    print(color("◆ Persistent Memory", Colors.CYAN, Colors.BOLD))
+
+    try:
+        from bwm_constants import get_hermes_home as _hh
+    except Exception as exc:
+        check_warn("Could not resolve BOOKWORMPRO_HOME", f"({exc})")
+        return
+
+    mem_dir = _hh() / "memories"
+    user_md = mem_dir / "USER.md"
+    mem_md = mem_dir / "MEMORY.md"
+
+    def _entry_stats(path) -> tuple[int, int]:
+        if not path.exists():
+            return (0, 0)
+        try:
+            text = path.read_text(encoding="utf-8")
+        except Exception:
+            return (0, 0)
+        # Entries are separated by '\n§\n'; the leading '§' counts an empty
+        # opener, so subtract 1 when present.
+        n = max(0, text.count("\n§\n"))
+        if text.strip().startswith("§"):
+            n += 1
+        return (n, len(text))
+
+    user_entries, user_chars = _entry_stats(user_md)
+    mem_entries, mem_chars = _entry_stats(mem_md)
+    USER_LIMIT = 1375
+    MEM_LIMIT = 2200
+
+    def _fmt(name, n_entries, n_chars, limit, path):
+        if not path.exists():
+            check_warn(f"{name}: missing", f"(will be auto-seeded on next start)")
+            return
+        pct = int(n_chars * 100 / limit) if limit else 0
+        if pct >= 90:
+            check_warn(f"{name}: {n_entries} entries · {n_chars}/{limit} chars",
+                       f"({pct}% — pruning recommended)")
+        elif n_entries == 0:
+            check_warn(f"{name}: empty", "(no recall yet)")
+        else:
+            check_ok(f"{name}: {n_entries} entries", f"({n_chars}/{limit} chars · {pct}%)")
+
+    _fmt("USER.md", user_entries, user_chars, USER_LIMIT, user_md)
+    _fmt("MEMORY.md", mem_entries, mem_chars, MEM_LIMIT, mem_md)
+
+    if not user_md.exists() and not mem_md.exists():
+        issues.append(
+            f"Memory files missing under {mem_dir}. They auto-seed from "
+            "docker/seed/ on container start, or you can `bookworm` once "
+            "and use the memory tool to add entries."
+        )
+
+    # External provider hint
+    try:
+        import yaml
+        cfg_path = _hh() / "config.yaml"
+        if cfg_path.exists():
+            cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+            mem_cfg = cfg.get("memory") if isinstance(cfg, dict) else None
+            provider = (mem_cfg or {}).get("provider") if isinstance(mem_cfg, dict) else None
+            if provider:
+                check_info(f"External provider: {provider} (additive on top of builtin)")
+    except Exception:
+        pass
+
+
+def _check_prompt_cache_freshness(issues: list[str]) -> None:
+    """Confirm the disk snapshot isn't stale relative to prompt-shaping code."""
+    print()
+    print(color("◆ Prompt Cache Freshness", Colors.CYAN, Colors.BOLD))
+
+    try:
+        from agent.prompt_builder import (
+            _max_code_dep_mtime,
+            _skills_prompt_snapshot_path,
+        )
+    except Exception as exc:
+        check_warn("Could not import prompt-builder helpers", f"({exc})")
+        return
+
+    snap_path = _skills_prompt_snapshot_path()
+    if not snap_path.exists():
+        check_info("No snapshot yet — first session will populate it")
+        return
+
+    try:
+        import json as _json
+        snap = _json.loads(snap_path.read_text(encoding="utf-8"))
+    except Exception:
+        check_warn("Snapshot exists but is unreadable", "(will rebuild on next start)")
+        return
+
+    snap_stamp = snap.get("code_dep_mtime_ns") if isinstance(snap, dict) else None
+    code_mtime = _max_code_dep_mtime()
+
+    if snap_stamp is None:
+        check_warn("Snapshot is from before the self-heal feature",
+                   "(will auto-rebuild on next start)")
+        return
+    if code_mtime and code_mtime > snap_stamp:
+        diff_s = (code_mtime - snap_stamp) / 1e9
+        check_warn(f"Snapshot is stale by {diff_s:.1f}s",
+                   "(will auto-rebuild on next start)")
+        check_info(f"Snapshot path: {snap_path}")
+    else:
+        check_ok("Snapshot is current with prompt-shaping code")
+
+
 def run_doctor(args):
     """Run diagnostic checks."""
     should_fix = getattr(args, 'fix', False)
@@ -1233,6 +1381,21 @@ def run_doctor(args):
         pass
     except Exception:
         pass
+
+    # =========================================================================
+    # Check: Runtime filesystem capability
+    # =========================================================================
+    _check_runtime_fs_capability(issues)
+
+    # =========================================================================
+    # Check: Persistent memory health
+    # =========================================================================
+    _check_memory_health(issues)
+
+    # =========================================================================
+    # Check: Prompt cache freshness
+    # =========================================================================
+    _check_prompt_cache_freshness(issues)
 
     # =========================================================================
     # Summary
