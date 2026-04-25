@@ -7684,6 +7684,32 @@ For more help on a command:
     doctor_parser.set_defaults(func=cmd_doctor)
 
     # =========================================================================
+    # canary command — fast post-deploy smoke test
+    # =========================================================================
+    canary_parser = subparsers.add_parser(
+        "canary",
+        help="Post-deploy smoke test (fast — runs after install/upgrade)",
+        description=(
+            "Validate that the freshly installed BookwormPRO can actually run.\n"
+            "Faster than `bookworm doctor`; focused on deployment-fragile checks:\n"
+            "config parse, runtime imports, credential pool resolution,\n"
+            "prompt-cache snapshot integrity, and memory-dir writability.\n\n"
+            "Pass --live to add a 1-token API ping against the active provider."
+        ),
+    )
+    canary_parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Add a 1-token API ping (network call) to validate the credential",
+    )
+
+    def cmd_canary(args):
+        from bwm_cli.canary import cmd_canary as _cmd_canary
+        return _cmd_canary(args)
+
+    canary_parser.set_defaults(func=cmd_canary)
+
+    # =========================================================================
     # dump command
     # =========================================================================
     dump_parser = subparsers.add_parser(
@@ -8157,6 +8183,20 @@ Examples:
     )
     memory_sub.add_parser("status", help="Show current memory provider config")
     memory_sub.add_parser("off", help="Disable external provider (built-in only)")
+    _show_parser = memory_sub.add_parser(
+        "show", help="Print contents of built-in memory stores with entry counts"
+    )
+    _show_parser.add_argument(
+        "target",
+        nargs="?",
+        choices=["memory", "user"],
+        help="Limit to one store (default: both)",
+    )
+    _why_parser = memory_sub.add_parser(
+        "why",
+        help="Locate which memory entry mentions a substring (provenance lookup)",
+    )
+    _why_parser.add_argument("query", help="Text to search for across memory entries")
     _reset_parser = memory_sub.add_parser(
         "reset",
         help="Erase all built-in memory (MEMORY.md and USER.md)",

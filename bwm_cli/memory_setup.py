@@ -446,6 +446,114 @@ def cmd_status(args) -> None:
 # Router
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# show / why — built-in memory introspection
+# ---------------------------------------------------------------------------
+
+# Entry delimiter used by tools/memory_tool.py when persisting MEMORY.md
+# entries.  Kept in lockstep with that module so split() yields the same
+# units the agent itself reads.
+_MEMORY_ENTRY_DELIM = "\n§\n"
+
+
+def _builtin_memory_files() -> list[tuple[str, "Path"]]:
+    """Return (label, path) tuples for built-in memory stores."""
+    home = get_hermes_home()
+    return [
+        ("MEMORY.md", home / "memories" / "MEMORY.md"),
+        ("USER.md", home / "memories" / "USER.md"),
+    ]
+
+
+def _split_entries(text: str) -> list[str]:
+    """Split a memory file body into entries on the canonical delimiter."""
+    if not text:
+        return []
+    return [chunk.strip() for chunk in text.split(_MEMORY_ENTRY_DELIM) if chunk.strip()]
+
+
+def cmd_show(args) -> None:
+    """Print contents of built-in memory stores with entry counts."""
+    target = (getattr(args, "target", None) or "").strip().lower()
+    files = _builtin_memory_files()
+    if target in {"memory", "user"}:
+        files = [(label, path) for label, path in files
+                 if label.lower().startswith(target)]
+    if not files:
+        print("\n  No matching memory store.\n")
+        return
+
+    print()
+    for label, path in files:
+        print(f"━━ {label} ━━ ({path})")
+        if not path.exists():
+            print("  (not present — nothing remembered yet)\n")
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            print(f"  (read failed: {exc})\n")
+            continue
+        if not text.strip():
+            print("  (empty)\n")
+            continue
+        entries = _split_entries(text)
+        size = path.stat().st_size
+        print(f"  {len(entries)} entries · {size:,} bytes")
+        for idx, entry in enumerate(entries, 1):
+            preview = entry if len(entry) <= 400 else entry[:397] + "..."
+            print(f"\n  [{idx}]")
+            for line in preview.splitlines():
+                print(f"    {line}")
+        print()
+
+
+def cmd_why(args) -> None:
+    """Find which memory entry surfaced a substring and explain its provenance.
+
+    Helps users answer 'why does the agent think X?' by locating the source
+    entry, its store, and the byte offset for direct editing.
+    """
+    needle = (getattr(args, "query", "") or "").strip()
+    if not needle:
+        print("\n  Usage: bookworm memory why <substring>\n")
+        return
+
+    needle_lc = needle.lower()
+    matches: list[tuple[str, "Path", int, str]] = []  # (label, path, idx, entry)
+    for label, path in _builtin_memory_files():
+        if not path.exists():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for idx, entry in enumerate(_split_entries(text), 1):
+            if needle_lc in entry.lower():
+                matches.append((label, path, idx, entry))
+
+    print()
+    if not matches:
+        print(f"  No memory entry mentions {needle!r}.")
+        print("  The agent has no recorded reason — it may be inferring from")
+        print("  current context, project files, or skill defaults instead.\n")
+        return
+
+    print(f"  Found {len(matches)} matching memory entr"
+          f"{'y' if len(matches) == 1 else 'ies'} for {needle!r}:")
+    for label, path, idx, entry in matches:
+        snippet = entry if len(entry) <= 600 else entry[:597] + "..."
+        print(f"\n  ━━ {label} entry [{idx}] ━━")
+        print(f"  source: {path}")
+        for line in snippet.splitlines():
+            print(f"    {line}")
+    print()
+
+
+# ---------------------------------------------------------------------------
+# Router
+# ---------------------------------------------------------------------------
+
 def memory_command(args) -> None:
     """Route memory subcommands."""
     sub = getattr(args, "memory_command", None)
@@ -453,5 +561,9 @@ def memory_command(args) -> None:
         cmd_setup(args)
     elif sub == "status":
         cmd_status(args)
+    elif sub == "show":
+        cmd_show(args)
+    elif sub == "why":
+        cmd_why(args)
     else:
         cmd_status(args)
