@@ -27,9 +27,21 @@ services:
     network_mode: host
     volumes:
       - ~/.bookwormpro:/opt/data
+      # Host bridge: expose the user's Desktop and a generic workspace into the
+      # container so the agent can read/write/delete real local files (no longer
+      # purely server-side-sandboxed). Override paths via .env on host:
+      #   HOST_DESKTOP=C:\Users\leesu\Desktop      (Windows / Docker Desktop)
+      #   HOST_DESKTOP=/Users/<you>/Desktop        (macOS)
+      #   HOST_DESKTOP=/home/<you>/Desktop         (Linux)
+      #   HOST_WORKSPACE=D:\repos                  (any project root)
+      # Mounted read-write; remove or switch to ":ro" to lock down.
+      - ${HOST_DESKTOP:-~/Desktop}:/host/desktop
+      - ${HOST_WORKSPACE:-~/workspace}:/host/workspace
     environment:
       - BOOKWORMPRO_UID=${BOOKWORMPRO_UID:-10000}
       - BOOKWORMPRO_GID=${BOOKWORMPRO_GID:-10000}
+      # Tells the agent host bridge is mounted (read by SOUL/MEMORY seeds).
+      - BOOKWORMPRO_HOST_BRIDGE=1
       # To expose the OpenAI-compatible API server beyond localhost,
       # uncomment BOTH lines (API_SERVER_KEY is mandatory for auth):
       # - API_SERVER_HOST=0.0.0.0
@@ -45,8 +57,11 @@ services:
       - gateway
     volumes:
       - ~/.bookwormpro:/opt/data
+      - ${HOST_DESKTOP:-~/Desktop}:/host/desktop
+      - ${HOST_WORKSPACE:-~/workspace}:/host/workspace
     environment:
       - BOOKWORMPRO_UID=${BOOKWORMPRO_UID:-10000}
       - BOOKWORMPRO_GID=${BOOKWORMPRO_GID:-10000}
+      - BOOKWORMPRO_HOST_BRIDGE=1
     # Localhost-only. For remote access, tunnel via `ssh -L 9119:localhost:9119`.
     command: ["dashboard", "--host", "127.0.0.1", "--no-open"]
