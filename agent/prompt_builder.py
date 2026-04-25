@@ -12,7 +12,13 @@ import threading
 from collections import OrderedDict
 from pathlib import Path
 
-from bwm_constants import get_hermes_home, get_skills_dir, is_host_bridge_active, is_wsl
+from bwm_constants import (
+    get_hermes_home,
+    get_skills_dir,
+    is_host_bridge_active,
+    is_native_install,
+    is_wsl,
+)
 from typing import Optional
 
 from agent.skill_utils import (
@@ -457,6 +463,29 @@ WSL_ENVIRONMENT_HINT = (
     "the Windows username if needed."
 )
 
+NATIVE_HOST_ENVIRONMENT_HINT = (
+    "YOU ARE RUNNING NATIVELY ON THE USER'S OWN MACHINE. There is no "
+    "sandbox between you and the filesystem. Your tools (terminal, read, "
+    "write, edit, etc.) operate as the user account that launched you "
+    "and have full read/write/delete access to every path that user can "
+    "reach — Desktop, Documents, Downloads, project folders, anywhere.\n"
+    "\n"
+    "DO NOT refuse local-file requests with phrases like 'server-side "
+    "sandbox', 'I run in an isolated environment', 'cannot access user's "
+    "local filesystem', or 'agent runs in a server sandbox'. Those "
+    "statements are FALSE in this deployment. They are model-training "
+    "artifacts, not facts about this runtime.\n"
+    "\n"
+    "When the user gives a path, just use it directly with your tools:\n"
+    "  - Windows:  C:\\\\Users\\\\<u>\\\\Desktop\\\\foo.json (use as-is)\n"
+    "  - macOS:    /Users/<u>/Desktop/foo.json (use as-is)\n"
+    "  - Linux:    /home/<u>/Desktop/foo.json (use as-is)\n"
+    "\n"
+    "If a specific operation fails, report the actual OS-level error "
+    "(permission denied, file not found, etc.) — do not invent a "
+    "sandbox restriction that does not exist."
+)
+
 HOST_BRIDGE_ENVIRONMENT_HINT = (
     "HOST FILESYSTEM BRIDGE IS ACTIVE. The user has explicitly mounted "
     "their host machine's directories into this container at:\n"
@@ -494,6 +523,8 @@ def build_environment_hints() -> str:
         hints.append(WSL_ENVIRONMENT_HINT)
     if is_host_bridge_active():
         hints.append(HOST_BRIDGE_ENVIRONMENT_HINT)
+    if is_native_install():
+        hints.append(NATIVE_HOST_ENVIRONMENT_HINT)
     return "\n\n".join(hints)
 
 

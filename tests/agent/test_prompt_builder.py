@@ -846,8 +846,24 @@ class TestEnvironmentHints:
         import agent.prompt_builder as _pb
         monkeypatch.setattr(_pb, "is_wsl", lambda: False)
         monkeypatch.setattr(_pb, "is_host_bridge_active", lambda: False)
+        monkeypatch.setattr(_pb, "is_native_install", lambda: False)
         result = _pb.build_environment_hints()
         assert result == ""
+
+    def test_native_host_hint_constant_phrasing(self):
+        from agent.prompt_builder import NATIVE_HOST_ENVIRONMENT_HINT
+        assert "NATIVELY" in NATIVE_HOST_ENVIRONMENT_HINT
+        assert "DO NOT refuse" in NATIVE_HOST_ENVIRONMENT_HINT
+        assert "server-side sandbox" in NATIVE_HOST_ENVIRONMENT_HINT
+
+    def test_build_environment_hints_native_install(self, monkeypatch):
+        import agent.prompt_builder as _pb
+        monkeypatch.setattr(_pb, "is_wsl", lambda: False)
+        monkeypatch.setattr(_pb, "is_host_bridge_active", lambda: False)
+        monkeypatch.setattr(_pb, "is_native_install", lambda: True)
+        result = _pb.build_environment_hints()
+        assert "NATIVELY" in result
+        assert "DO NOT refuse" in result
 
     def test_host_bridge_hint_constant_mentions_paths(self):
         from agent.prompt_builder import HOST_BRIDGE_ENVIRONMENT_HINT
@@ -859,6 +875,7 @@ class TestEnvironmentHints:
         import agent.prompt_builder as _pb
         monkeypatch.setattr(_pb, "is_wsl", lambda: False)
         monkeypatch.setattr(_pb, "is_host_bridge_active", lambda: True)
+        monkeypatch.setattr(_pb, "is_native_install", lambda: False)
         result = _pb.build_environment_hints()
         assert "/host/desktop" in result
         assert "/host/workspace" in result
@@ -867,6 +884,7 @@ class TestEnvironmentHints:
         import agent.prompt_builder as _pb
         monkeypatch.setattr(_pb, "is_wsl", lambda: True)
         monkeypatch.setattr(_pb, "is_host_bridge_active", lambda: True)
+        monkeypatch.setattr(_pb, "is_native_install", lambda: False)
         result = _pb.build_environment_hints()
         assert "WSL" in result
         assert "/host/desktop" in result

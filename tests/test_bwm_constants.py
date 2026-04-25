@@ -7,7 +7,12 @@ from unittest.mock import patch
 import pytest
 
 import bwm_constants
-from bwm_constants import get_default_hermes_root, is_container, is_host_bridge_active
+from bwm_constants import (
+    get_default_hermes_root,
+    is_container,
+    is_host_bridge_active,
+    is_native_install,
+)
 
 
 class TestGetDefaultHermesRoot:
@@ -145,3 +150,22 @@ class TestIsHostBridgeActive:
         monkeypatch.setattr(bwm_constants, "_host_bridge_detected", True)
         monkeypatch.delenv("BOOKWORMPRO_HOST_BRIDGE", raising=False)
         assert is_host_bridge_active() is True
+
+
+class TestIsNativeInstall:
+    """Tests for is_native_install() — true when not container and not WSL."""
+
+    def test_native_when_neither(self, monkeypatch):
+        monkeypatch.setattr(bwm_constants, "is_container", lambda: False)
+        monkeypatch.setattr(bwm_constants, "is_wsl", lambda: False)
+        assert is_native_install() is True
+
+    def test_not_native_when_container(self, monkeypatch):
+        monkeypatch.setattr(bwm_constants, "is_container", lambda: True)
+        monkeypatch.setattr(bwm_constants, "is_wsl", lambda: False)
+        assert is_native_install() is False
+
+    def test_not_native_when_wsl(self, monkeypatch):
+        monkeypatch.setattr(bwm_constants, "is_container", lambda: False)
+        monkeypatch.setattr(bwm_constants, "is_wsl", lambda: True)
+        assert is_native_install() is False

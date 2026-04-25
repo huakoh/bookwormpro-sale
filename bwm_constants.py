@@ -243,6 +243,21 @@ def is_host_bridge_active() -> bool:
     return _host_bridge_detected
 
 
+def is_native_install() -> bool:
+    """Return True when running directly on the user's host OS.
+
+    Native = not inside a Docker/Podman container AND not inside WSL.
+    Covers `pip install bookwormpro` on Windows / macOS / bare-metal Linux,
+    where the agent runs as the user with full filesystem access — no
+    sandbox, no bridge needed.
+
+    Used by the system prompt to suppress the "server-side sandbox" refusal
+    that the base model is trained to emit. Not cached (cheap to recompute
+    and depends on the cached is_container/is_wsl results).
+    """
+    return not is_container() and not is_wsl()
+
+
 # ─── Well-Known Paths ─────────────────────────────────────────────────────────
 
 
