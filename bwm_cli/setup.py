@@ -3112,8 +3112,33 @@ def _resolve_hermes_chat_argv() -> Optional[list[str]]:
     return None
 
 
+def _run_post_deploy_canary() -> None:
+    """Run the post-deploy canary at the tail of setup.
+
+    Stays silent on full success; surfaces failures + warnings so users see
+    config drift before they hit it mid-conversation.  Importing lazily
+    keeps setup startup fast and avoids a hard dependency cycle.
+    """
+    if os.environ.get("BOOKWORMPRO_SKIP_POST_DEPLOY_CANARY"):
+        return
+    try:
+        from bwm_cli.canary import run_canaries, _format_report
+    except Exception:  # pragma: no cover — defensive: never let canary block setup
+        return
+    try:
+        report = run_canaries(live=False)
+    except Exception:  # pragma: no cover
+        return
+    if report.failed or report.warned:
+        print(_format_report(report))
+    else:
+        print()
+        print_info(f"Post-deploy canary: all {len(report.passed)} checks green.")
+
+
 def _offer_launch_chat():
     """Prompt the user to jump straight into chat after setup."""
+    _run_post_deploy_canary()
     print()
     if not prompt_yes_no("Launch bookworm chat now?", True):
         return
