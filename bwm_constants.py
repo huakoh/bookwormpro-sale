@@ -215,10 +215,32 @@ def is_container() -> bool:
             if "docker" in cgroup or "podman" in cgroup or "/lxc/" in cgroup:
                 _container_detected = True
                 return True
-    except OSError:
+    except Exception:
         pass
     _container_detected = False
     return False
+
+
+_host_bridge_detected: bool | None = None
+
+
+def is_host_bridge_active() -> bool:
+    """Return True when a host filesystem bridge is mounted into the container.
+
+    Activated by env var ``BOOKWORMPRO_HOST_BRIDGE=1`` set in docker-compose.yml
+    when ``HOST_DESKTOP`` / ``HOST_WORKSPACE`` volumes are mounted at
+    ``/host/desktop`` and ``/host/workspace``.  When active the agent has real
+    read/write/delete access to the user's chosen host paths and must not
+    refuse local-file requests with a "server-side sandbox" excuse.
+
+    Result is cached for the process lifetime.
+    """
+    global _host_bridge_detected
+    if _host_bridge_detected is not None:
+        return _host_bridge_detected
+    flag = os.environ.get("BOOKWORMPRO_HOST_BRIDGE", "").strip().lower()
+    _host_bridge_detected = flag in ("1", "true", "yes", "on")
+    return _host_bridge_detected
 
 
 # ─── Well-Known Paths ─────────────────────────────────────────────────────────
@@ -242,6 +264,14 @@ def get_skills_dir() -> Path:
 def get_env_path() -> Path:
     """Return the path to the ``.env`` file under BOOKWORMPRO_HOME."""
     return get_hermes_home() / ".env"
+
+
+# ─── BookwormPRO 命名 alias (推荐新代码使用 bookwormpro_* 名称) ──────────────
+# 旧的 hermes_* 函数名保留以兼容现有调用，新代码请使用下列 alias。
+get_bookwormpro_home = get_hermes_home
+get_default_bookwormpro_root = get_default_hermes_root
+get_bookwormpro_dir = get_hermes_dir
+display_bookwormpro_home = display_hermes_home
 
 
 # ─── Network Preferences ─────────────────────────────────────────────────────
@@ -269,7 +299,7 @@ def apply_ipv4_preference(force: bool = False) -> None:
     import socket
 
     # Guard against double-patching
-    if getattr(socket.getaddrinfo, "_hermes_ipv4_patched", False):
+    if getattr(socket.getaddrinfo, "_bwm_ipv4_patched", False):
         return
 
     _original_getaddrinfo = socket.getaddrinfo
@@ -285,7 +315,7 @@ def apply_ipv4_preference(force: bool = False) -> None:
                 return _original_getaddrinfo(host, port, family, type, proto, flags)
         return _original_getaddrinfo(host, port, family, type, proto, flags)
 
-    _ipv4_getaddrinfo._hermes_ipv4_patched = True  # type: ignore[attr-defined]
+    _ipv4_getaddrinfo._bwm_ipv4_patched = True  # type: ignore[attr-defined]
     socket.getaddrinfo = _ipv4_getaddrinfo  # type: ignore[assignment]
 
 

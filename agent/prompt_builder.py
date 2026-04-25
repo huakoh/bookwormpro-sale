@@ -12,7 +12,7 @@ import threading
 from collections import OrderedDict
 from pathlib import Path
 
-from bwm_constants import get_hermes_home, get_skills_dir, is_wsl
+from bwm_constants import get_hermes_home, get_skills_dir, is_host_bridge_active, is_wsl
 from typing import Optional
 
 from agent.skill_utils import (
@@ -86,7 +86,7 @@ def _find_git_root(start: Path) -> Optional[Path]:
     return None
 
 
-_HERMES_MD_NAMES = (".bookwormpro.md", "HERMES.md")
+_HERMES_MD_NAMES = (".bookwormpro.md", "BOOKWORM.md", "HERMES.md")  # 末位为兼容旧项目
 
 
 def _find_hermes_md(cwd: Path) -> Optional[Path]:
@@ -457,16 +457,43 @@ WSL_ENVIRONMENT_HINT = (
     "the Windows username if needed."
 )
 
+HOST_BRIDGE_ENVIRONMENT_HINT = (
+    "HOST FILESYSTEM BRIDGE IS ACTIVE. The user has explicitly mounted "
+    "their host machine's directories into this container at:\n"
+    "  - /host/desktop    — the user's real Desktop folder (read-write)\n"
+    "  - /host/workspace  — the user's chosen project workspace (read-write)\n"
+    "\n"
+    "You DO have read, write, move, and delete access to these paths. "
+    "When the user asks you to operate on a Desktop file (Mac, Windows, "
+    "or Linux path), translate the path and use your normal file tools:\n"
+    "  - C:\\\\Users\\\\<u>\\\\Desktop\\\\foo.json  →  /host/desktop/foo.json\n"
+    "  - /Users/<u>/Desktop/foo.json     →  /host/desktop/foo.json\n"
+    "  - /home/<u>/Desktop/foo.json      →  /host/desktop/foo.json\n"
+    "\n"
+    "DO NOT refuse host-file requests with phrases like 'server-side "
+    "sandbox', 'cannot access user's local filesystem', or 'I run in "
+    "an isolated environment'. Those statements are false when this "
+    "hint is present. The user has authorized this access via "
+    "docker-compose volume mounts and the BOOKWORMPRO_HOST_BRIDGE "
+    "environment flag. Just do the operation. If a path outside "
+    "/host/desktop and /host/workspace is requested, then explain that "
+    "only those two trees are bridged and ask the user to extend the "
+    "mount in docker-compose.yml."
+)
+
 
 def build_environment_hints() -> str:
     """Return environment-specific guidance for the system prompt.
 
-    Detects WSL, and can be extended for Termux, Docker, etc.
-    Returns an empty string when no special environment is detected.
+    Detects WSL, host-filesystem bridge, and can be extended for Termux,
+    Docker, etc. Returns an empty string when no special environment is
+    detected.
     """
     hints: list[str] = []
     if is_wsl():
         hints.append(WSL_ENVIRONMENT_HINT)
+    if is_host_bridge_active():
+        hints.append(HOST_BRIDGE_ENVIRONMENT_HINT)
     return "\n\n".join(hints)
 
 
@@ -974,7 +1001,7 @@ def load_soul_md() -> Optional[str]:
 
 
 def _load_hermes_md(cwd_path: Path) -> str:
-    """.bookwormpro.md / HERMES.md — walk to git root."""
+    """.bookwormpro.md / BOOKWORM.md (兼容旧 HERMES.md) — walk to git root."""
     hermes_md_path = _find_hermes_md(cwd_path)
     if not hermes_md_path:
         return ""

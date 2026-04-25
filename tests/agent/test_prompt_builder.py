@@ -845,8 +845,31 @@ class TestEnvironmentHints:
     def test_build_environment_hints_not_wsl(self, monkeypatch):
         import agent.prompt_builder as _pb
         monkeypatch.setattr(_pb, "is_wsl", lambda: False)
+        monkeypatch.setattr(_pb, "is_host_bridge_active", lambda: False)
         result = _pb.build_environment_hints()
         assert result == ""
+
+    def test_host_bridge_hint_constant_mentions_paths(self):
+        from agent.prompt_builder import HOST_BRIDGE_ENVIRONMENT_HINT
+        assert "/host/desktop" in HOST_BRIDGE_ENVIRONMENT_HINT
+        assert "/host/workspace" in HOST_BRIDGE_ENVIRONMENT_HINT
+        assert "DO NOT refuse" in HOST_BRIDGE_ENVIRONMENT_HINT
+
+    def test_build_environment_hints_with_host_bridge(self, monkeypatch):
+        import agent.prompt_builder as _pb
+        monkeypatch.setattr(_pb, "is_wsl", lambda: False)
+        monkeypatch.setattr(_pb, "is_host_bridge_active", lambda: True)
+        result = _pb.build_environment_hints()
+        assert "/host/desktop" in result
+        assert "/host/workspace" in result
+
+    def test_build_environment_hints_combines_wsl_and_bridge(self, monkeypatch):
+        import agent.prompt_builder as _pb
+        monkeypatch.setattr(_pb, "is_wsl", lambda: True)
+        monkeypatch.setattr(_pb, "is_host_bridge_active", lambda: True)
+        result = _pb.build_environment_hints()
+        assert "WSL" in result
+        assert "/host/desktop" in result
 
 
 # =========================================================================
