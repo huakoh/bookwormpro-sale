@@ -571,6 +571,38 @@ def _build_skills_manifest(skills_dir: Path) -> dict[str, list[int]]:
     return manifest
 
 
+# Files whose mtime invalidates the disk snapshot. Snapshots cache rendered
+# system-prompt content; if the code that *renders* the prompt changes, the
+# cached output is stale even when SKILL.md files are untouched. This is the
+# fix for the "edit prompt_builder.py, restart bookworm, but agent still uses
+# old prompt" foot-gun. Add a path here whenever you introduce a new module
+# that materially shapes the system prompt.
+_PROMPT_CODE_DEPENDENCIES: tuple[str, ...] = (
+    "agent/prompt_builder.py",
+    "agent/memory_manager.py",
+    "bwm_constants.py",
+)
+
+
+def _max_code_dep_mtime() -> int:
+    """Return the highest mtime_ns across prompt-shaping source files.
+
+    Returns 0 when none of the files are accessible (e.g. zip-installed deploy
+    where stat() may fail) — in that case the snapshot is trusted and only
+    the SKILL.md manifest gates invalidation.
+    """
+    project_root = Path(__file__).resolve().parent.parent
+    high = 0
+    for rel in _PROMPT_CODE_DEPENDENCIES:
+        try:
+            ts = (project_root / rel).stat().st_mtime_ns
+            if ts > high:
+                high = ts
+        except OSError:
+            continue
+    return high
+
+
 def _load_skills_snapshot(skills_dir: Path) -> Optional[dict]:
     """Load the disk snapshot if it exists and its manifest still matches."""
     snapshot_path = _skills_prompt_snapshot_path()
@@ -585,6 +617,23 @@ def _load_skills_snapshot(skills_dir: Path) -> Optional[dict]:
     if snapshot.get("version") != _SKILLS_SNAPSHOT_VERSION:
         return None
     if snapshot.get("manifest") != _build_skills_manifest(skills_dir):
+        return None
+    # Self-heal against stale code: if any prompt-shaping source file has been
+    # modified since the snapshot was written, treat the snapshot as invalid.
+    # This is what eliminates the "I edited prompt_builder.py but the prompt
+    # didn't change" surprise after a code update.
+    snap_written = snapshot.get("code_dep_mtime_ns")
+    code_mtime = _max_code_dep_mtime()
+    if code_mtime and (not isinstance(snap_written, int) or code_mtime > snap_written):
+        try:
+            snapshot_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        logger.debug(
+            "Skills prompt snapshot invalidated: prompt-shaping code "
+            "(prompt_builder.py / memory_manager.py / bwm_constants.py) "
+            "is newer than the snapshot. Rebuilding."
+        )
         return None
     return snapshot
 
@@ -601,6 +650,10 @@ def _write_skills_snapshot(
         "manifest": manifest,
         "skills": skill_entries,
         "category_descriptions": category_descriptions,
+        # Stamp the snapshot with the highest mtime across prompt-shaping
+        # source files. _load_skills_snapshot() compares this against the
+        # current code state and self-heals when code is newer.
+        "code_dep_mtime_ns": _max_code_dep_mtime(),
     }
     try:
         atomic_json_write(_skills_prompt_snapshot_path(), payload)

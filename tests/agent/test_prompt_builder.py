@@ -2,6 +2,7 @@
 
 import builtins
 import importlib
+import json
 import logging
 import sys
 
@@ -1122,6 +1123,94 @@ class TestOpenAIModelExecutionGuidance:
     def test_guidance_is_string(self):
         assert isinstance(OPENAI_MODEL_EXECUTION_GUIDANCE, str)
         assert len(OPENAI_MODEL_EXECUTION_GUIDANCE) > 100
+
+
+# =========================================================================
+# Skills prompt snapshot self-heal
+# =========================================================================
+
+class TestSkillsPromptSnapshotSelfHeal:
+    """Snapshot must invalidate when prompt-shaping code is newer than the file."""
+
+    def _seed_snapshot(self, tmp_path, monkeypatch, code_mtime_ns):
+        """Plant a snapshot file plus stub helpers for a controlled test."""
+        import agent.prompt_builder as _pb
+
+        skills_dir = tmp_path / "skills"
+        skills_dir.mkdir()
+        snap_path = tmp_path / ".skills_prompt_snapshot.json"
+
+        manifest = {"foo/SKILL.md": [123, 456]}
+        snapshot_payload = {
+            "version": _pb._SKILLS_SNAPSHOT_VERSION,
+            "manifest": manifest,
+            "skills": [],
+            "category_descriptions": {},
+            "code_dep_mtime_ns": code_mtime_ns,
+        }
+        snap_path.write_text(json.dumps(snapshot_payload), encoding="utf-8")
+
+        monkeypatch.setattr(_pb, "_skills_prompt_snapshot_path", lambda: snap_path)
+        monkeypatch.setattr(_pb, "_build_skills_manifest", lambda _d: manifest)
+        return _pb, snap_path, skills_dir
+
+    def test_snapshot_loaded_when_code_unchanged(self, tmp_path, monkeypatch):
+        import json as _json  # noqa: F401 — referenced via globals in helper
+        _pb, snap_path, skills_dir = self._seed_snapshot(
+            tmp_path, monkeypatch, code_mtime_ns=1_000_000
+        )
+        monkeypatch.setattr(_pb, "_max_code_dep_mtime", lambda: 1_000_000)
+        result = _pb._load_skills_snapshot(skills_dir)
+        assert result is not None
+        assert result["manifest"] == {"foo/SKILL.md": [123, 456]}
+        assert snap_path.exists()  # not deleted
+
+    def test_snapshot_invalidated_when_code_newer(self, tmp_path, monkeypatch):
+        _pb, snap_path, skills_dir = self._seed_snapshot(
+            tmp_path, monkeypatch, code_mtime_ns=1_000_000
+        )
+        # Code is newer than the snapshot stamp.
+        monkeypatch.setattr(_pb, "_max_code_dep_mtime", lambda: 2_000_000)
+        result = _pb._load_skills_snapshot(skills_dir)
+        assert result is None
+        assert not snap_path.exists()  # auto-deleted
+
+    def test_snapshot_kept_when_code_mtime_unavailable(self, tmp_path, monkeypatch):
+        _pb, snap_path, skills_dir = self._seed_snapshot(
+            tmp_path, monkeypatch, code_mtime_ns=1_000_000
+        )
+        # zip-installed deploy: stat() returns 0
+        monkeypatch.setattr(_pb, "_max_code_dep_mtime", lambda: 0)
+        result = _pb._load_skills_snapshot(skills_dir)
+        assert result is not None  # don't invalidate when we can't read code
+
+    def test_legacy_snapshot_without_stamp_invalidates_when_code_present(
+        self, tmp_path, monkeypatch
+    ):
+        # A snapshot from before this feature shipped won't have the stamp.
+        # If we can read code mtimes now, treat the legacy snapshot as stale
+        # so the next session picks up any prompt-shaping changes.
+        _pb, snap_path, skills_dir = self._seed_snapshot(
+            tmp_path, monkeypatch, code_mtime_ns=None  # legacy: missing stamp
+        )
+        # Re-write without the stamp key
+        snap_path.write_text(json.dumps({
+            "version": _pb._SKILLS_SNAPSHOT_VERSION,
+            "manifest": {"foo/SKILL.md": [123, 456]},
+            "skills": [],
+            "category_descriptions": {},
+        }), encoding="utf-8")
+        monkeypatch.setattr(_pb, "_max_code_dep_mtime", lambda: 1_500_000)
+        result = _pb._load_skills_snapshot(skills_dir)
+        assert result is None
+        assert not snap_path.exists()
+
+    def test_max_code_dep_mtime_returns_max_or_zero(self, monkeypatch):
+        import agent.prompt_builder as _pb
+        # When project root has the files, mtime should be > 0
+        result = _pb._max_code_dep_mtime()
+        assert isinstance(result, int)
+        assert result >= 0
 
 
 # =========================================================================
