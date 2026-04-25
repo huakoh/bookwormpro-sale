@@ -1370,3 +1370,90 @@ def test_nous_exhausted_entry_recovers_via_auth_store_sync(tmp_path, monkeypatch
     assert len(available) == 1
     assert available[0].refresh_token == "refresh-FRESH"
     assert available[0].last_status is None
+
+
+# ── OpenRouter relay/official conflict guard ──────────────────────────────
+# When a manual entry already targets a custom (relay/aggregator) base_url,
+# seeding the official OPENROUTER_API_KEY from env creates a rotation
+# pothole: rotation lands on the official key against the relay endpoint
+# and 401s. Refs progress note 2026-04-26.
+
+def test_openrouter_env_seed_skipped_when_manual_relay_present(tmp_path, monkeypatch, caplog):
+    import logging
+    monkeypatch.setenv("BOOKWORMPRO_HOME", str(tmp_path / "bookworm"))
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-OFFICIAL-DEADBEEF")
+    _write_auth_store(
+        tmp_path,
+        {
+            "version": 1,
+            "credential_pool": {
+                "openrouter": [
+                    {
+                        "id": "cred-relay",
+                        "label": "RELAY",
+                        "auth_type": "api_key",
+                        "priority": 0,
+                        "source": "manual",
+                        "access_token": "sk-relay-ABC",
+                        "base_url": "https://bww.letcareme.com/v1",
+                    }
+                ]
+            },
+        },
+    )
+
+    from agent.credential_pool import load_pool
+
+    with caplog.at_level(logging.WARNING, logger="agent.credential_pool"):
+        pool = load_pool("openrouter")
+
+    sources = [e.source for e in pool._entries]
+    assert "manual" in sources
+    assert "env:OPENROUTER_API_KEY" not in sources, (
+        "env seed must be suppressed when a relay manual entry is present"
+    )
+    assert any("RELAY" in r.getMessage() or "bww.letcareme.com" in r.getMessage()
+               for r in caplog.records), "expected explanatory warning"
+
+
+def test_openrouter_env_seeds_when_no_conflict(tmp_path, monkeypatch):
+    monkeypatch.setenv("BOOKWORMPRO_HOME", str(tmp_path / "bookworm"))
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-OFFICIAL")
+    _write_auth_store(tmp_path, {"version": 1, "credential_pool": {}})
+
+    from agent.credential_pool import load_pool
+
+    pool = load_pool("openrouter")
+    sources = [e.source for e in pool._entries]
+    assert "env:OPENROUTER_API_KEY" in sources
+
+
+def test_openrouter_env_seeds_when_manual_uses_default_base_url(tmp_path, monkeypatch):
+    """Manual entry pointing at the default OpenRouter URL is not a conflict."""
+    monkeypatch.setenv("BOOKWORMPRO_HOME", str(tmp_path / "bookworm"))
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-OFFICIAL")
+    _write_auth_store(
+        tmp_path,
+        {
+            "version": 1,
+            "credential_pool": {
+                "openrouter": [
+                    {
+                        "id": "cred-manual",
+                        "label": "MANUAL",
+                        "auth_type": "api_key",
+                        "priority": 0,
+                        "source": "manual",
+                        "access_token": "sk-manual",
+                        "base_url": "https://openrouter.ai/api/v1",
+                    }
+                ]
+            },
+        },
+    )
+
+    from agent.credential_pool import load_pool
+
+    pool = load_pool("openrouter")
+    sources = [e.source for e in pool._entries]
+    assert "env:OPENROUTER_API_KEY" in sources

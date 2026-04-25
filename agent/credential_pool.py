@@ -1278,6 +1278,33 @@ def _seed_from_env(provider: str, entries: List[PooledCredential]) -> Tuple[bool
             source = "env:OPENROUTER_API_KEY"
             if _is_source_suppressed(provider, source):
                 return changed, active_sources
+            # Conflict guard: if a manual entry already exists pointing at a
+            # non-default (relay/aggregator) base_url, do NOT seed the official
+            # OPENROUTER_API_KEY from env. The official key is invalid against
+            # relay endpoints (bww.letcareme.com et al), so rotation onto it
+            # produces hard 401s that look like quota exhaustion. Surface a
+            # warning so the user can suppress the env entry explicitly with
+            # `bookworm auth remove openrouter <N>` if they really want both.
+            _default = (OPENROUTER_BASE_URL or "").rstrip("/")
+            _conflict = next(
+                (
+                    e for e in entries
+                    if _is_manual_source(e.source)
+                    and (e.base_url or "").rstrip("/") not in ("", _default)
+                ),
+                None,
+            )
+            if _conflict is not None:
+                logger.warning(
+                    "credential pool: skipping env:OPENROUTER_API_KEY seed — "
+                    "manual entry %s targets %s, which the official key "
+                    "cannot authenticate against. Run "
+                    "`bookworm auth remove openrouter` to drop one side, or "
+                    "unset OPENROUTER_API_KEY in your shell.",
+                    _conflict.label or _conflict.id[:8],
+                    _conflict.base_url,
+                )
+                return changed, active_sources
             active_sources.add(source)
             changed |= _upsert_entry(
                 entries,
