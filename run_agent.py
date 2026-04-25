@@ -1645,7 +1645,7 @@ class AIAgent:
                         _init_kwargs = {
                             "session_id": self.session_id,
                             "platform": platform or "cli",
-                            "hermes_home": str(get_hermes_home()),
+                            "bookworm_home": str(get_hermes_home()),
                             "agent_context": "primary",
                         }
                         # Thread session title for memory provider scoping
@@ -12684,9 +12684,30 @@ class AIAgent:
 
         Returns:
             str: Final assistant response
+
+        Phantom-refusal post-processing: when the runtime advertises full
+        filesystem access (native install or host bridge) but the model
+        still emits a trained "server-side sandbox" style refusal, we
+        retry exactly once with an explicit override nudge. See
+        ``agent/refusal_interceptor.py`` for the detection patterns.
         """
         result = self.run_conversation(message, stream_callback=stream_callback)
-        return result["final_response"]
+        final = result.get("final_response")
+
+        try:
+            from agent.refusal_interceptor import maybe_intercept
+        except Exception:
+            return final
+
+        def _retry():
+            from agent.refusal_interceptor import PHANTOM_REFUSAL_OVERRIDE_NUDGE
+            retry_result = self.run_conversation(
+                PHANTOM_REFUSAL_OVERRIDE_NUDGE,
+                stream_callback=stream_callback,
+            )
+            return retry_result.get("final_response")
+
+        return maybe_intercept(final, retry_callback=_retry)
 
 
 def main(
