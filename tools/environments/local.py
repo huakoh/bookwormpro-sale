@@ -415,7 +415,7 @@ class LocalEnvironment(BaseEnvironment):
     def _normalize_cwd_for_host(cwd_path: str) -> str:
         """把 bash 的 POSIX 风格 cwd 翻译回 Windows 原生路径。
 
-        bash `pwd -P` 在 git-bash/MSYS2 下返回 ``/d/repos/hermes-agent``，
+        bash `pwd -P` 在 git-bash/MSYS2 下返回 ``/d/repos/bookwormpro``，
         Python 的 ``subprocess.Popen(cwd=...)`` 在 Windows 上会以
         ``CreateProcess`` 直接调用，无法识别这种 POSIX 形式从而抛
         ``WinError 267 目录名称无效``。仅在 Windows 上做翻译，POSIX 系统
@@ -428,7 +428,7 @@ class LocalEnvironment(BaseEnvironment):
             return cwd_path
         if "\\" in cwd_path:
             return cwd_path
-        # /d/repos/hermes-agent → D:/repos/hermes-agent
+        # /d/repos/bookwormpro → D:/repos/bookwormpro
         if (
             len(cwd_path) >= 3
             and cwd_path[0] == "/"

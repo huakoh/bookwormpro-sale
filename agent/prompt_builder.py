@@ -92,11 +92,11 @@ def _find_git_root(start: Path) -> Optional[Path]:
     return None
 
 
-_HERMES_MD_NAMES = (".bookwormpro.md", "BOOKWORM.md", "HERMES.md")  # 末位为兼容旧项目
+_HERMES_MD_NAMES = (".bookwormpro.md", "BOOKWORM.md")
 
 
 def _find_hermes_md(cwd: Path) -> Optional[Path]:
-    """Discover the nearest ``.bookwormpro.md`` or ``HERMES.md``.
+    """Discover the nearest ``.bookwormpro.md`` or ``BOOKWORM.md``.
 
     Search order: *cwd* first, then each parent directory up to (and
     including) the git repository root.  Returns the first match, or

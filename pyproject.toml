@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bookwormpro"
 version = "7.0.0"
-description = "BookwormPRO - Self-hosted AI Agent CLI for academic research (Chinese-localized fork of hermes-agent)"
+description = "BookwormPRO - Self-hosted AI Agent CLI for academic research"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "huakoh" }]
