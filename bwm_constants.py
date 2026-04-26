@@ -356,11 +356,16 @@ def is_bww_relay_url(base_url: str | None) -> bool:
 
     Accepts plain hosts, ``http(s)://`` URLs, and trailing path components
     (``/v1`` etc.).  Match is case-insensitive on the host portion.
+    Uses exact hostname comparison to prevent subdomain false positives.
     """
     if not base_url:
         return False
-    s = str(base_url).lower()
-    return any(host in s for host in BWW_RELAY_HOSTS)
+    from urllib.parse import urlparse
+    s = str(base_url)
+    if "://" not in s:
+        s = "https://" + s
+    hostname = (urlparse(s).hostname or "").lower()
+    return hostname in BWW_RELAY_HOSTS
 
 
 def is_deepseek_model(model: str | None) -> bool:

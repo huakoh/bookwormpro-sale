@@ -399,13 +399,12 @@ class TestChatCompletionsCacheStats:
         assert result == {"cached_tokens": 500, "creation_tokens": 100}
 
 
-# BWW relay (bww.letcareme.com) routes deepseek thinking models with Anthropic
-# block semantics over the chat completions endpoint. Assistant tool-call
-# content must be a block list [{type:thinking,...},{type:text,...}] on the
-# request side, and normalize_response must extract thinking back into
-# reasoning_content so downstream replay re-emits it.
+# BWW relay (bww.letcareme.com) handles all OpenAI→Anthropic conversion
+# internally.  convert_messages must NOT pre-convert to Anthropic blocks —
+# doing so causes double-conversion (relay re-processes already-converted
+# blocks, producing empty-type blocks → HTTP 400/429).
 
-class TestBwwRelayDeepSeekRequest:
+class TestBwwRelayNoPreConversion:
 
     def _assistant_msg(
         self, content="going to call tool", reasoning="thought 1",
@@ -429,83 +428,44 @@ class TestBwwRelayDeepSeekRequest:
             "content": content,
         }
 
-    def test_assistant_tool_call_becomes_thinking_text_tool_use_blocks(self, transport):
+    def test_assistant_stays_openai_format(self, transport):
+        """Assistant messages keep OpenAI format — no Anthropic block conversion."""
         msgs = [self._assistant_msg(), self._tool_msg()]
-        out = transport.convert_messages(
-            msgs,
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        content = out[0]["content"]
-        assert isinstance(content, list)
-        assert content[0] == {"type": "thinking", "thinking": "thought 1"}
-        assert content[1] == {"type": "text", "text": "going to call tool"}
-        assert content[2] == {
-            "type": "tool_use",
-            "id": "call_1",
-            "name": "terminal",
-            "input": {"path": "/tmp/x"},
-        }
-        # OpenAI tool_calls field must be dropped (relay rejects it).
-        assert "tool_calls" not in out[0]
-        # Original list is untouched.
-        assert msgs[0]["tool_calls"][0]["id"] == "call_1"
+        out = transport.convert_messages(msgs)
+        assert out is msgs
+        assert out[0]["content"] == "going to call tool"
+        assert "tool_calls" in out[0]
+        assert out[0]["tool_calls"][0]["id"] == "call_1"
 
-    def test_role_tool_becomes_user_with_tool_result_block(self, transport):
+    def test_tool_stays_openai_format(self, transport):
         msgs = [self._assistant_msg(), self._tool_msg(content="found at C:/x.json")]
-        out = transport.convert_messages(
-            msgs,
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        tool_msg_out = out[1]
-        assert tool_msg_out["role"] == "user"
-        assert tool_msg_out["content"] == [{
-            "type": "tool_result",
-            "tool_use_id": "call_1",
-            "content": "found at C:/x.json",
-        }]
+        out = transport.convert_messages(msgs)
+        assert out is msgs
+        assert out[1]["role"] == "tool"
+        assert out[1]["content"] == "found at C:/x.json"
 
-    def test_empty_reasoning_still_emits_thinking_block(self, transport):
-        msg = self._assistant_msg(reasoning="")
-        del msg["reasoning_content"]
-        out = transport.convert_messages(
-            [msg, self._tool_msg()],
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        thinking = out[0]["content"][0]
-        assert thinking == {"type": "thinking", "thinking": ""}
+    def test_codex_fields_stripped_but_no_block_conversion(self, transport):
+        """Codex fields are stripped but messages stay in OpenAI format."""
+        msgs = [
+            {
+                "role": "assistant",
+                "content": "calling",
+                "codex_reasoning_items": [{"id": "rs_1"}],
+                "tool_calls": [{
+                    "id": "call_1", "call_id": "call_1", "response_item_id": "fc_1",
+                    "type": "function",
+                    "function": {"name": "terminal", "arguments": "{}"},
+                }],
+            },
+            self._tool_msg(),
+        ]
+        out = transport.convert_messages(msgs)
+        assert "codex_reasoning_items" not in out[0]
+        assert "call_id" not in out[0]["tool_calls"][0]
+        assert out[0]["content"] == "calling"
+        assert isinstance(out[0]["content"], str)
 
-    def test_falls_back_to_reasoning_field(self, transport):
-        msg = {
-            "role": "assistant",
-            "content": "calling",
-            "reasoning": "from openrouter",
-            "tool_calls": [{
-                "id": "call_1", "type": "function",
-                "function": {"name": "t", "arguments": "{}"},
-            }],
-        }
-        out = transport.convert_messages(
-            [msg, self._tool_msg()],
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        assert out[0]["content"][0]["thinking"] == "from openrouter"
-
-    def test_empty_assistant_content_drops_text_block_keeps_tool_use(self, transport):
-        msg = self._assistant_msg(content="")
-        out = transport.convert_messages(
-            [msg, self._tool_msg()],
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        content = out[0]["content"]
-        types = [b["type"] for b in content]
-        assert types == ["thinking", "tool_use"]
-
-    def test_multiple_tool_calls_become_multiple_tool_use_blocks(self, transport):
+    def test_multiple_tool_calls_preserved(self, transport):
         msg = {
             "role": "assistant",
             "content": "two calls",
@@ -517,82 +477,16 @@ class TestBwwRelayDeepSeekRequest:
                  "function": {"name": "b", "arguments": '{"k":"v"}'}},
             ],
         }
-        out = transport.convert_messages(
-            [msg, self._tool_msg("c1"), self._tool_msg("c2")],
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        content = out[0]["content"]
-        assert content[2] == {"type": "tool_use", "id": "c1", "name": "a", "input": {}}
-        assert content[3] == {"type": "tool_use", "id": "c2", "name": "b", "input": {"k": "v"}}
+        out = transport.convert_messages([msg, self._tool_msg("c1"), self._tool_msg("c2")])
+        assert out is [msg] or len(out[0]["tool_calls"]) == 2
 
-    def test_invalid_tool_arguments_json_falls_back_to_raw(self, transport):
-        msg = self._assistant_msg(tc_args="not-json{")
-        out = transport.convert_messages(
-            [msg, self._tool_msg()],
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        tool_use = out[0]["content"][2]
-        assert tool_use["input"] == {"_raw": "not-json{"}
-
-    def test_skips_assistant_without_tool_calls(self, transport):
-        msg = {"role": "assistant", "content": "plain answer"}
-        out = transport.convert_messages(
-            [msg],
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        # No tool_calls and no role:tool → nothing to convert.
-        assert out is [msg] or out[0]["content"] == "plain answer"
-
-    def test_passes_through_user_messages(self, transport):
+    def test_plain_messages_pass_through(self, transport):
         msgs = [
             {"role": "user", "content": "hi"},
-            self._assistant_msg(),
-            self._tool_msg(),
+            {"role": "assistant", "content": "hello"},
         ]
-        out = transport.convert_messages(
-            msgs,
-            base_url="https://bww.letcareme.com/v1",
-            model="deepseek-v4-pro",
-        )
-        assert out[0] == {"role": "user", "content": "hi"}
-
-    def test_non_bww_relay_no_transform(self, transport):
-        msgs = [self._assistant_msg(), self._tool_msg()]
-        out = transport.convert_messages(
-            msgs,
-            base_url="https://api.deepseek.com/v1",
-            model="deepseek-v4-pro",
-        )
-        # Direct DeepSeek API uses OpenAI shape — no Anthropic blocks.
+        out = transport.convert_messages(msgs)
         assert out is msgs
-        assert out[0]["content"] == "going to call tool"
-        assert out[1]["role"] == "tool"
-
-    def test_bww_relay_non_deepseek_no_transform(self, transport):
-        msgs = [self._assistant_msg(), self._tool_msg()]
-        out = transport.convert_messages(
-            msgs,
-            base_url="https://bww.letcareme.com/v1",
-            model="claude-sonnet-4-6",
-        )
-        assert out is msgs
-        assert out[1]["role"] == "tool"
-
-    def test_build_kwargs_threads_base_url_for_full_conversion(self, transport):
-        msgs = [self._assistant_msg(), self._tool_msg()]
-        kw = transport.build_kwargs(
-            model="deepseek-v4-pro",
-            messages=msgs,
-            base_url="https://bww.letcareme.com/v1",
-        )
-        # Both message types are converted via build_kwargs path.
-        assert "tool_calls" not in kw["messages"][0]
-        assert kw["messages"][0]["content"][2]["type"] == "tool_use"
-        assert kw["messages"][1]["role"] == "user"
-        assert kw["messages"][1]["content"][0]["type"] == "tool_result"
 
 
 class TestBwwRelayDeepSeekResponse:
@@ -707,3 +601,105 @@ class TestBwwRelayDeepSeekResponse:
             {"type": "tool_use", "id": "x", "name": "f", "input": "raw-string"},
         ]))
         assert nr.tool_calls[0].arguments == "raw-string"
+
+
+class TestBwwRelayThinkingBlockInjection:
+    """P0 #8: BWW relay + DeepSeek requires assistant content to contain
+    Anthropic-style {type:thinking} blocks.  _inject_thinking_blocks converts
+    reasoning_content → block list while preserving tool_calls as-is."""
+
+    def test_reasoning_converted_to_thinking_block(self, transport):
+        msgs = [
+            {"role": "user", "content": "hi"},
+            {"role": "assistant", "content": "answer", "reasoning_content": "thought process"},
+        ]
+        result = transport._inject_thinking_blocks(msgs)
+        assert result[0] is msgs[0]  # user msg untouched
+        ast = result[1]
+        assert isinstance(ast["content"], list)
+        assert ast["content"][0] == {"type": "thinking", "thinking": "thought process"}
+        assert ast["content"][1] == {"type": "text", "text": "answer"}
+        assert "reasoning_content" not in ast
+
+    def test_tool_calls_preserved(self, transport):
+        msgs = [{
+            "role": "assistant",
+            "content": "calling tool",
+            "reasoning_content": "thinking",
+            "tool_calls": [{"id": "c1", "type": "function",
+                           "function": {"name": "t", "arguments": "{}"}}],
+        }]
+        result = transport._inject_thinking_blocks(msgs)
+        assert result[0]["tool_calls"] == msgs[0]["tool_calls"]
+        assert isinstance(result[0]["content"], list)
+        assert result[0]["content"][0]["type"] == "thinking"
+
+    def test_no_reasoning_no_transform(self, transport):
+        msgs = [
+            {"role": "assistant", "content": "plain answer"},
+        ]
+        result = transport._inject_thinking_blocks(msgs)
+        assert result is msgs
+
+    def test_tool_messages_untouched(self, transport):
+        msgs = [
+            {"role": "tool", "tool_call_id": "c1", "content": "result"},
+        ]
+        result = transport._inject_thinking_blocks(msgs)
+        assert result is msgs
+        assert result[0]["content"] == "result"
+
+    def test_already_block_content_skipped(self, transport):
+        msgs = [{
+            "role": "assistant",
+            "content": [{"type": "thinking", "thinking": "already blocks"}],
+            "reasoning_content": "dup",
+        }]
+        result = transport._inject_thinking_blocks(msgs)
+        assert result is msgs
+
+    def test_reasoning_field_fallback(self, transport):
+        msgs = [{"role": "assistant", "content": "ans", "reasoning": "via reasoning field"}]
+        result = transport._inject_thinking_blocks(msgs)
+        assert result[0]["content"][0] == {"type": "thinking", "thinking": "via reasoning field"}
+        assert "reasoning" not in result[0]
+
+    def test_none_content_gets_thinking_only(self, transport):
+        msgs = [{"role": "assistant", "content": None, "reasoning_content": "thoughts"}]
+        result = transport._inject_thinking_blocks(msgs)
+        assert len(result[0]["content"]) == 1
+        assert result[0]["content"][0]["type"] == "thinking"
+
+    def test_build_kwargs_triggers_for_bww_deepseek(self, transport):
+        """Integration: build_kwargs injects thinking blocks for BWW + DeepSeek."""
+        msgs = [
+            {"role": "user", "content": "hi"},
+            {"role": "assistant", "content": "answer", "reasoning_content": "think"},
+            {"role": "user", "content": "follow up"},
+        ]
+        kw = transport.build_kwargs(
+            model="deepseek-v4-pro",
+            messages=msgs,
+            base_url="https://bww.letcareme.com/v1",
+        )
+        ast = kw["messages"][1]
+        assert isinstance(ast["content"], list)
+        assert ast["content"][0]["type"] == "thinking"
+
+    def test_build_kwargs_skips_non_bww(self, transport):
+        msgs = [{"role": "assistant", "content": "ans", "reasoning_content": "think"}]
+        kw = transport.build_kwargs(
+            model="deepseek-v4-pro",
+            messages=msgs,
+            base_url="https://api.deepseek.com/v1",
+        )
+        assert isinstance(kw["messages"][0]["content"], str)
+
+    def test_build_kwargs_skips_non_deepseek(self, transport):
+        msgs = [{"role": "assistant", "content": "ans", "reasoning_content": "think"}]
+        kw = transport.build_kwargs(
+            model="claude-sonnet-4-6",
+            messages=msgs,
+            base_url="https://bww.letcareme.com/v1",
+        )
+        assert isinstance(kw["messages"][0]["content"], str)

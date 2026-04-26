@@ -18,117 +18,6 @@ from agent.prompt_builder import DEVELOPER_ROLE_MODELS
 from agent.transports.base import ProviderTransport
 from agent.transports.types import NormalizedResponse, ToolCall, Usage
 from bwm_constants import is_bww_relay_url, is_deepseek_model
-
-
-def _needs_bww_deepseek_thinking(base_url: Optional[str], model: Optional[str]) -> bool:
-    """Return True when the request is routed through a BWW relay using a
-    DeepSeek thinking-mode model.
-
-    BWW relays surface DeepSeek with full Anthropic-block semantics on the
-    chat completions endpoint: every message — assistant tool-calls AND tool
-    results — must be in Anthropic shape, otherwise the relay rejects with
-    ``unknown variant ``, expected one of `text`, `tool_use`, `tool_result`,
-    `thinking`, ...``.
-    """
-    return is_bww_relay_url(base_url) and is_deepseek_model(model)
-
-
-def _parse_tool_arguments(arguments: Any) -> Dict[str, Any]:
-    """Convert OpenAI tool-call ``arguments`` (string JSON) to Anthropic ``input`` (dict)."""
-    if isinstance(arguments, dict):
-        return arguments
-    if isinstance(arguments, str):
-        s = arguments.strip()
-        if not s:
-            return {}
-        try:
-            parsed = json.loads(s)
-            return parsed if isinstance(parsed, dict) else {"_raw": parsed}
-        except (json.JSONDecodeError, ValueError):
-            return {"_raw": arguments}
-    return {}
-
-
-def _convert_messages_to_anthropic_blocks(
-    messages: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-    """Convert an OpenAI-shape message list to Anthropic block-shape in-place safe.
-
-    Transformations (idempotent — already-converted messages pass through):
-
-    * assistant + ``tool_calls`` → ``content`` becomes
-      ``[{thinking},{text}?,{tool_use}+]`` and ``tool_calls`` field is dropped.
-    * role ``tool`` → role ``user`` with ``content=[{tool_result}]``.
-    * Plain string ``content`` on assistant/user is kept as a string when no
-      block-conversion is needed (the relay accepts strings for non-tool turns).
-    """
-    out: List[Dict[str, Any]] = []
-    for msg in messages:
-        if not isinstance(msg, dict):
-            out.append(msg)
-            continue
-
-        role = msg.get("role")
-
-        # role: tool → role: user with tool_result block
-        if role == "tool":
-            tool_call_id = msg.get("tool_call_id") or ""
-            content = msg.get("content")
-            if isinstance(content, list):
-                tr_content: Any = content
-            else:
-                tr_content = content if isinstance(content, str) else ""
-            out.append({
-                "role": "user",
-                "content": [{
-                    "type": "tool_result",
-                    "tool_use_id": tool_call_id,
-                    "content": tr_content,
-                }],
-            })
-            continue
-
-        # assistant with tool_calls → merge into content blocks
-        if role == "assistant" and msg.get("tool_calls"):
-            content = msg.get("content")
-
-            # Idempotent: if already block list AND tool_calls absent, pass through.
-            # If both exist (mid-conversion), prefer rebuild from tool_calls source-of-truth.
-            if isinstance(content, list) and not msg.get("tool_calls"):
-                out.append(msg)
-                continue
-
-            text = content if isinstance(content, str) else ""
-            reasoning = msg.get("reasoning_content")
-            if not isinstance(reasoning, str):
-                alt = msg.get("reasoning")
-                reasoning = alt if isinstance(alt, str) else ""
-
-            blocks: List[Dict[str, Any]] = []
-            # Thinking first per Anthropic ordering — required even when empty.
-            blocks.append({"type": "thinking", "thinking": reasoning})
-            if text:
-                blocks.append({"type": "text", "text": text})
-            for tc in msg.get("tool_calls") or []:
-                if not isinstance(tc, dict):
-                    continue
-                fn = tc.get("function") or {}
-                blocks.append({
-                    "type": "tool_use",
-                    "id": tc.get("id") or "",
-                    "name": fn.get("name") or "",
-                    "input": _parse_tool_arguments(fn.get("arguments")),
-                })
-
-            new_msg = {k: v for k, v in msg.items() if k != "tool_calls"}
-            new_msg["content"] = blocks
-            out.append(new_msg)
-            continue
-
-        out.append(msg)
-    return out
-
-
 class ChatCompletionsTransport(ProviderTransport):
     """Transport for api_mode='chat_completions'.
 
@@ -146,14 +35,11 @@ class ChatCompletionsTransport(ProviderTransport):
         message, ``call_id``/``response_item_id`` on tool_calls) that strict
         chat-completions providers reject with 400/422.
 
-        When the route is a BWW-style relay carrying a DeepSeek thinking-mode
-        model, also rewrites assistant tool-call ``content`` from a string to
-        an Anthropic-style block list ``[{type:thinking}, {type:text}]``.
+        BWW-relay messages are kept in pure OpenAI format — the relay handles
+        all OpenAI→Anthropic conversion internally.  Pre-converting here
+        causes double-conversion (relay re-processes already-converted blocks,
+        producing empty-type blocks → HTTP 400/429).
         """
-        base_url = kwargs.get("base_url")
-        model = kwargs.get("model")
-        bww_deepseek = _needs_bww_deepseek_thinking(base_url, model)
-
         needs_sanitize = False
         for msg in messages:
             if not isinstance(msg, dict):
@@ -168,21 +54,6 @@ class ChatCompletionsTransport(ProviderTransport):
                         needs_sanitize = True
                         break
                 if needs_sanitize:
-                    break
-
-        if bww_deepseek:
-            for msg in messages:
-                if not isinstance(msg, dict):
-                    continue
-                if msg.get("role") == "tool":
-                    needs_sanitize = True
-                    break
-                if (
-                    msg.get("role") == "assistant"
-                    and msg.get("tool_calls")
-                    and not isinstance(msg.get("content"), list)
-                ):
-                    needs_sanitize = True
                     break
 
         if not needs_sanitize:
@@ -200,9 +71,56 @@ class ChatCompletionsTransport(ProviderTransport):
                         tc.pop("call_id", None)
                         tc.pop("response_item_id", None)
 
-        if bww_deepseek:
-            sanitized = _convert_messages_to_anthropic_blocks(sanitized)
         return sanitized
+
+    @staticmethod
+    def _inject_thinking_blocks(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Convert reasoning_content on assistant messages to Anthropic thinking blocks.
+
+        BWW relay expects assistant ``content`` to be a block list containing
+        ``{type: "thinking", thinking: "..."}`` when the model used thinking.
+        OpenAI-format stores this in ``reasoning_content`` (or ``reasoning``).
+
+        Only transforms assistant messages that have reasoning AND whose
+        content is still a plain string (not already block-converted).
+        tool_calls and role:tool messages are left untouched.
+        """
+        needs_transform = False
+        for msg in messages:
+            if not isinstance(msg, dict) or msg.get("role") != "assistant":
+                continue
+            reasoning = msg.get("reasoning_content") or msg.get("reasoning") or ""
+            if reasoning and isinstance(msg.get("content", ""), (str, type(None))):
+                needs_transform = True
+                break
+
+        if not needs_transform:
+            return messages
+
+        result = []
+        for msg in messages:
+            if not isinstance(msg, dict) or msg.get("role") != "assistant":
+                result.append(msg)
+                continue
+
+            reasoning = msg.get("reasoning_content") or msg.get("reasoning") or ""
+            content = msg.get("content")
+
+            if not reasoning or isinstance(content, list):
+                result.append(msg)
+                continue
+
+            blocks: List[Dict[str, Any]] = []
+            if reasoning:
+                blocks.append({"type": "thinking", "thinking": reasoning})
+            if content:
+                blocks.append({"type": "text", "text": content})
+
+            new_msg = {k: v for k, v in msg.items() if k not in ("content", "reasoning_content", "reasoning")}
+            new_msg["content"] = blocks
+            result.append(new_msg)
+
+        return result
 
     def convert_tools(self, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Tools are already in OpenAI format — identity."""
@@ -256,13 +174,15 @@ class ChatCompletionsTransport(ProviderTransport):
             extra_body_additions: dict | None — pre-built extra_body entries
         """
         # Codex sanitization: drop reasoning_items / call_id / response_item_id
-        # base_url + model are threaded so BWW-relay DeepSeek tool-call messages
-        # get content rewritten to Anthropic block form (see convert_messages).
-        sanitized = self.convert_messages(
-            messages,
-            base_url=params.get("base_url"),
-            model=model,
-        )
+        sanitized = self.convert_messages(messages)
+
+        # BWW relay + DeepSeek: convert reasoning_content → thinking blocks.
+        # The relay requires assistant content to contain Anthropic-style
+        # {type:thinking} blocks.  tool_calls are left untouched — the relay
+        # handles OpenAI→Anthropic tool conversion internally.
+        base_url = params.get("base_url")
+        if is_bww_relay_url(base_url) and is_deepseek_model(model):
+            sanitized = self._inject_thinking_blocks(sanitized)
 
         # Qwen portal prep AFTER codex sanitization.  If sanitize already
         # deepcopied, reuse that copy via the in-place variant to avoid a

@@ -9,6 +9,7 @@ import pytest
 import bwm_constants
 from bwm_constants import (
     get_default_hermes_root,
+    is_bww_relay_url,
     is_container,
     is_host_bridge_active,
     is_native_install,
@@ -150,6 +151,43 @@ class TestIsHostBridgeActive:
         monkeypatch.setattr(bwm_constants, "_host_bridge_detected", True)
         monkeypatch.delenv("BOOKWORMPRO_HOST_BRIDGE", raising=False)
         assert is_host_bridge_active() is True
+
+
+class TestIsBwwRelayUrl:
+    """Tests for is_bww_relay_url() — hostname-precise matching."""
+
+    def test_full_https_url(self):
+        assert is_bww_relay_url("https://bww.letcareme.com/v1") is True
+
+    def test_http_url(self):
+        assert is_bww_relay_url("http://bww.letcareme.com/v1") is True
+
+    def test_bare_host(self):
+        assert is_bww_relay_url("bww.letcareme.com") is True
+
+    def test_bare_host_with_path(self):
+        assert is_bww_relay_url("bww.letcareme.com/v1") is True
+
+    def test_case_insensitive(self):
+        assert is_bww_relay_url("https://BWW.LETCAREME.COM/v1") is True
+
+    def test_none(self):
+        assert is_bww_relay_url(None) is False
+
+    def test_empty(self):
+        assert is_bww_relay_url("") is False
+
+    def test_subdomain_no_false_positive(self):
+        assert is_bww_relay_url("https://evil-bww.letcareme.com/v1") is False
+
+    def test_parent_domain_no_false_positive(self):
+        assert is_bww_relay_url("https://bww.letcareme.com.evil.com/v1") is False
+
+    def test_unrelated_host(self):
+        assert is_bww_relay_url("https://api.deepseek.com/v1") is False
+
+    def test_host_as_path_component_no_false_positive(self):
+        assert is_bww_relay_url("https://evil.com/bww.letcareme.com") is False
 
 
 class TestIsNativeInstall:
