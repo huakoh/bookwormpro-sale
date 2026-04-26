@@ -97,7 +97,7 @@ class LocalEditSnapshot:
 # Configurable tool preview length (0 = no limit)
 # Set once at startup by CLI or gateway from display.tool_preview_length config.
 # =========================================================================
-_tool_preview_max_len: int = 0  # 0 = unlimited
+_tool_preview_max_len: int = 80  # 默认强制截短，避免长命令行刷屏 (0 = unlimited)
 
 
 def set_tool_preview_max_len(n: int) -> None:
@@ -156,6 +156,82 @@ def get_tool_emoji(tool_name: str, default: str = "*") -> str:
         pass
     # 3. Hardcoded fallback
     return default
+
+
+# =========================================================================
+# 工具中文名映射 (用于精简模式的"准备 XX..."等展示)
+# =========================================================================
+
+_TOOL_ZH_NAMES = {
+    "memory": "记忆",
+    "session_search": "会话搜索",
+    "skills": "技能",
+    "skill_manage": "技能管理",
+    "delegate_task": "委派子任务",
+    "todo": "任务列表",
+    "clarify": "追问",
+    "tts": "语音合成",
+    "vision": "视觉识别",
+    "web_search": "网络搜索",
+    "web_extract": "网页提取",
+    "web_crawl": "网页爬取",
+    "fetch_url": "URL 抓取",
+    "browser": "浏览器",
+    "browser_back": "浏览器后退",
+    "browser_click": "浏览器点击",
+    "browser_dialog": "浏览器对话",
+    "browser_cdp": "浏览器调试",
+    "execute_code": "执行代码",
+    "code_execution": "执行代码",
+    "terminal": "终端",
+    "process": "进程",
+    "read_file": "读取文件",
+    "write_file": "写入文件",
+    "patch": "代码补丁",
+    "edit_file": "编辑文件",
+    "search_files": "文件搜索",
+    "list_files": "列出文件",
+    "delete_file": "删除文件",
+    "move_file": "移动文件",
+    "cronjob": "定时任务",
+    "discord_server": "Discord 服务器",
+    "feishu_doc_read": "飞书文档读取",
+    "send_message": "发送消息",
+    "image_gen": "图片生成",
+    "voice_mode": "语音模式",
+    "speak": "朗读",
+    "rl_training": "强化学习训练",
+    "checkpoint": "检查点",
+    "mcp": "MCP 工具",
+    "homeassistant": "智能家居",
+    "messaging": "消息",
+    "moa": "多模型协同",
+}
+
+
+def get_tool_zh_name(tool_name: str) -> str:
+    """返回工具的中文显示名 (用于状态行/spinner)。
+
+    解析顺序: skin tool_zh_names → 内置映射 → MCP 前缀剥离 → 原名。
+    """
+    if not tool_name:
+        return "工具"
+    # 1. skin override
+    skin = _get_skin()
+    if skin and getattr(skin, "tool_zh_names", None):
+        override = skin.tool_zh_names.get(tool_name)
+        if override:
+            return override
+    # 2. 内置映射
+    if tool_name in _TOOL_ZH_NAMES:
+        return _TOOL_ZH_NAMES[tool_name]
+    # 3. MCP 工具 (mcp__server__method) → server / method
+    if tool_name.startswith("mcp__"):
+        parts = tool_name.split("__", 2)
+        if len(parts) == 3:
+            return f"MCP·{parts[1]}·{parts[2]}"
+    # 4. 默认回退原名
+    return tool_name
 
 
 # =========================================================================
@@ -868,131 +944,132 @@ def get_cute_tool_message(
             return line
         return f"{line}{failure_suffix}"
 
+    # 中文一句话: ┊ {emoji} {中文动词} {简要参数}  {耗时}
     if tool_name == "web_search":
-        return _wrap(f"┊ [查找] search    {_trunc(args.get('query', ''), 42)}  {dur}")
+        return _wrap(f"┊ 🔍 网络搜索  {_trunc(args.get('query', ''), 42)}  {dur}")
     if tool_name == "web_extract":
         urls = args.get("urls", [])
         if urls:
             url = urls[0] if isinstance(urls, list) else str(urls)
             domain = url.replace("https://", "").replace("http://", "").split("/")[0]
             extra = f" +{len(urls)-1}" if len(urls) > 1 else ""
-            return _wrap(f"┊ [文档] fetch     {_trunc(domain, 35)}{extra}  {dur}")
-        return _wrap(f"┊ [文档] fetch     pages  {dur}")
+            return _wrap(f"┊ 📄 网页提取  {_trunc(domain, 35)}{extra}  {dur}")
+        return _wrap(f"┊ 📄 网页提取  pages  {dur}")
     if tool_name == "web_crawl":
         url = args.get("url", "")
         domain = url.replace("https://", "").replace("http://", "").split("/")[0]
-        return _wrap(f"┊ 🕸️  crawl     {_trunc(domain, 35)}  {dur}")
+        return _wrap(f"┊ 🕸 网页爬取  {_trunc(domain, 35)}  {dur}")
     if tool_name == "terminal":
-        return _wrap(f"┊ [系统] $         {_trunc(args.get('command', ''), 42)}  {dur}")
+        return _wrap(f"┊ ⌨ 终端       $ {_trunc(args.get('command', ''), 40)}  {dur}")
     if tool_name == "process":
         action = args.get("action", "?")
         sid = args.get("session_id", "")[:12]
-        labels = {"list": "ls processes", "poll": f"poll {sid}", "log": f"log {sid}",
-                  "wait": f"wait {sid}", "kill": f"kill {sid}", "write": f"write {sid}", "submit": f"submit {sid}"}
-        return _wrap(f"┊ ⚙️  proc      {labels.get(action, f'{action} {sid}')}  {dur}")
+        labels = {"list": "进程列表", "poll": f"轮询 {sid}", "log": f"日志 {sid}",
+                  "wait": f"等待 {sid}", "kill": f"终止 {sid}", "write": f"写入 {sid}", "submit": f"提交 {sid}"}
+        return _wrap(f"┊ ⚙ 进程       {labels.get(action, f'{action} {sid}')}  {dur}")
     if tool_name == "read_file":
-        return _wrap(f"┊ 📖 read      {_path(args.get('path', ''))}  {dur}")
+        return _wrap(f"┊ 📖 读取文件  {_path(args.get('path', ''))}  {dur}")
     if tool_name == "write_file":
-        return _wrap(f"┊ ✍️  write     {_path(args.get('path', ''))}  {dur}")
+        return _wrap(f"┊ ✍ 写入文件  {_path(args.get('path', ''))}  {dur}")
     if tool_name == "patch":
-        return _wrap(f"┊ [工具] patch     {_path(args.get('path', ''))}  {dur}")
+        return _wrap(f"┊ 🩹 代码补丁  {_path(args.get('path', ''))}  {dur}")
     if tool_name == "search_files":
         pattern = _trunc(args.get("pattern", ""), 35)
         target = args.get("target", "content")
-        verb = "find" if target == "files" else "grep"
-        return _wrap(f"┊ 🔎 {verb:9} {pattern}  {dur}")
+        verb = "查找文件" if target == "files" else "搜索内容"
+        return _wrap(f"┊ 🔎 {verb}  {pattern}  {dur}")
     if tool_name == "browser_navigate":
         url = args.get("url", "")
         domain = url.replace("https://", "").replace("http://", "").split("/")[0]
-        return _wrap(f"┊ [网页] navigate  {_trunc(domain, 35)}  {dur}")
+        return _wrap(f"┊ 🌐 访问网页  {_trunc(domain, 35)}  {dur}")
     if tool_name == "browser_snapshot":
-        mode = "full" if args.get("full") else "compact"
-        return _wrap(f"┊ 📸 snapshot  {mode}  {dur}")
+        mode = "完整" if args.get("full") else "精简"
+        return _wrap(f"┊ 📸 页面快照  {mode}  {dur}")
     if tool_name == "browser_click":
-        return _wrap(f"┊ 👆 click     {args.get('ref', '?')}  {dur}")
+        return _wrap(f"┊ 👆 点击元素  {args.get('ref', '?')}  {dur}")
     if tool_name == "browser_type":
-        return _wrap(f"┊ ⌨️  type      \"{_trunc(args.get('text', ''), 30)}\"  {dur}")
+        return _wrap(f"┊ ⌨ 输入文本  \"{_trunc(args.get('text', ''), 30)}\"  {dur}")
     if tool_name == "browser_scroll":
         d = args.get("direction", "down")
         arrow = {"down": "↓", "up": "↑", "right": "→", "left": "←"}.get(d, "↓")
-        return _wrap(f"┊ {arrow}  scroll    {d}  {dur}")
+        return _wrap(f"┊ {arrow} 滚动页面  {d}  {dur}")
     if tool_name == "browser_back":
-        return _wrap(f"┊ ◀️  back      {dur}")
+        return _wrap(f"┊ ◀ 后退       {dur}")
     if tool_name == "browser_press":
-        return _wrap(f"┊ ⌨️  press     {args.get('key', '?')}  {dur}")
+        return _wrap(f"┊ ⌨ 按键       {args.get('key', '?')}  {dur}")
     if tool_name == "browser_get_images":
-        return _wrap(f"┊ 🖼️  images    extracting  {dur}")
+        return _wrap(f"┊ 🖼 提取图片  正在抽取  {dur}")
     if tool_name == "browser_vision":
-        return _wrap(f"┊ 👁️  vision    analyzing page  {dur}")
+        return _wrap(f"┊ 👁 视觉识别  分析页面  {dur}")
     if tool_name == "todo":
         todos_arg = args.get("todos")
         merge = args.get("merge", False)
         if todos_arg is None:
-            return _wrap(f"┊ [汇总] plan      reading tasks  {dur}")
+            return _wrap(f"┊ 📋 任务列表  读取  {dur}")
         elif merge:
-            return _wrap(f"┊ [汇总] plan      update {len(todos_arg)} task(s)  {dur}")
+            return _wrap(f"┊ 📋 任务列表  更新 {len(todos_arg)} 项  {dur}")
         else:
-            return _wrap(f"┊ [汇总] plan      {len(todos_arg)} task(s)  {dur}")
+            return _wrap(f"┊ 📋 任务列表  写入 {len(todos_arg)} 项  {dur}")
     if tool_name == "session_search":
-        return _wrap(f"┊ [查找] recall    \"{_trunc(args.get('query', ''), 35)}\"  {dur}")
+        return _wrap(f"┊ 🔍 会话回忆  \"{_trunc(args.get('query', ''), 35)}\"  {dur}")
     if tool_name == "memory":
         action = args.get("action", "?")
         target = args.get("target", "")
         if action == "add":
-            return _wrap(f"┊ 🧠 memory    +{target}: \"{_trunc(args.get('content', ''), 30)}\"  {dur}")
+            return _wrap(f"┊ 🧠 记忆       +{target}: \"{_trunc(args.get('content', ''), 30)}\"  {dur}")
         elif action == "replace":
-            old = args.get("old_text") or ""
-            old = old if old else "<missing old_text>"
-            return _wrap(f"┊ 🧠 memory    ~{target}: \"{_trunc(old, 20)}\"  {dur}")
+            old = args.get("old_text") or "<缺 old_text>"
+            return _wrap(f"┊ 🧠 记忆       ~{target}: \"{_trunc(old, 20)}\"  {dur}")
         elif action == "remove":
-            old = args.get("old_text") or ""
-            old = old if old else "<missing old_text>"
-            return _wrap(f"┊ 🧠 memory    -{target}: \"{_trunc(old, 20)}\"  {dur}")
-        return _wrap(f"┊ 🧠 memory    {action}  {dur}")
+            old = args.get("old_text") or "<缺 old_text>"
+            return _wrap(f"┊ 🧠 记忆       -{target}: \"{_trunc(old, 20)}\"  {dur}")
+        return _wrap(f"┊ 🧠 记忆       {action}  {dur}")
     if tool_name == "skills_list":
-        return _wrap(f"┊ 📚 skills    list {args.get('category', 'all')}  {dur}")
+        return _wrap(f"┊ 📚 技能列表  {args.get('category', '全部')}  {dur}")
     if tool_name == "skill_view":
-        return _wrap(f"┊ 📚 skill     {_trunc(args.get('name', ''), 30)}  {dur}")
+        return _wrap(f"┊ 📚 查看技能  {_trunc(args.get('name', ''), 30)}  {dur}")
     if tool_name == "image_generate":
-        return _wrap(f"┊ [样式] create    {_trunc(args.get('prompt', ''), 35)}  {dur}")
+        return _wrap(f"┊ 🎨 生成图片  {_trunc(args.get('prompt', ''), 35)}  {dur}")
     if tool_name == "text_to_speech":
-        return _wrap(f"┊ 🔊 speak     {_trunc(args.get('text', ''), 30)}  {dur}")
+        return _wrap(f"┊ 🔊 朗读       {_trunc(args.get('text', ''), 30)}  {dur}")
     if tool_name == "vision_analyze":
-        return _wrap(f"┊ 👁️  vision    {_trunc(args.get('question', ''), 30)}  {dur}")
+        return _wrap(f"┊ 👁 视觉识别  {_trunc(args.get('question', ''), 30)}  {dur}")
     if tool_name == "mixture_of_agents":
-        return _wrap(f"┊ 🧠 reason    {_trunc(args.get('user_prompt', ''), 30)}  {dur}")
+        return _wrap(f"┊ 🧠 多模型推理  {_trunc(args.get('user_prompt', ''), 30)}  {dur}")
     if tool_name == "send_message":
-        return _wrap(f"┊ 📨 send      {args.get('target', '?')}: \"{_trunc(args.get('message', ''), 25)}\"  {dur}")
+        return _wrap(f"┊ 📨 发送消息  {args.get('target', '?')}: \"{_trunc(args.get('message', ''), 25)}\"  {dur}")
     if tool_name == "cronjob":
         action = args.get("action", "?")
         if action == "create":
             skills = args.get("skills") or ([] if not args.get("skill") else [args.get("skill")])
-            label = args.get("name") or (skills[0] if skills else None) or args.get("prompt", "task")
-            return _wrap(f"┊ ⏰ cron      create {_trunc(label, 24)}  {dur}")
+            label = args.get("name") or (skills[0] if skills else None) or args.get("prompt", "任务")
+            return _wrap(f"┊ ⏰ 定时任务  新建 {_trunc(label, 24)}  {dur}")
         if action == "list":
-            return _wrap(f"┊ ⏰ cron      listing  {dur}")
-        return _wrap(f"┊ ⏰ cron      {action} {args.get('job_id', '')}  {dur}")
+            return _wrap(f"┊ ⏰ 定时任务  列表  {dur}")
+        return _wrap(f"┊ ⏰ 定时任务  {action} {args.get('job_id', '')}  {dur}")
     if tool_name.startswith("rl_"):
         rl = {
-            "rl_list_environments": "list envs", "rl_select_environment": f"select {args.get('name', '')}",
-            "rl_get_current_config": "get config", "rl_edit_config": f"set {args.get('field', '?')}",
-            "rl_start_training": "start training", "rl_check_status": f"status {args.get('run_id', '?')[:12]}",
-            "rl_stop_training": f"stop {args.get('run_id', '?')[:12]}", "rl_get_results": f"results {args.get('run_id', '?')[:12]}",
-            "rl_list_runs": "list runs", "rl_test_inference": "test inference",
+            "rl_list_environments": "环境列表", "rl_select_environment": f"选择 {args.get('name', '')}",
+            "rl_get_current_config": "查看配置", "rl_edit_config": f"设置 {args.get('field', '?')}",
+            "rl_start_training": "开始训练", "rl_check_status": f"状态 {args.get('run_id', '?')[:12]}",
+            "rl_stop_training": f"停止 {args.get('run_id', '?')[:12]}", "rl_get_results": f"结果 {args.get('run_id', '?')[:12]}",
+            "rl_list_runs": "运行列表", "rl_test_inference": "推理测试",
         }
-        return _wrap(f"┊ 🧪 rl        {rl.get(tool_name, tool_name.replace('rl_', ''))}  {dur}")
+        return _wrap(f"┊ 🧪 强化学习  {rl.get(tool_name, tool_name.replace('rl_', ''))}  {dur}")
     if tool_name == "execute_code":
         code = args.get("code", "")
         first_line = code.strip().split("\n")[0] if code.strip() else ""
-        return _wrap(f"┊ 🐍 exec      {_trunc(first_line, 35)}  {dur}")
+        return _wrap(f"┊ 🐍 执行代码  {_trunc(first_line, 35)}  {dur}")
     if tool_name == "delegate_task":
         tasks = args.get("tasks")
         if tasks and isinstance(tasks, list):
-            return _wrap(f"┊ 🔀 delegate  {len(tasks)} parallel tasks  {dur}")
-        return _wrap(f"┊ 🔀 delegate  {_trunc(args.get('goal', ''), 35)}  {dur}")
+            return _wrap(f"┊ 🔀 委派子任务  {len(tasks)} 项并行  {dur}")
+        return _wrap(f"┊ 🔀 委派子任务  {_trunc(args.get('goal', ''), 35)}  {dur}")
 
+    # 默认: 用中文映射 + 参数预览
+    zh = get_tool_zh_name(tool_name)
     preview = build_tool_preview(tool_name, args) or ""
-    return _wrap(f"┊ * {tool_name[:9]:9} {_trunc(preview, 35)}  {dur}")
+    return _wrap(f"┊ ✦ {zh:<10} {_trunc(preview, 35)}  {dur}")
 
 
 # =========================================================================

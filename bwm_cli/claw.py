@@ -335,7 +335,7 @@ def _cmd_migrate(args):
     )
     print(
         color(
-            "│          [BWM] BookwormPRO — OpenClaw Migration                 │",
+            "│          BookwormPRO · OpenClaw Migration                       │",
             Colors.MAGENTA,
         )
     )
@@ -505,7 +505,7 @@ def _cmd_cleanup(args):
     )
     print(
         color(
-            "│          [BWM] BookwormPRO — OpenClaw Cleanup                   │",
+            "│          BookwormPRO · OpenClaw Cleanup                         │",
             Colors.MAGENTA,
         )
     )

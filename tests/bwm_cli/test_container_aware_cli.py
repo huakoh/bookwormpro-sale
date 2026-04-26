@@ -49,7 +49,7 @@ def test_get_container_exec_info_returns_metadata(container_env):
     assert info["backend"] == "podman"
     assert info["container_name"] == "bookwormpro"
     assert info["exec_user"] == "bookworm"
-    assert info["hermes_bin"] == "/data/current-package/bin/bookworm"
+    assert info["bookworm_bin"] == "/data/current-package/bin/bookworm"
 
 
 def test_get_container_exec_info_none_inside_container(container_env):
@@ -114,7 +114,7 @@ def test_get_container_exec_info_defaults():
         assert info["backend"] == "docker"
         assert info["container_name"] == "bookwormpro"
         assert info["exec_user"] == "bookworm"
-        assert info["hermes_bin"] == "/data/current-package/bin/bookworm"
+        assert info["bookworm_bin"] == "/data/current-package/bin/bookworm"
 
 
 def test_get_container_exec_info_docker_backend(container_env):
@@ -132,7 +132,7 @@ def test_get_container_exec_info_docker_backend(container_env):
     assert info["backend"] == "docker"
     assert info["container_name"] == "bookworm-custom"
     assert info["exec_user"] == "myuser"
-    assert info["hermes_bin"] == "/opt/bookworm/bin/bookworm"
+    assert info["bookworm_bin"] == "/opt/bookworm/bin/bookworm"
 
 
 def test_get_container_exec_info_crashes_on_permission_error(container_env):
@@ -154,7 +154,7 @@ def docker_container_info():
         "backend": "docker",
         "container_name": "bookwormpro",
         "exec_user": "bookworm",
-        "hermes_bin": "/data/current-package/bin/bookworm",
+        "bookworm_bin": "/data/current-package/bin/bookworm",
     }
 
 
@@ -164,7 +164,7 @@ def podman_container_info():
         "backend": "podman",
         "container_name": "bookwormpro",
         "exec_user": "bookworm",
-        "hermes_bin": "/data/current-package/bin/bookworm",
+        "bookworm_bin": "/data/current-package/bin/bookworm",
     }
 
 

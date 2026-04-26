@@ -228,8 +228,8 @@ class TestSetupLogging:
         """The custom record factory injects session_tag on all records."""
         bwm_logging.setup_logging(hermes_home=hermes_home)
         factory = logging.getLogRecordFactory()
-        assert getattr(factory, "_hermes_session_injector", False), (
-            "Record factory should have _hermes_session_injector marker"
+        assert getattr(factory, "_bwm_session_injector", False), (
+            "Record factory should have _bwm_session_injector marker"
         )
         # Verify session_tag exists on a fresh record
         record = factory("test", logging.INFO, "", 0, "msg", (), None)
@@ -534,7 +534,7 @@ class TestSetupVerboseLogging:
             h for h in root.handlers
             if isinstance(h, logging.StreamHandler)
             and not isinstance(h, RotatingFileHandler)
-            and getattr(h, "_hermes_verbose", False)
+            and getattr(h, "_bwm_verbose", False)
         ]
         assert len(verbose_handlers) == 1
         assert verbose_handlers[0].level == logging.DEBUG
@@ -549,7 +549,7 @@ class TestSetupVerboseLogging:
             h for h in root.handlers
             if isinstance(h, logging.StreamHandler)
             and not isinstance(h, RotatingFileHandler)
-            and getattr(h, "_hermes_verbose", False)
+            and getattr(h, "_bwm_verbose", False)
         ]
         assert len(verbose_handlers) == 1
 

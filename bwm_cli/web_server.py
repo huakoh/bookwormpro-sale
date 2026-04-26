@@ -571,7 +571,7 @@ async def get_status():
     return {
         "version": __version__,
         "release_date": __release_date__,
-        "hermes_home": str(get_hermes_home()),
+        "bookworm_home": str(get_hermes_home()),
         "config_path": str(get_config_path()),
         "env_path": str(get_env_path()),
         "config_version": current_ver,
@@ -3104,7 +3104,7 @@ def _mount_plugin_api_routes():
             continue
         try:
             spec = importlib.util.spec_from_file_location(
-                f"hermes_dashboard_plugin_{plugin['name']}", api_path,
+                f"bookworm_dashboard_plugin_{plugin['name']}", api_path,
             )
             if spec is None or spec.loader is None:
                 continue

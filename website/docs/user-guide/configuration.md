@@ -1410,7 +1410,7 @@ BookwormPRO uses two different context scopes:
 | File | Purpose | Scope |
 |------|---------|-------|
 | `SOUL.md` | **Primary agent identity** — defines who the agent is (slot #1 in the system prompt) | `~/.bookwormpro/SOUL.md` or `$BOOKWORMPRO_HOME/SOUL.md` |
-| `.bookwormpro.md` / `HERMES.md` | Project-specific instructions (highest priority) | Walks to git root |
+| `.bookwormpro.md` / `BOOKWORMPRO.md` | Project-specific instructions (highest priority) | Walks to git root |
 | `AGENTS.md` | Project-specific instructions, coding conventions | Recursive directory walk |
 | `CLAUDE.md` | Claude Code context files (also detected) | Working directory only |
 | `.cursorrules` | Cursor IDE rules (also detected) | Working directory only |

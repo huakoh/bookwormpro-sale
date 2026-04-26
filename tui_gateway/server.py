@@ -1763,7 +1763,7 @@ def _(rid, params: dict) -> dict:
     import time as _time
 
     filename = os.path.abspath(
-        f"hermes_conversation_{_time.strftime('%Y%m%d_%H%M%S')}.json"
+        f"bookworm_conversation_{_time.strftime('%Y%m%d_%H%M%S')}.json"
     )
     try:
         with open(filename, "w") as f:

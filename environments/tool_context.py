@@ -191,7 +191,7 @@ class ToolContext:
             )
         else:
             # For larger files, write base64 in chunks then decode
-            tmp_b64 = "/tmp/_hermes_upload.b64"
+            tmp_b64 = "/tmp/_bwm_upload.b64"
             self.terminal(f": > {tmp_b64}", timeout=5)  # truncate
             for i in range(0, len(b64), chunk_size):
                 chunk = b64[i : i + chunk_size]

@@ -384,9 +384,24 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
         else:
             disabled_tools.update(tools_in_ts)
 
-    # 单列居中布局，避免左右错位/换行折断
-    layout_table = Table.grid(padding=(0, 1))
-    layout_table.add_column("center", justify="center")
+    # 自适应布局: 终端 ≥ 110 列时双栏 (Hero 左 + 信息卡右), 否则单栏
+    term_width = shutil.get_terminal_size().columns
+    LEFT_W = 58       # Hero ASCII 固定宽
+    DIV_W = 3
+    RIGHT_W_MIN = 40  # 右栏最小宽度
+    USE_DUAL = (term_width - 8 - LEFT_W - DIV_W) >= RIGHT_W_MIN
+
+    from rich.table import Table as _RTable
+    if USE_DUAL:
+        RIGHT_W = term_width - 8 - LEFT_W - DIV_W
+        layout_table = _RTable.grid(padding=(0, 0), expand=False)
+        layout_table.add_column("left", justify="left", no_wrap=True, width=LEFT_W)
+        layout_table.add_column("divider", justify="center", no_wrap=True, width=DIV_W)
+        layout_table.add_column("right", justify="left", no_wrap=False, width=RIGHT_W)
+    else:
+        # 窄屏单栏
+        layout_table = _RTable.grid(padding=(0, 1))
+        layout_table.add_column("center", justify="left")
 
     # 蓝色主题
     accent = _skin_color("banner_accent", "#5DADE2")
@@ -419,56 +434,64 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
     if len(model_short) > 28:
         model_short = model_short[:25] + "..."
 
-    # 单列布局: 顶部 Hero ASCII + 副标题 + 信息行
-    lines: List[str] = [""]
-    lines.append(_hero)
-    lines.append(f"[bold {accent}]BookwormPRO[/]  [dim {dim}]·[/]  [bright_cyan]自托管 AI 研究助手[/]")
-    lines.append("")
+    # ─── 左栏：Hero ASCII + 副标题 ──────────────────────────────
+    left_lines: List[str] = ["", _hero, ""]
+    left_lines.append(f"  [bold {accent}]BookwormPRO[/]  [dim {dim}]·[/]  [bright_cyan]自托管 AI 研究助手[/]")
+    left_lines.append("")
+    left_content = "\n".join(left_lines)
 
-    # 模型行 (左对齐至最大字段)
-    model_line = f"  [{accent}]{model_short}[/]"
+    # 中间栏 (divider) 在右栏构建完成后再生成 (按行数自适应)
+
+    # ─── 右栏：结构化信息卡 ─────────────────────────────────
+    def LBL(s: str) -> str:
+        """中文标签按显示宽度 padding 到 6 列宽 (中文 = 2 列)。"""
+        disp_w = sum(2 if ord(c) > 127 else 1 for c in s)
+        pad = max(0, 8 - disp_w)
+        return f"[dim]{s}{' ' * pad}[/]"
+    right_lines: List[str] = [""]
+
+    # ◈ RUNTIME 区
+    right_lines.append(f"[bold {accent}]◈ 运行时[/]")
+    right_lines.append(f"{LBL('模型')} [bold bright_cyan]{model_short}[/]")
     if context_length:
-        model_line += f"  [dim {dim}]·  {_format_context_length(context_length)} 上下文[/]"
-    lines.append(model_line)
-
-    # 工作目录
-    lines.append(f"  [dim {dim}]{cwd}[/]")
-
-    # 会话 ID
+        right_lines.append(f"{LBL('上下文')} [dim]{_format_context_length(context_length)}[/]")
+    right_lines.append(f"{LBL('目录')} [white]{cwd}[/]")
     if session_id:
-        lines.append(f"  [dim {session_color}]{session_id}[/]")
+        right_lines.append(f"{LBL('会话')} [dim]{session_id}[/]")
 
-    # profile (非 default 时)
+    # 档案 (非 default 时)
     try:
         from bwm_cli.profiles import get_active_profile_name
         _profile_name = get_active_profile_name()
         if _profile_name and _profile_name != "default":
-            lines.append(f"  [dim {dim}]档案 · {_profile_name}[/]")
+            right_lines.append(f"{LBL('档案')} [white]{_profile_name}[/]")
     except Exception:
         pass
 
-    # 能力汇总
-    summary_parts = [f"{len(tools)} 工具", f"{total_skills} 技能"]
-    if mcp_connected:
-        summary_parts.append(f"{mcp_connected} MCP")
-    summary_parts.append("/help")
-    lines.append(f"  [dim {dim}]{' · '.join(summary_parts)}[/]")
+    right_lines.append(f"[dim {dim}]{'─' * 38}[/]")
 
-    # 运行时能力声明 — 让用户一眼看到 agent 有什么权限。
-    # 也是给模型自己的"能力锚点"：banner 会出现在 conversation 顶部，
-    # 配合 system prompt 的 NATIVE_HOST_ENVIRONMENT_HINT 双保险消除
-    # "server-side sandbox" 幻觉拒绝。
+    # ✦ CAPABILITY 区
+    right_lines.append(f"[bold {accent}]✦ 能力[/]")
+    right_lines.append(f"{LBL('工具')} [bright_cyan]{len(tools)}[/] [dim]个 active[/]")
+    right_lines.append(f"{LBL('技能')} [bright_cyan]{total_skills}[/] [dim]个 loaded[/]")
+    if mcp_connected:
+        right_lines.append(f"{LBL('MCP')} [bright_cyan]{mcp_connected}[/] [dim]server[/]")
+    right_lines.append(f"{LBL('命令')} [dim]/help · /skills · /clear[/]")
+
+    right_lines.append(f"[dim {dim}]{'─' * 38}[/]")
+
+    # ✓ STATUS 区
+    right_lines.append(f"[bold {accent}]✓ 状态[/]")
     try:
         from bwm_constants import is_container, is_host_bridge_active, is_native_install, is_wsl
-        capability_parts: List[str] = []
         if is_native_install():
-            capability_parts.append("[bright_green]✓[/] 文件系统全访问 [dim]· 原生模式[/]")
+            right_lines.append(f"{LBL('环境')} [green]✓[/] [white]原生模式[/] [dim]· 文件系统全访问[/]")
         elif is_host_bridge_active():
-            capability_parts.append("[bright_green]✓[/] 桥接 [dim]/host/desktop[/] [dim]·[/] [dim]/host/workspace[/]")
+            right_lines.append(f"{LBL('环境')} [green]✓[/] [white]桥接模式[/] [dim]· /host/{{desktop,workspace}}[/]")
         elif is_container():
-            capability_parts.append("[yellow]◐[/] 沙箱模式 [dim]· 仅 /opt/data 可写[/]")
+            right_lines.append(f"{LBL('环境')} [yellow]◐[/] [white]沙箱模式[/] [dim]· 仅 /opt/data 可写[/]")
         if is_wsl():
-            capability_parts.append("[dim]/mnt/c/[/] WSL")
+            right_lines.append(f"{LBL('挂载')} [dim]/mnt/c/[/] [white]WSL[/]")
         # 记忆条数（builtin layer）
         try:
             mem_dir = get_hermes_home() / "memories"
@@ -479,13 +502,9 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
             if (mem_dir / "USER.md").exists():
                 user_count = (mem_dir / "USER.md").read_text(encoding="utf-8").count("\n§\n")
             if mem_count or user_count:
-                capability_parts.append(
-                    f"[bright_green]✓[/] 记忆 [dim]{mem_count}+{user_count} 条[/]"
-                )
+                right_lines.append(f"{LBL('记忆')} [green]✓[/] [bright_cyan]{mem_count}+{user_count}[/] [dim]条[/]")
         except Exception:
             pass
-        if capability_parts:
-            lines.append(f"  [dim {dim}]能力 ·[/] {'  '.join(capability_parts)}")
     except Exception:
         pass  # banner 永不因能力探测失败而崩
 
@@ -494,14 +513,23 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
         behind = get_update_result(timeout=0.5)
         if behind and behind >= 50:
             from bwm_cli.config import recommended_update_command
-            lines.append(
-                f"  [dim yellow]更新可用 ({behind})  ·  {recommended_update_command()}[/]"
-            )
+            right_lines.append(f"[dim {dim}]{'─' * 38}[/]")
+            right_lines.append(f"[yellow]⚠ 更新可用 ({behind} 个提交) · {recommended_update_command()}[/]")
     except Exception:
         pass
 
-    lines.append("")
-    layout_table.add_row("\n".join(lines))
+    right_lines.append("")
+    right_content = "\n".join(right_lines)
+
+    if USE_DUAL:
+        # 自适应 divider: 取左右两栏中行数较多者
+        n_div = max(len(left_lines), len(right_lines))
+        divider_content = "\n".join(["[dim cyan]┊[/]"] * n_div)
+        layout_table.add_row(left_content, divider_content, right_content)
+    else:
+        # 窄屏：Hero + 信息行依次堆叠
+        layout_table.add_row(left_content)
+        layout_table.add_row(right_content)
 
     agent_name = _skin_branding("agent_name", "BookwormPRO")
     title_color = _skin_color("banner_title", "#5DADE2")

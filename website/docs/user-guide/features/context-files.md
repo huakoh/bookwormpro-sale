@@ -12,7 +12,7 @@ BookwormPRO automatically discovers and loads context files that shape how it be
 
 | File | Purpose | Discovery |
 |------|---------|-----------| 
-| **.bookwormpro.md** / **HERMES.md** | Project instructions (highest priority) | Walks to git root |
+| **.bookwormpro.md** / **BOOKWORMPRO.md** | Project instructions (highest priority) | Walks to git root |
 | **AGENTS.md** | Project instructions, conventions, architecture | CWD at startup + subdirectories progressively |
 | **CLAUDE.md** | Claude Code context files (also detected) | CWD at startup + subdirectories progressively |
 | **SOUL.md** | Global personality and tone customization for this BookwormPRO instance | `BOOKWORMPRO_HOME/SOUL.md` only |

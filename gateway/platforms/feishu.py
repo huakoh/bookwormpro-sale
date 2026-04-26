@@ -1746,7 +1746,7 @@ class FeishuAdapter(BasePlatformAdapter):
                     "tag": "button",
                     "text": {"tag": "plain_text", "content": label},
                     "type": btn_type,
-                    "value": {"hermes_action": action_name, "approval_id": approval_id},
+                    "value": {"bookworm_action": action_name, "approval_id": approval_id},
                 }
 
             card = {
@@ -2310,7 +2310,7 @@ class FeishuAdapter(BasePlatformAdapter):
         event = getattr(data, "event", None)
         action = getattr(event, "action", None)
         action_value = getattr(action, "value", {}) or {}
-        hermes_action = action_value.get("hermes_action") if isinstance(action_value, dict) else None
+        hermes_action = action_value.get("bookworm_action") if isinstance(action_value, dict) else None
 
         if hermes_action:
             return self._handle_approval_card_action(event=event, action_value=action_value, loop=loop)
@@ -2336,7 +2336,7 @@ class FeishuAdapter(BasePlatformAdapter):
         if approval_id is None:
             logger.debug("[Feishu] Card action missing approval_id, ignoring")
             return P2CardActionTriggerResponse() if P2CardActionTriggerResponse else None
-        choice = _APPROVAL_CHOICE_MAP.get(action_value.get("hermes_action"), "deny")
+        choice = _APPROVAL_CHOICE_MAP.get(action_value.get("bookworm_action"), "deny")
 
         operator = getattr(event, "operator", None)
         open_id = str(getattr(operator, "open_id", "") or "")
@@ -2848,7 +2848,7 @@ class FeishuAdapter(BasePlatformAdapter):
             response = await client.get(
                 file_url,
                 headers={
-                    "User-Agent": "Mozilla/5.0 (compatible; HermesAgent/1.0)",
+                    "User-Agent": "Mozilla/5.0 (compatible; BookwormPRO/1.0)",
                     "Accept": "*/*",
                 },
             )

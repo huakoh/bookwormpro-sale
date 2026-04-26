@@ -509,7 +509,7 @@ async def cache_image_from_url(url: str, ext: str = ".jpg", retries: int = 2) ->
                 response = await client.get(
                     url,
                     headers={
-                        "User-Agent": "Mozilla/5.0 (compatible; HermesAgent/1.0)",
+                        "User-Agent": "Mozilla/5.0 (compatible; BookwormPRO/1.0)",
                         "Accept": "image/*,*/*;q=0.8",
                     },
                 )
@@ -623,7 +623,7 @@ async def cache_audio_from_url(url: str, ext: str = ".ogg", retries: int = 2) ->
                 response = await client.get(
                     url,
                     headers={
-                        "User-Agent": "Mozilla/5.0 (compatible; HermesAgent/1.0)",
+                        "User-Agent": "Mozilla/5.0 (compatible; BookwormPRO/1.0)",
                         "Accept": "audio/*,*/*;q=0.8",
                     },
                 )
@@ -2150,7 +2150,7 @@ class BasePlatformAdapter(ABC):
         # Fall back to a new Event only if the entry was removed externally.
         interrupt_event = self._active_sessions.get(session_key) or asyncio.Event()
         self._active_sessions[session_key] = interrupt_event
-        callback_generation = getattr(interrupt_event, "_hermes_run_generation", None)
+        callback_generation = getattr(interrupt_event, "_bwm_run_generation", None)
         
         # Start continuous typing indicator (refreshes every 2 seconds)
         _thread_metadata = {"thread_id": event.source.thread_id} if event.source.thread_id else None

@@ -6309,7 +6309,7 @@ class GatewayRunner:
             # Use .mp3 extension so edge-tts conversion to opus works correctly.
             # The TTS tool may convert to .ogg — use file_path from result.
             audio_path = os.path.join(
-                tempfile.gettempdir(), "hermes_voice",
+                tempfile.gettempdir(), "bookworm_voice",
                 f"tts_reply_{_uuid.uuid4().hex[:12]}.mp3",
             )
             os.makedirs(os.path.dirname(audio_path), exist_ok=True)
@@ -8823,7 +8823,7 @@ class GatewayRunner:
         try:
             interrupt_event = getattr(adapter, "_active_sessions", {}).get(session_key)
             if interrupt_event is not None:
-                setattr(interrupt_event, "_hermes_run_generation", int(generation))
+                setattr(interrupt_event, "_bwm_run_generation", int(generation))
         except Exception:
             pass
 

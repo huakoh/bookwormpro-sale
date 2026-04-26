@@ -190,13 +190,13 @@ def get_container_exec_info() -> Optional[dict]:
     backend = info.get("backend", "docker")
     container_name = info.get("container_name", "bookwormpro")
     exec_user = info.get("exec_user", "bookworm")
-    hermes_bin = info.get("hermes_bin", "/data/current-package/bin/bookworm")
+    hermes_bin = info.get("bookworm_bin", "/data/current-package/bin/bookworm")
 
     return {
         "backend": backend,
         "container_name": container_name,
         "exec_user": exec_user,
-        "hermes_bin": hermes_bin,
+        "bookworm_bin": hermes_bin,
     }
 
 
