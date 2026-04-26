@@ -10,6 +10,7 @@ reasoning configuration, temperature handling, and extra_body assembly.
 """
 
 import copy
+import json
 from typing import Any, Dict, List, Optional
 
 from agent.moonshot_schema import is_moonshot_model, sanitize_moonshot_tools
@@ -23,49 +24,109 @@ def _needs_bww_deepseek_thinking(base_url: Optional[str], model: Optional[str]) 
     """Return True when the request is routed through a BWW relay using a
     DeepSeek thinking-mode model.
 
-    BWW relays surface DeepSeek with Anthropic-block semantics on the chat
-    completions endpoint: assistant tool-call ``content`` must be a list with
-    ``{type:thinking}`` + ``{type:text}`` blocks; sending a plain string yields
-    HTTP 400/429 ``content[].thinking ... must be passed back to the API``.
+    BWW relays surface DeepSeek with full Anthropic-block semantics on the
+    chat completions endpoint: every message — assistant tool-calls AND tool
+    results — must be in Anthropic shape, otherwise the relay rejects with
+    ``unknown variant ``, expected one of `text`, `tool_use`, `tool_result`,
+    `thinking`, ...``.
     """
     return is_bww_relay_url(base_url) and is_deepseek_model(model)
 
 
-def _wrap_assistant_tool_call_content_anthropic(
-    msg: Dict[str, Any],
-) -> Dict[str, Any]:
-    """Rewrite a single assistant tool-call message into Anthropic block form.
+def _parse_tool_arguments(arguments: Any) -> Dict[str, Any]:
+    """Convert OpenAI tool-call ``arguments`` (string JSON) to Anthropic ``input`` (dict)."""
+    if isinstance(arguments, dict):
+        return arguments
+    if isinstance(arguments, str):
+        s = arguments.strip()
+        if not s:
+            return {}
+        try:
+            parsed = json.loads(s)
+            return parsed if isinstance(parsed, dict) else {"_raw": parsed}
+        except (json.JSONDecodeError, ValueError):
+            return {"_raw": arguments}
+    return {}
 
-    Idempotent: if ``content`` is already a list, the message is returned
-    unchanged. Preserves ``reasoning_content`` so downstream creation/replay
-    paths keep working.
+
+def _convert_messages_to_anthropic_blocks(
+    messages: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Convert an OpenAI-shape message list to Anthropic block-shape in-place safe.
+
+    Transformations (idempotent — already-converted messages pass through):
+
+    * assistant + ``tool_calls`` → ``content`` becomes
+      ``[{thinking},{text}?,{tool_use}+]`` and ``tool_calls`` field is dropped.
+    * role ``tool`` → role ``user`` with ``content=[{tool_result}]``.
+    * Plain string ``content`` on assistant/user is kept as a string when no
+      block-conversion is needed (the relay accepts strings for non-tool turns).
     """
-    if msg.get("role") != "assistant":
-        return msg
-    if not msg.get("tool_calls"):
-        return msg
-    content = msg.get("content")
-    # Already a block list — assume previously transformed; leave intact.
-    if isinstance(content, list):
-        return msg
+    out: List[Dict[str, Any]] = []
+    for msg in messages:
+        if not isinstance(msg, dict):
+            out.append(msg)
+            continue
 
-    text = content if isinstance(content, str) else ""
-    reasoning = msg.get("reasoning_content")
-    if not isinstance(reasoning, str):
-        # Fall back to ``reasoning`` (OpenRouter unified field) if present.
-        alt = msg.get("reasoning")
-        reasoning = alt if isinstance(alt, str) else ""
+        role = msg.get("role")
 
-    blocks: List[Dict[str, Any]] = []
-    # Thinking block must precede text in Anthropic ordering. Empty thinking
-    # is still required by the relay — the field name itself is what's checked.
-    blocks.append({"type": "thinking", "thinking": reasoning})
-    if text:
-        blocks.append({"type": "text", "text": text})
+        # role: tool → role: user with tool_result block
+        if role == "tool":
+            tool_call_id = msg.get("tool_call_id") or ""
+            content = msg.get("content")
+            if isinstance(content, list):
+                tr_content: Any = content
+            else:
+                tr_content = content if isinstance(content, str) else ""
+            out.append({
+                "role": "user",
+                "content": [{
+                    "type": "tool_result",
+                    "tool_use_id": tool_call_id,
+                    "content": tr_content,
+                }],
+            })
+            continue
 
-    msg = dict(msg)
-    msg["content"] = blocks
-    return msg
+        # assistant with tool_calls → merge into content blocks
+        if role == "assistant" and msg.get("tool_calls"):
+            content = msg.get("content")
+
+            # Idempotent: if already block list AND tool_calls absent, pass through.
+            # If both exist (mid-conversion), prefer rebuild from tool_calls source-of-truth.
+            if isinstance(content, list) and not msg.get("tool_calls"):
+                out.append(msg)
+                continue
+
+            text = content if isinstance(content, str) else ""
+            reasoning = msg.get("reasoning_content")
+            if not isinstance(reasoning, str):
+                alt = msg.get("reasoning")
+                reasoning = alt if isinstance(alt, str) else ""
+
+            blocks: List[Dict[str, Any]] = []
+            # Thinking first per Anthropic ordering — required even when empty.
+            blocks.append({"type": "thinking", "thinking": reasoning})
+            if text:
+                blocks.append({"type": "text", "text": text})
+            for tc in msg.get("tool_calls") or []:
+                if not isinstance(tc, dict):
+                    continue
+                fn = tc.get("function") or {}
+                blocks.append({
+                    "type": "tool_use",
+                    "id": tc.get("id") or "",
+                    "name": fn.get("name") or "",
+                    "input": _parse_tool_arguments(fn.get("arguments")),
+                })
+
+            new_msg = {k: v for k, v in msg.items() if k != "tool_calls"}
+            new_msg["content"] = blocks
+            out.append(new_msg)
+            continue
+
+        out.append(msg)
+    return out
 
 
 class ChatCompletionsTransport(ProviderTransport):
@@ -111,9 +172,13 @@ class ChatCompletionsTransport(ProviderTransport):
 
         if bww_deepseek:
             for msg in messages:
+                if not isinstance(msg, dict):
+                    continue
+                if msg.get("role") == "tool":
+                    needs_sanitize = True
+                    break
                 if (
-                    isinstance(msg, dict)
-                    and msg.get("role") == "assistant"
+                    msg.get("role") == "assistant"
                     and msg.get("tool_calls")
                     and not isinstance(msg.get("content"), list)
                 ):
@@ -124,7 +189,7 @@ class ChatCompletionsTransport(ProviderTransport):
             return messages
 
         sanitized = copy.deepcopy(messages)
-        for i, msg in enumerate(sanitized):
+        for msg in sanitized:
             if not isinstance(msg, dict):
                 continue
             msg.pop("codex_reasoning_items", None)
@@ -134,8 +199,9 @@ class ChatCompletionsTransport(ProviderTransport):
                     if isinstance(tc, dict):
                         tc.pop("call_id", None)
                         tc.pop("response_item_id", None)
-            if bww_deepseek:
-                sanitized[i] = _wrap_assistant_tool_call_content_anthropic(msg)
+
+        if bww_deepseek:
+            sanitized = _convert_messages_to_anthropic_blocks(sanitized)
         return sanitized
 
     def convert_tools(self, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -424,15 +490,18 @@ class ChatCompletionsTransport(ProviderTransport):
         reasoning_content = getattr(msg, "reasoning_content", None)
 
         # BWW-relay DeepSeek echoes Anthropic-style content blocks. When
-        # ``msg.content`` is a list of blocks, extract ``thinking`` blocks
-        # into ``reasoning_content`` (so downstream replay re-emits them)
-        # and flatten ``text`` blocks back into a plain string.
+        # ``msg.content`` is a list of blocks, extract:
+        #   * ``thinking`` blocks → ``reasoning_content`` (replay re-emits them)
+        #   * ``text`` blocks → flattened string ``content``
+        #   * ``tool_use`` blocks → synthesized OpenAI-shape ``tool_calls``
+        #     (only used when the SDK didn't already populate msg.tool_calls)
         content_value = getattr(msg, "content", None)
         if content_value is None and hasattr(msg, "model_extra"):
             content_value = (msg.model_extra or {}).get("content")
         if isinstance(content_value, list):
             text_parts: List[str] = []
             thinking_parts: List[str] = []
+            tool_use_blocks: List[Dict[str, Any]] = []
             for block in content_value:
                 if not isinstance(block, dict):
                     continue
@@ -445,9 +514,30 @@ class ChatCompletionsTransport(ProviderTransport):
                     t = block.get("text") or ""
                     if isinstance(t, str):
                         text_parts.append(t)
+                elif btype == "tool_use":
+                    tool_use_blocks.append(block)
             content_str = "".join(text_parts) if text_parts else None
             if thinking_parts and not reasoning_content:
                 reasoning_content = "".join(thinking_parts)
+            if tool_use_blocks and not tool_calls:
+                tool_calls = []
+                for tu in tool_use_blocks:
+                    args = tu.get("input")
+                    if isinstance(args, (dict, list)):
+                        try:
+                            args_str = json.dumps(args, ensure_ascii=False)
+                        except (TypeError, ValueError):
+                            args_str = "{}"
+                    elif isinstance(args, str):
+                        args_str = args
+                    else:
+                        args_str = "{}"
+                    tool_calls.append(ToolCall(
+                        id=tu.get("id") or "",
+                        name=tu.get("name") or "",
+                        arguments=args_str,
+                        provider_data=None,
+                    ))
         else:
             content_str = content_value
 
