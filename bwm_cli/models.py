@@ -1425,11 +1425,16 @@ def detect_provider_for_model(
         return None
 
     # --- Step 1: check static provider catalogs for a direct match ---
+    # Also try the bare model name (strip vendor/ prefix) so that
+    # aggregator-remapped names like "deepseek/deepseek-v4-pro" match
+    # the static catalog entry "deepseek-v4-pro".
+    bare_lower = name_lower.split("/", 1)[-1] if "/" in name_lower else name_lower
     direct_match: Optional[str] = None
     for pid, models in _PROVIDER_MODELS.items():
         if pid == current_provider or pid in _AGGREGATORS:
             continue
-        if any(name_lower == m.lower() for m in models):
+        models_lower = [m.lower() for m in models]
+        if name_lower in models_lower or bare_lower in models_lower:
             direct_match = pid
             break
 
@@ -1855,7 +1860,7 @@ def copilot_default_headers() -> dict[str, str]:
     except ImportError:
         return {
             "Editor-Version": COPILOT_EDITOR_VERSION,
-            "User-Agent": "HermesAgent/1.0",
+            "User-Agent": "BookwormPRO/1.0",
             "Openai-Intent": "conversation-edits",
             "x-initiator": "agent",
         }
@@ -2796,6 +2801,19 @@ def validate_requested_model(
                     "recognized": True,
                     "corrected_model": auto[0],
                     "message": f"Auto-corrected `{requested}` → `{auto[0]}`",
+                }
+
+            # Accept if the model is in our curated static catalog — the
+            # provider's /models endpoint may not list all usable models
+            # (e.g. DeepSeek's API accepts deepseek-chat/deepseek-reasoner
+            # but /models only returns v4-flash/v4-pro).
+            static_models = _PROVIDER_MODELS.get(normalized, [])
+            if any(requested_for_lookup == m.lower() for m in static_models):
+                return {
+                    "accepted": True,
+                    "persist": True,
+                    "recognized": True,
+                    "message": None,
                 }
 
             suggestions = get_close_matches(requested, api_models, n=3, cutoff=0.5)
