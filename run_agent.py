@@ -7624,6 +7624,28 @@ class AIAgent:
         # Sanitize surrogates from API response — some models (e.g. Kimi/GLM via Ollama)
         # can return invalid surrogate code points that crash json.dumps() on persist.
         _raw_content = assistant_message.content or ""
+
+        # BWW relay echoes DeepSeek/Anthropic-style content blocks as a list
+        # (e.g. [{type:"thinking",...}, {type:"text",...}]).  Flatten to a
+        # plain string for storage so thinking blocks don't leak into the
+        # session history and get rejected on replay.
+        if isinstance(_raw_content, list):
+            _text_parts = []
+            for _blk in _raw_content:
+                if isinstance(_blk, dict):
+                    _btype = _blk.get("type")
+                    if _btype == "thinking":
+                        _t = _blk.get("thinking") or _blk.get("text") or ""
+                        if isinstance(_t, str) and _t and not reasoning_text:
+                            reasoning_text = _t
+                    elif _btype == "text":
+                        _t = _blk.get("text") or ""
+                        if isinstance(_t, str):
+                            _text_parts.append(_t)
+                elif isinstance(_blk, str):
+                    _text_parts.append(_blk)
+            _raw_content = "".join(_text_parts)
+
         _san_content = _sanitize_surrogates(_raw_content)
         if reasoning_text:
             reasoning_text = _sanitize_surrogates(reasoning_text)
