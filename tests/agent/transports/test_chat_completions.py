@@ -670,8 +670,8 @@ class TestBwwRelayThinkingBlockInjection:
         assert len(result[0]["content"]) == 1
         assert result[0]["content"][0]["type"] == "thinking"
 
-    def test_build_kwargs_triggers_for_bww_deepseek(self, transport):
-        """Integration: build_kwargs injects thinking blocks for BWW + DeepSeek."""
+    def test_build_kwargs_no_thinking_injection_for_bww(self, transport):
+        """BWW relay rejects thinking blocks — build_kwargs must NOT inject them."""
         msgs = [
             {"role": "user", "content": "hi"},
             {"role": "assistant", "content": "answer", "reasoning_content": "think"},
@@ -683,23 +683,6 @@ class TestBwwRelayThinkingBlockInjection:
             base_url="https://bww.letcareme.com/v1",
         )
         ast = kw["messages"][1]
-        assert isinstance(ast["content"], list)
-        assert ast["content"][0]["type"] == "thinking"
-
-    def test_build_kwargs_skips_non_bww(self, transport):
-        msgs = [{"role": "assistant", "content": "ans", "reasoning_content": "think"}]
-        kw = transport.build_kwargs(
-            model="deepseek-v4-pro",
-            messages=msgs,
-            base_url="https://api.deepseek.com/v1",
-        )
-        assert isinstance(kw["messages"][0]["content"], str)
-
-    def test_build_kwargs_skips_non_deepseek(self, transport):
-        msgs = [{"role": "assistant", "content": "ans", "reasoning_content": "think"}]
-        kw = transport.build_kwargs(
-            model="claude-sonnet-4-6",
-            messages=msgs,
-            base_url="https://bww.letcareme.com/v1",
-        )
-        assert isinstance(kw["messages"][0]["content"], str)
+        assert isinstance(ast["content"], str)
+        assert ast["content"] == "answer"
+        assert ast.get("reasoning_content") == "think"

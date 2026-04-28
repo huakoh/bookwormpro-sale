@@ -176,13 +176,10 @@ class ChatCompletionsTransport(ProviderTransport):
         # Codex sanitization: drop reasoning_items / call_id / response_item_id
         sanitized = self.convert_messages(messages)
 
-        # BWW relay + DeepSeek: convert reasoning_content → thinking blocks.
-        # The relay requires assistant content to contain Anthropic-style
-        # {type:thinking} blocks.  tool_calls are left untouched — the relay
-        # handles OpenAI→Anthropic tool conversion internally.
-        base_url = params.get("base_url")
-        if is_bww_relay_url(base_url) and is_deepseek_model(model):
-            sanitized = self._inject_thinking_blocks(sanitized)
+        # BWW relay + DeepSeek: keep pure OpenAI format.  The relay does its
+        # own OpenAI→Anthropic conversion internally.  Injecting {type:thinking}
+        # blocks here causes the relay to reject with "unknown variant thinking,
+        # expected text".  reasoning_content stays as a top-level field.
 
         # Qwen portal prep AFTER codex sanitization.  If sanitize already
         # deepcopied, reuse that copy via the in-place variant to avoid a
