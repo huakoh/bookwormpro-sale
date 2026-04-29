@@ -88,13 +88,13 @@ class TestCopyReasoningContentForApi:
         agent._copy_reasoning_content_for_api(source, api_msg)
         assert api_msg.get("reasoning_content") == ""
 
-    def test_deepseek_assistant_no_tool_call_left_alone(self) -> None:
-        """Plain assistant turns without tool_calls don't get padded."""
+    def test_deepseek_assistant_no_tool_call_gets_empty_rc(self) -> None:
+        """DeepSeek requires reasoning_content on ALL assistant turns."""
         agent = _make_agent(provider="deepseek", model="deepseek-v4-flash")
         source = {"role": "assistant", "content": "hello"}
         api_msg: dict = {}
         agent._copy_reasoning_content_for_api(source, api_msg)
-        assert "reasoning_content" not in api_msg
+        assert api_msg.get("reasoning_content") == ""
 
     def test_deepseek_explicit_reasoning_content_preserved(self) -> None:
         """When reasoning_content is already set, it's copied verbatim."""
@@ -297,7 +297,8 @@ class TestBuildAssistantMessageDeepSeekPin:
         msg = agent._build_assistant_message(assistant_message, "tool_calls")
         assert msg.get("reasoning_content") == "real chain of thought"
 
-    def test_deepseek_no_tool_calls_not_pinned(self) -> None:
+    def test_deepseek_no_tool_calls_pins_empty_rc(self) -> None:
+        """DeepSeek pins reasoning_content on ALL assistant messages."""
         agent = _make_full_agent(provider="deepseek", model="deepseek-v4-pro")
         assistant_message = _StubAssistantMessage(
             content="hello",
@@ -305,7 +306,7 @@ class TestBuildAssistantMessageDeepSeekPin:
             reasoning_content=None,
         )
         msg = agent._build_assistant_message(assistant_message, "stop")
-        assert "reasoning_content" not in msg
+        assert msg.get("reasoning_content") == ""
 
     def test_non_deepseek_tool_call_not_pinned(self) -> None:
         agent = _make_full_agent(
