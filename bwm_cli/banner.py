@@ -66,16 +66,17 @@ def _skin_branding(key: str, fallback: str) -> str:
 
 from bwm_cli import __version__ as VERSION, __release_date__ as RELEASE_DATE
 from bwm_cli.i18n import _
-from bwm_cli.i18n import _
-from bwm_cli.i18n import _
 
 # Hero ASCII (raw, 不含 markup; 颜色由 banner 渲染时套上)
 _HERO_LINES = [
-    " ____              _                                   ",
-    "| __ )  ___   ___ | | ____      _____  _ __ _ __ ___   ",
-    "|  _ \\ / _ \\ / _ \\| |/ /\\ \\ /\\ / / _ \\| '__| '_ ` _ \\  ",
-    "| |_) | (_) | (_) |   <  \\ V  V / (_) | |  | | | | | | ",
-    "|____/ \\___/ \\___/|_|\\_\\  \\_/\\_/ \\___/|_|  |_| |_| |_| ",
+    " ╔══════════════════════════════════════════════════╗ ",
+    " ║  ██████╗  ██████╗  ██╗  ██╗ ██╗    ██╗  ██████╗ ║ ",
+    " ║  ██╔══██╗ ██╔══██╗ ██║ ██╔╝ ██║    ██║ ██╔═══██╗ ║ ",
+    " ║  ██████╔╝ ██║  ██║ █████╔╝  ██║ █╗ ██║ ██║   ██║ ║ ",
+    " ║  ██╔══██╗ ██║  ██║ ██╔═██╗  ██║███╗██║ ██║   ██║ ║ ",
+    " ║  ██████╔╝ ╚██████╔╝ ██║  ██╗ ╚███╔███╔╝ ╚██████╔╝ ║ ",
+    " ║  ╚═════╝   ╚═════╝  ╚═╝  ╚═╝  ╚══╝╚══╝   ╚═════╝  ║ ",
+    " ╚══════════════════════════════════════════════════╝ ",
 ]
 
 
@@ -437,15 +438,25 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
     if len(model_short) > 28:
         model_short = model_short[:25] + "..."
 
-    # ─── 左栏：Hero ASCII + 副标题 ──────────────────────────────
+    # ─── 左栏：Hero + 品牌 + 公司落款 ────────────────────────
     left_lines: List[str] = ["", _hero, ""]
-    left_lines.append(f"  [bold {accent}]BookwormPRO[/]  [dim {dim}]·[/]  [bright_cyan]Your AI Command Center[/]")
-    left_lines.append(f"   [italic {text}]善读者，必善造。[/]")
+    # ── 版本徽章 (tech badge) ──
+    BADGE_TEXT = f" v{VERSION} "
+    badge_pad = (LEFT_W - len(BADGE_TEXT) - 4) // 2  # -4 for brackets
+    left_lines.append(f"{' ' * badge_pad}[dim {dim}]╭{'─' * (len(BADGE_TEXT) + 2)}╮[/]")
+    left_lines.append(f"{' ' * badge_pad}[dim {dim}]│[/] [bold bright_cyan]{BADGE_TEXT}[/] [dim {dim}]│[/]")
+    left_lines.append(f"{' ' * badge_pad}[dim {dim}]╰{'─' * (len(BADGE_TEXT) + 2)}╯[/]")
     left_lines.append("")
-    # 公司落款：鑫霖科技 (右对齐于左栏底部)
+    # ── 品牌标语 ──
+    left_lines.append(f"  [bold bright_cyan]Your AI Command Center[/]")
+    left_lines.append(f"  [dim italic {text}]善读者，必善造。[/]  [dim {dim}]//[/]  [dim]{RELEASE_DATE}[/]")
     left_lines.append("")
-    left_lines.append(f'{" " * (LEFT_W - 25)}[bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/]')
-    left_lines.append(f'{" " * (LEFT_W - 24)}[dim italic]智能驱动 · 科技赋能[/]')
+    # ── 分隔装饰线 ──
+    left_lines.append(f"  [dim {dim}]{'·' * 8}  {'·' * 8}  {'·' * 8}  {'·' * 8}[/]")
+    left_lines.append("")
+    # ── 公司落款：鑫霖科技 ──
+    left_lines.append(f"  [bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/]")
+    left_lines.append(f"  [dim italic]智能驱动 · 科技赋能[/]")
     left_lines.append("")
     left_content = "\n".join(left_lines)
 
