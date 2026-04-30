@@ -782,7 +782,7 @@ def _handle_vision_analyze(args: Dict[str, Any], **kw: Any) -> Awaitable[str]:
         "Fully describe and explain everything about this image, then answer the "
         f"following question:\n\n{question}"
     )
-    model = os.getenv("AUXILIARY_VISION_MODEL", "").strip() or None
+    model = os.getenv("AUXILIARY_VISION_MODEL", "").strip() or "alibaba/qwen-vl-max"
     return vision_analyze_tool(image_url, full_prompt, model)
 
 

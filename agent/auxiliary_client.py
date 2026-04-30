@@ -2133,6 +2133,14 @@ def _try_alibaba_vision(model_override: str = None) -> Tuple[Optional[Any], Opti
     return client, model
 
 
+def _try_alibaba_vision(model_override: str = None) -> Tuple[Optional[Any], Optional[str]]:
+    _model = model_override or "qwen-vl-max"
+    client, model = resolve_provider_client("alibaba", _model)
+    if client is None:
+        return None, None
+    return client, model
+
+
 def _strict_vision_backend_available(provider: str) -> bool:
     return _resolve_strict_vision_backend(provider)[0] is not None
 
