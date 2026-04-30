@@ -16,6 +16,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 
 from gateway.status import terminate_pid
+from bwm_cli.i18n import _
 from gateway.restart import (
     DEFAULT_GATEWAY_RESTART_DRAIN_TIMEOUT,
     GATEWAY_SERVICE_RESTART_EXIT_CODE,
@@ -275,16 +276,27 @@ def _scan_gateway_pids(exclude_pids: set[int], all_profiles: bool = False) -> li
 
     try:
         if is_windows():
+            # Use PowerShell Get-CimInstance instead of deprecated wmic.
+            # wmic was removed in Windows 11 24H2 and has encoding issues
+            # with non-UTF-8 locales. Capture bytes and decode with
+            # errors="replace" because process command lines may contain
+            # Chinese characters in GBK encoding.
             result = subprocess.run(
-                ["wmic", "process", "get", "ProcessId,CommandLine", "/FORMAT:LIST"],
+                ["powershell", "-NoProfile", "-Command",
+                 "Get-CimInstance Win32_Process | "
+                 "Select-Object ProcessId,CommandLine | "
+                 "ForEach-Object { "
+                 '  Write-Output ("CommandLine=" + $_.CommandLine); '
+                 '  Write-Output ("ProcessId=" + $_.ProcessId) '
+                 "}"],
                 capture_output=True,
-                text=True,
-                timeout=10,
+                timeout=15,
             )
             if result.returncode != 0:
                 return []
+            stdout = result.stdout.decode("utf-8", errors="replace") if result.stdout else ""
             current_cmd = ""
-            for line in result.stdout.split("\n"):
+            for line in stdout.split("\n"):
                 line = line.strip()
                 if line.startswith("CommandLine="):
                     current_cmd = line[len("CommandLine="):]
@@ -597,10 +609,10 @@ def _print_gateway_process_mismatch(snapshot: GatewayRuntimeSnapshot) -> None:
     if not snapshot.has_process_service_mismatch:
         return
     print()
-    print("[警告] Gateway process is running for this profile, but the service is not active")
+    print(_("[警告] Gateway process is running for this profile, but the service is not active"))
     print(f"  PID(s): {_format_gateway_pids(snapshot.gateway_pids, limit=None)}")
-    print("  This is usually a manual foreground/tmux/nohup run, so `bookworm gateway`")
-    print("  can refuse to start another copy until this process stops.")
+    print(_("  This is usually a manual foreground/tmux/nohup run, so `bookworm gateway`"))
+    print(_("  can refuse to start another copy until this process stops."))
 
 
 def kill_gateway_processes(force: bool = False, exclude_pids: set | None = None,
@@ -625,10 +637,10 @@ def kill_gateway_processes(force: bool = False, exclude_pids: set | None = None,
             # Process already gone
             pass
         except PermissionError:
-            print(f"[警告] Permission denied to kill PID {pid}")
+            print(_("[警告] Permission denied to kill PID {pid}").format(pid=pid))
     
         except OSError as exc:
-            print(f"Failed to kill PID {pid}: {exc}")
+            print(_("Failed to kill PID {pid}: {exc}").format(pid=pid, exc=exc))
     return killed
 
 
@@ -653,7 +665,7 @@ def stop_profile_gateway() -> bool:
     except ProcessLookupError:
         pass  # Already gone
     except PermissionError:
-        print(f"[警告] Permission denied to kill PID {pid}")
+        print(_("[警告] Permission denied to kill PID {pid}").format(pid=pid))
         return False
 
     # Wait briefly for it to exit
@@ -1131,25 +1143,25 @@ def remove_legacy_hermes_units(
     """
     legacy = _find_legacy_hermes_units()
     if not legacy:
-        print("No legacy BookwormPRO gateway units found.")
+        print(_("No legacy BookwormPRO gateway units found."))
         return 0, []
 
     user_units = [(n, p) for n, p, is_sys in legacy if not is_sys]
     system_units = [(n, p) for n, p, is_sys in legacy if is_sys]
 
     print()
-    print("Legacy BookwormPRO gateway unit(s) found:")
+    print(_("Legacy BookwormPRO gateway unit(s) found:"))
     for name, path, is_system in legacy:
         scope = "system" if is_system else "user"
         print(f"  {path}  ({scope} scope)")
     print()
 
     if dry_run:
-        print("(dry-run — nothing removed)")
+        print(_("(dry-run — nothing removed)"))
         return 0, [p for _, p, _ in legacy]
 
     if interactive and not prompt_yes_no("Remove these legacy units?", True):
-        print("Skipped. Run again with: bookworm gateway migrate-legacy")
+        print(_("Skipped. Run again with: bookworm gateway migrate-legacy"))
         return 0, [p for _, p, _ in legacy]
 
     removed = 0
@@ -1200,7 +1212,7 @@ def remove_legacy_hermes_units(
 
     print()
     if remaining:
-        print_warning(f"{len(remaining)} legacy unit(s) still present — see messages above.")
+        print_warning(_("{} legacy unit(s) still present — see messages above.").format(len(remaining)))
     else:
         print_success(f"Removed {removed} legacy unit(s).")
 
@@ -1214,7 +1226,7 @@ def print_systemd_scope_conflict_warning() -> None:
 
     rendered_scopes = " + ".join(scopes)
     print_warning(f"Both user and system gateway services are installed ({rendered_scopes}).")
-    print_info("  This is confusing and can make start/stop/status behavior ambiguous.")
+    print_info(_("  This is confusing and can make start/stop/status behavior ambiguous."))
     print_info("  Default gateway commands target the user service unless you pass --system.")
     print_info("  Keep one of these:")
     print_info("    bookworm gateway uninstall")
@@ -1223,7 +1235,7 @@ def print_systemd_scope_conflict_warning() -> None:
 
 def _require_root_for_system_service(action: str) -> None:
     if os.geteuid() != 0:
-        print(f"System gateway {action} requires root. Re-run with sudo.")
+        print(_("System gateway {action} requires root. Re-run with sudo.").format(action=action))
         sys.exit(1)
 
 

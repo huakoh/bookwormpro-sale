@@ -18,6 +18,7 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
+from bwm_cli.i18n import _
 
 # prompt_toolkit is an optional CLI dependency — only needed for
 # SlashCommandCompleter and SlashCommandAutoSuggest.  Gateway and test
@@ -43,7 +44,7 @@ class CommandDef:
 
     name: str                          # canonical name without slash: "background"
     description: str                   # human-readable description
-    category: str                      # "Session", "Configuration", etc.
+    category: str                      # _("Session"), _("Configuration"), etc.
     aliases: tuple[str, ...] = ()      # alternative names: ("bg",)
     args_hint: str = ""                # argument placeholder: "<prompt>", "[name]"
     subcommands: tuple[str, ...] = ()  # tab-completable subcommands
@@ -58,123 +59,123 @@ class CommandDef:
 
 COMMAND_REGISTRY: list[CommandDef] = [
     # Session
-    CommandDef("new", "Start a new session (fresh session ID + history)", "Session",
+    CommandDef("new", _("Start a new session (fresh session ID + history)"), _("Session"),
                aliases=("reset",)),
-    CommandDef("clear", "Clear screen and start a new session", "Session",
+    CommandDef("clear", _("Clear screen and start a new session"), _("Session"),
                cli_only=True),
-    CommandDef("history", "Show conversation history", "Session",
+    CommandDef("history", _("Show conversation history"), _("Session"),
                cli_only=True),
-    CommandDef("save", "Save the current conversation", "Session",
+    CommandDef("save", _("Save the current conversation"), _("Session"),
                cli_only=True),
-    CommandDef("retry", "Retry the last message (resend to agent)", "Session"),
-    CommandDef("undo", "Remove the last user/assistant exchange", "Session"),
-    CommandDef("title", "Set a title for the current session", "Session",
+    CommandDef("retry", _("Retry the last message (resend to agent)"), _("Session")),
+    CommandDef("undo", _("Remove the last user/assistant exchange"), _("Session")),
+    CommandDef("title", _("Set a title for the current session"), _("Session"),
                args_hint="[name]"),
-    CommandDef("branch", "Branch the current session (explore a different path)", "Session",
+    CommandDef("branch", _("Branch the current session (explore a different path)"), _("Session"),
                aliases=("fork",), args_hint="[name]"),
-    CommandDef("compress", "Manually compress conversation context", "Session",
+    CommandDef("compress", _("Manually compress conversation context"), _("Session"),
                args_hint="[focus topic]"),
-    CommandDef("rollback", "List or restore filesystem checkpoints", "Session",
+    CommandDef("rollback", _("List or restore filesystem checkpoints"), _("Session"),
                args_hint="[number]"),
-    CommandDef("snapshot", "Create or restore state snapshots of BookwormPRO config/state", "Session",
+    CommandDef("snapshot", _("Create or restore state snapshots of BookwormPRO config/state"), _("Session"),
                cli_only=True, aliases=("snap",), args_hint="[create|restore <id>|prune]"),
-    CommandDef("stop", "Kill all running background processes", "Session"),
-    CommandDef("approve", "Approve a pending dangerous command", "Session",
+    CommandDef("stop", _("Kill all running background processes"), _("Session")),
+    CommandDef("approve", _("Approve a pending dangerous command"), _("Session"),
                gateway_only=True, args_hint="[session|always]"),
-    CommandDef("deny", "Deny a pending dangerous command", "Session",
+    CommandDef("deny", _("Deny a pending dangerous command"), _("Session"),
                gateway_only=True),
-    CommandDef("background", "Run a prompt in the background", "Session",
+    CommandDef("background", _("Run a prompt in the background"), _("Session"),
                aliases=("bg",), args_hint="<prompt>"),
-    CommandDef("btw", "Ephemeral side question using session context (no tools, not persisted)", "Session",
+    CommandDef("btw", _("Ephemeral side question using session context (no tools, not persisted)"), _("Session"),
                args_hint="<question>"),
-    CommandDef("agents", "Show active agents and running tasks", "Session",
+    CommandDef("agents", _("Show active agents and running tasks"), _("Session"),
                aliases=("tasks",)),
-    CommandDef("queue", "Queue a prompt for the next turn (doesn't interrupt)", "Session",
+    CommandDef("queue", _("Queue a prompt for the next turn (doesn't interrupt)"), _("Session"),
                aliases=("q",), args_hint="<prompt>"),
-    CommandDef("steer", "Inject a message after the next tool call without interrupting", "Session",
+    CommandDef("steer", _("Inject a message after the next tool call without interrupting"), _("Session"),
                args_hint="<prompt>"),
-    CommandDef("status", "Show session info", "Session"),
-    CommandDef("profile", "Show active profile name and home directory", "Info"),
-    CommandDef("sethome", "Set this chat as the home channel", "Session",
+    CommandDef("status", _("Show session info"), _("Session")),
+    CommandDef("profile", _("Show active profile name and home directory"), _("Info")),
+    CommandDef("sethome", _("Set this chat as the home channel"), _("Session"),
                gateway_only=True, aliases=("set-home",)),
-    CommandDef("resume", "Resume a previously-named session", "Session",
+    CommandDef("resume", _("Resume a previously-named session"), _("Session"),
                args_hint="[name]"),
 
     # Configuration
-    CommandDef("config", "Show current configuration", "Configuration",
+    CommandDef("config", _("Show current configuration"), _("Configuration"),
                cli_only=True),
-    CommandDef("model", "Switch model for this session", "Configuration", args_hint="[model] [--provider name] [--global]"),
-    CommandDef("gquota", "Show Google Gemini Code Assist quota usage", "Info",
+    CommandDef("model", _("Switch model for this session"), _("Configuration"), args_hint="[model] [--provider name] [--global]"),
+    CommandDef("gquota", _("Show Google Gemini Code Assist quota usage"), _("Info"),
                cli_only=True),
 
-    CommandDef("personality", "Set a predefined personality", "Configuration",
+    CommandDef("personality", _("Set a predefined personality"), _("Configuration"),
                args_hint="[name]"),
-    CommandDef("statusbar", "Toggle the context/model status bar", "Configuration",
+    CommandDef("statusbar", _("Toggle the context/model status bar"), _("Configuration"),
                cli_only=True, aliases=("sb",)),
-    CommandDef("verbose", "Cycle tool progress display: off -> new -> all -> verbose",
-               "Configuration", cli_only=True,
+    CommandDef("verbose", _("Cycle tool progress display: off -> new -> all -> verbose"),
+               _("Configuration"), cli_only=True,
                gateway_config_gate="display.tool_progress_command"),
-    CommandDef("yolo", "Toggle YOLO mode (skip all dangerous command approvals)",
-               "Configuration"),
-    CommandDef("reasoning", "Manage reasoning effort and display", "Configuration",
+    CommandDef("yolo", _("Toggle YOLO mode (skip all dangerous command approvals)"),
+               _("Configuration")),
+    CommandDef("reasoning", _("Manage reasoning effort and display"), _("Configuration"),
                args_hint="[level|show|hide]",
                subcommands=("none", "minimal", "low", "medium", "high", "xhigh", "show", "hide", "on", "off")),
-    CommandDef("fast", "Toggle fast mode — OpenAI Priority Processing / Anthropic Fast Mode (Normal/Fast)", "Configuration",
+    CommandDef("fast", _("Toggle fast mode — OpenAI Priority Processing / Anthropic Fast Mode (Normal/Fast)"), _("Configuration"),
                args_hint="[normal|fast|status]",
                subcommands=("normal", "fast", "status", "on", "off")),
-    CommandDef("skin", "Show or change the display skin/theme", "Configuration",
+    CommandDef("skin", _("Show or change the display skin/theme"), _("Configuration"),
                cli_only=True, args_hint="[name]"),
-    CommandDef("voice", "Toggle voice mode", "Configuration",
+    CommandDef("voice", _("Toggle voice mode"), _("Configuration"),
                args_hint="[on|off|tts|status]", subcommands=("on", "off", "tts", "status")),
-    CommandDef("busy", "Control what Enter does while BookwormPRO is working", "Configuration",
+    CommandDef("busy", _("Control what Enter does while BookwormPRO is working"), _("Configuration"),
                cli_only=True, args_hint="[queue|interrupt|status]",
                subcommands=("queue", "interrupt", "status")),
 
     # Tools & Skills
-    CommandDef("tools", "Manage tools: /tools [list|disable|enable] [name...]", "Tools & Skills",
+    CommandDef("tools", _("Manage tools: /tools [list|disable|enable] [name...]"), _("Tools & Skills"),
                args_hint="[list|disable|enable] [name...]", cli_only=True),
-    CommandDef("toolsets", "List available toolsets", "Tools & Skills",
+    CommandDef("toolsets", _("List available toolsets"), _("Tools & Skills"),
                cli_only=True),
-    CommandDef("skills", "Search, install, inspect, or manage skills",
-               "Tools & Skills", cli_only=True,
+    CommandDef("skills", _("Search, install, inspect, or manage skills"),
+               _("Tools & Skills"), cli_only=True,
                subcommands=("search", "browse", "inspect", "install")),
-    CommandDef("cron", "Manage scheduled tasks", "Tools & Skills",
+    CommandDef("cron", _("Manage scheduled tasks"), _("Tools & Skills"),
                cli_only=True, args_hint="[subcommand]",
                subcommands=("list", "add", "create", "edit", "pause", "resume", "run", "remove")),
-    CommandDef("reload", "Reload .env variables into the running session", "Tools & Skills",
+    CommandDef("reload", _("Reload .env variables into the running session"), _("Tools & Skills"),
                cli_only=True),
-    CommandDef("reload-mcp", "Reload MCP servers from config", "Tools & Skills",
+    CommandDef("reload-mcp", _("Reload MCP servers from config"), _("Tools & Skills"),
                aliases=("reload_mcp",)),
-    CommandDef("browser", "Connect browser tools to your live Chrome via CDP", "Tools & Skills",
+    CommandDef("browser", _("Connect browser tools to your live Chrome via CDP"), _("Tools & Skills"),
                cli_only=True, args_hint="[connect|disconnect|status]",
                subcommands=("connect", "disconnect", "status")),
-    CommandDef("plugins", "List installed plugins and their status",
-               "Tools & Skills", cli_only=True),
+    CommandDef("plugins", _("List installed plugins and their status"),
+               _("Tools & Skills"), cli_only=True),
 
     # Info
-    CommandDef("commands", "Browse all commands and skills (paginated)", "Info",
+    CommandDef("commands", _("Browse all commands and skills (paginated)"), _("Info"),
                gateway_only=True, args_hint="[page]"),
-    CommandDef("help", "Show available commands", "Info"),
-    CommandDef("restart", "Gracefully restart the gateway after draining active runs", "Session",
+    CommandDef("help", _("Show available commands"), _("Info")),
+    CommandDef("restart", _("Gracefully restart the gateway after draining active runs"), _("Session"),
                gateway_only=True),
-    CommandDef("usage", "Show token usage and rate limits for the current session", "Info"),
-    CommandDef("cost", "Show compact session / today / month cost rollup", "Info"),
-    CommandDef("insights", "Show usage insights and analytics", "Info",
+    CommandDef("usage", _("Show token usage and rate limits for the current session"), _("Info")),
+    CommandDef("cost", _("Show compact session / today / month cost rollup"), _("Info")),
+    CommandDef("insights", _("Show usage insights and analytics"), _("Info"),
                args_hint="[days]"),
-    CommandDef("platforms", "Show gateway/messaging platform status", "Info",
+    CommandDef("platforms", _("Show gateway/messaging platform status"), _("Info"),
                cli_only=True, aliases=("gateway",)),
-    CommandDef("copy", "Copy the last assistant response to clipboard", "Info",
+    CommandDef("copy", _("Copy the last assistant response to clipboard"), _("Info"),
                cli_only=True, args_hint="[number]"),
-    CommandDef("paste", "Attach clipboard image from your clipboard", "Info",
+    CommandDef("paste", _("Attach clipboard image from your clipboard"), _("Info"),
                cli_only=True),
-    CommandDef("image", "Attach a local image file for your next prompt", "Info",
+    CommandDef("image", _("Attach a local image file for your next prompt"), _("Info"),
                cli_only=True, args_hint="<path>"),
-    CommandDef("update", "Update BookwormPRO to the latest version", "Info",
+    CommandDef("update", _("Update BookwormPRO to the latest version"), _("Info"),
                gateway_only=True),
-    CommandDef("debug", "Upload debug report (system info + logs) and get shareable links", "Info"),
+    CommandDef("debug", _("Upload debug report (system info + logs) and get shareable links"), _("Info")),
 
     # Exit
-    CommandDef("quit", "Exit the CLI", "Exit",
+    CommandDef("quit", _("Exit the CLI"), _("Exit"),
                cli_only=True, aliases=("exit",)),
 ]
 
@@ -207,7 +208,7 @@ def resolve_command(name: str) -> CommandDef | None:
 def _build_description(cmd: CommandDef) -> str:
     """Build a CLI-facing description string including usage hint."""
     if cmd.args_hint:
-        return f"{cmd.description} (usage: /{cmd.name} {cmd.args_hint})"
+        return f"{cmd.description} ({_("用法")}: /{cmd.name} {cmd.args_hint})"
     return cmd.description
 
 
@@ -217,7 +218,7 @@ for _cmd in COMMAND_REGISTRY:
     if not _cmd.gateway_only:
         COMMANDS[f"/{_cmd.name}"] = _build_description(_cmd)
         for _alias in _cmd.aliases:
-            COMMANDS[f"/{_alias}"] = f"{_cmd.description} (alias for /{_cmd.name})"
+            COMMANDS[f"/{_alias}"] = f"{_cmd.description} ({_("别名")}: /{_cmd.name})"
 
 # Backwards-compatible categorized dict
 COMMANDS_BY_CATEGORY: dict[str, dict[str, str]] = {}

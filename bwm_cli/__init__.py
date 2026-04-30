@@ -11,5 +11,5 @@ Provides subcommands for:
 - bookworm cron          - Manage cron jobs
 """
 
-__version__ = "0.11.0"
-__release_date__ = "2026.4.23"
+__version__ = "7.0.0"
+__release_date__ = "2026.4.30"

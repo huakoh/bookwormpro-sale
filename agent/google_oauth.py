@@ -60,6 +60,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
+from bwm_cli.i18n import _
 from bwm_constants import get_hermes_home
 
 logger = logging.getLogger(__name__)
@@ -880,7 +881,7 @@ def start_oauth_flow(
     server_thread.start()
 
     print()
-    print("Opening your browser to sign in to Google…")
+    print(_("Opening your browser to sign in to Google..."))
     print(f"If it does not open automatically, visit:\n  {auth_url}")
     print()
 
@@ -954,11 +955,11 @@ def _paste_mode_login(
     auth_url = AUTH_ENDPOINT + "?" + urllib.parse.urlencode(params) + "#bookworm"
 
     print()
-    print("Open this URL in a browser on any device:")
+    print(_("Open this URL in a browser on any device:"))
     print(f"  {auth_url}")
     print()
-    print("After signing in, Google will redirect to localhost (which won't load).")
-    print("Copy the full URL from your browser and paste it below.")
+    print(_("After signing in, Google will redirect to localhost (which won't load)."))
+    print(_("Copy the full URL from your browser and paste it below."))
     print()
 
     code = _prompt_paste_fallback()
@@ -974,7 +975,7 @@ def _paste_mode_login(
 
 def _prompt_paste_fallback() -> Optional[str]:
     print()
-    print("Paste the full redirect URL Google showed you, OR just the 'code=' parameter value.")
+    print(_("Paste the full redirect URL Google showed you, OR just the 'code=' parameter value."))
     raw = input("Callback URL or code: ").strip()
     if not raw:
         return None

@@ -1940,7 +1940,7 @@ def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
 
     print()
     print("=" * 70)
-    print("Spotify first-time setup")
+    print(_("Spotify first-time setup"))
     print("=" * 70)
     print()
     print("Spotify requires every user to register their own lightweight")
@@ -1949,7 +1949,7 @@ def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
     print()
     print(f"Full guide: {SPOTIFY_DOCS_URL}")
     print()
-    print("Steps:")
+    print(_("Steps:"))
     print(f"  1. Opening {SPOTIFY_DASHBOARD_URL} in your browser...")
     print("  2. Click 'Create app' and fill in:")
     print("       App name:     anything (e.g. bookwormpro)")
@@ -2025,7 +2025,7 @@ def login_spotify_command(args) -> None:
         accounts_base_url=accounts_base_url,
     )
 
-    print("Starting Spotify PKCE login...")
+    print(_("Starting Spotify PKCE login..."))
     print(f"Client ID: {client_id}")
     print(f"Redirect URI: {redirect_uri}")
     print("Make sure this redirect URI is allow-listed in your Spotify app settings.")
@@ -2078,7 +2078,7 @@ def login_spotify_command(args) -> None:
         _store_provider_state(auth_store, "spotify", spotify_state, set_active=False)
         saved_to = _save_auth_store(auth_store)
 
-    print("Spotify login successful!")
+    print(_("Spotify login successful!"))
     print(f"  Auth state: {saved_to}")
     print("  Provider state saved under providers.spotify")
     print(f"  Docs: {SPOTIFY_DOCS_URL}")
@@ -3857,7 +3857,7 @@ def _login_openai_codex(
                 if reuse in ("", "y", "yes"):
                     config_path = _update_config_for_provider("openai-codex", existing.get("base_url", DEFAULT_CODEX_BASE_URL))
                     print()
-                    print("Login successful!")
+                    print(_("Login successful!"))
                     print(f"  Config updated: {config_path} (model.provider=openai-codex)")
                     return
             else:
@@ -3887,7 +3887,7 @@ def _login_openai_codex(
 
     # Run a fresh device code flow — BookwormPRO gets its own OAuth session
     print()
-    print("Signing in to OpenAI Codex...")
+    print(_("Signing in to OpenAI Codex..."))
     print("(BookwormPRO creates its own session — won't affect Codex CLI or VS Code)")
     print()
 
@@ -3897,7 +3897,7 @@ def _login_openai_codex(
     _save_codex_tokens(creds["tokens"], creds.get("last_refresh"))
     config_path = _update_config_for_provider("openai-codex", creds.get("base_url", DEFAULT_CODEX_BASE_URL))
     print()
-    print("Login successful!")
+    print(_("Login successful!"))
     from bwm_constants import display_hermes_home as _dhh
     print(f"  Auth state: {_dhh()}/auth.json")
     print(f"  Config updated: {config_path} (model.provider=openai-codex)")
@@ -3947,7 +3947,7 @@ def _codex_device_code_login() -> Dict[str, Any]:
     print(f"     \033[94m{issuer}/codex/device\033[0m\n")
     print("  2. Enter this code:")
     print(f"     \033[94m{user_code}\033[0m\n")
-    print("Waiting for sign-in... (press Ctrl+C to cancel)")
+    print(_("Waiting for sign-in... (press Ctrl+C to cancel)"))
 
     # Step 3: Poll for authorization code
     max_wait = 15 * 60  # 15 minutes
@@ -4102,7 +4102,7 @@ def _nous_device_code_login(
         interval = int(device_data["interval"])
 
         print()
-        print("To continue:")
+        print(_("To continue:"))
         print(f"  1. Open: {verification_url}")
         print(f"  2. If prompted, enter code: {user_code}")
 
@@ -4218,7 +4218,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
             saved_to = _save_auth_store(auth_store)
 
         print()
-        print("Login successful!")
+        print(_("Login successful!"))
         print(f"  Auth state: {saved_to}")
 
         # Resolve model BEFORE writing provider to config.yaml so we never

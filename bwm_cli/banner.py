@@ -65,6 +65,7 @@ def _skin_branding(key: str, fallback: str) -> str:
 # =========================================================================
 
 from bwm_cli import __version__ as VERSION, __release_date__ as RELEASE_DATE
+from bwm_cli.i18n import _
 
 # Hero ASCII (raw, 不含 markup; 颜色由 banner 渲染时套上)
 _HERO_LINES = [
@@ -369,7 +370,7 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
     tools = tools or []
     enabled_toolsets = enabled_toolsets or []
 
-    _, unavailable_toolsets = check_tool_availability(quiet=True)
+    _avail, unavailable_toolsets = check_tool_availability(quiet=True)
     disabled_tools = set()
     # Tools whose toolset has a check_fn are lazy-initialized (e.g. honcho,
     # homeassistant) — they show as unavailable at banner time because the
@@ -436,7 +437,8 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
 
     # ─── 左栏：Hero ASCII + 副标题 ──────────────────────────────
     left_lines: List[str] = ["", _hero, ""]
-    left_lines.append(f"  [bold {accent}]BookwormPRO[/]  [dim {dim}]·[/]  [bright_cyan]自托管 AI 研究助手[/]")
+    left_lines.append(f"  [bold {accent}]BookwormPRO[/]  [dim {dim}]·[/]  [bright_cyan]Your AI Command Center[/]")
+    left_lines.append(f"   [italic {text}]善读者，必善造。[/]")
     left_lines.append("")
     left_content = "\n".join(left_lines)
 
@@ -472,10 +474,10 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
 
     # ✦ CAPABILITY 区
     right_lines.append(f"[bold {accent}]✦ 能力[/]")
-    right_lines.append(f"{LBL('工具')} [bright_cyan]{len(tools)}[/] [dim]个 active[/]")
-    right_lines.append(f"{LBL('技能')} [bright_cyan]{total_skills}[/] [dim]个 loaded[/]")
+    right_lines.append(f"{LBL('工具')} [bright_cyan]{len(tools)}[/] [dim]{_("个 active")}[/]")
+    right_lines.append(f"{LBL('技能')} [bright_cyan]{total_skills}[/] [dim]{_("个 loaded")}[/]")
     if mcp_connected:
-        right_lines.append(f"{LBL('MCP')} [bright_cyan]{mcp_connected}[/] [dim]server[/]")
+        right_lines.append(f"{LBL('MCP')} [bright_cyan]{mcp_connected}[/] [dim]{_("server")}[/]")
     right_lines.append(f"{LBL('命令')} [dim]/help · /skills · /clear[/]")
 
     right_lines.append(f"[dim {dim}]{'─' * 38}[/]")
@@ -514,7 +516,7 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
         if behind and behind >= 50:
             from bwm_cli.config import recommended_update_command
             right_lines.append(f"[dim {dim}]{'─' * 38}[/]")
-            right_lines.append(f"[yellow]⚠ 更新可用 ({behind} 个提交) · {recommended_update_command()}[/]")
+            right_lines.append(f"[yellow]⚠ 更新可用 ({behind} {_("个提交")}) · {recommended_update_command()}[/]")
     except Exception:
         pass
 
