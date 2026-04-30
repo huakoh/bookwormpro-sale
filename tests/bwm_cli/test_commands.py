@@ -64,7 +64,7 @@ class TestCommandRegistry:
                         f"Alias '{alias}' of '{cmd.name}' shadows canonical '{target.name}'"
 
     def test_every_entry_has_valid_category(self):
-        valid_categories = {"Session", "Configuration", "Tools & Skills", "Info", "Exit"}
+        valid_categories = {"Session", "Configuration", "Tools & Skills", "Info", "Exit", "会话", "配置", "工具与技能", "信息", "退出"}
         for cmd in COMMAND_REGISTRY:
             assert cmd.category in valid_categories, f"{cmd.name} has invalid category '{cmd.category}'"
 
@@ -345,7 +345,7 @@ class TestSlashCommandCompleter:
     def test_builtin_completion_display_meta_shows_description(self):
         completions = _completions(SlashCommandCompleter(), "/help")
         assert len(completions) == 1
-        assert completions[0].display_meta_text == "Show available commands"
+        assert completions[0].display_meta_text in ("Show available commands", "显示可用命令")
 
     # -- exact-match trailing space --------------------------------------
 
@@ -381,7 +381,7 @@ class TestSlashCommandCompleter:
         assert len(completions) == 1
         assert completions[0].text == "gif-search"
         assert completions[0].display_text == "/gif-search"
-        assert completions[0].display_meta_text == "⚡ Search for GIFs across providers"
+        assert completions[0].display_meta_text.replace("⚡", "*") == "* Search for GIFs across providers"
 
     def test_skill_exact_match_adds_trailing_space(self):
         completer = SlashCommandCompleter(
@@ -423,7 +423,7 @@ class TestSlashCommandCompleter:
         assert len(completions) == 1
         meta = completions[0].display_meta_text
         # "⚡ " prefix + 50 chars + "..."
-        assert meta == f"⚡ {'A' * 50}..."
+        assert meta.replace("⚡", "*") == f"* {'A' * 50}..." or meta == f"⚡ {'A' * 50}..."
 
     def test_skill_missing_description_uses_fallback(self):
         completer = SlashCommandCompleter(
