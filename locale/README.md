@@ -132,3 +132,16 @@ print(msg.format(model=name))
 
 ### Q: 为什么不直接用 Python gettext？
 A: Windows 上 gettext 依赖系统 locale（常为 ASCII），中文 .mo 文件解码失败。自实现翻译器直接用 UTF-8 解析，跨平台一致。
+
+## 语言切换
+
+默认语言为 `zh_CN`（中文）。切换到英文：
+
+```yaml
+# ~/.bookwormpro/config.yaml
+language: en
+```
+
+英文模式下，所有 `_()` 调用返回原文（msgid 本身就是英文），无需额外的 `.po` 编译。
+
+切换回中文：`language: zh_CN` 或删除该行使用默认。
