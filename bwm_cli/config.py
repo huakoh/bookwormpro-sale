@@ -344,6 +344,9 @@ def _ensure_hermes_home_managed(home: Path):
 # =============================================================================
 
 DEFAULT_CONFIG = {
+    # UI display language: "zh_CN" (default), "en" for English.
+    # When empty/not set, auto-detects from LANG environment variable.
+    "language": "",
     "model": "",
     "providers": {},
     "fallback_providers": [],
