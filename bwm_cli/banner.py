@@ -66,8 +66,6 @@ def _skin_branding(key: str, fallback: str) -> str:
 
 from bwm_cli import __version__ as VERSION, __release_date__ as RELEASE_DATE
 from bwm_cli.i18n import _
-from bwm_cli.i18n import _
-from bwm_cli.i18n import _
 
 # Hero ASCII (raw, 不含 markup; 颜色由 banner 渲染时套上)
 _HERO_LINES = [
@@ -439,13 +437,15 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
 
     # ─── 左栏：Hero ASCII + 副标题 ──────────────────────────────
     left_lines: List[str] = ["", _hero, ""]
-    left_lines.append(f"  [bold {accent}]BookwormPRO[/]  [dim {dim}]·[/]  [bright_cyan]Your AI Command Center[/]")
-    left_lines.append(f"   [italic {text}]善读者，必善造。[/]")
-    left_lines.append("")
-    # 公司落款：鑫霖科技 (右对齐于左栏底部)
-    left_lines.append("")
-    left_lines.append(f'{" " * (LEFT_W - 25)}[bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/]')
-    left_lines.append(f'{" " * (LEFT_W - 24)}[dim italic]智能驱动 · 科技赋能[/]')
+    # ── Box 1: 品牌标语 ──
+    b1_text1 = f"  [bold {accent}]BookwormPRO[/]  [dim {dim}]·[/]  [bright_cyan]Your AI Command Center[/]  "
+    b1_text2 = f"     [italic {text}]善读者，必善造。[/]     "
+    b1_w = 40
+    b1_p = (LEFT_W - b1_w) // 2
+    left_lines.append(f"{' ' * b1_p}[dim {dim}]╭{"─" * b1_w}╮[/]")
+    left_lines.append(f"{' ' * b1_p}[dim {dim}]│[/]{b1_text1}[dim {dim}]│[/]")
+    left_lines.append(f"{' ' * b1_p}[dim {dim}]│[/]{b1_text2}[dim {dim}]│[/]")
+    left_lines.append(f"{' ' * b1_p}[dim {dim}]╰{"─" * b1_w}╯[/]")
     left_lines.append("")
     left_content = "\n".join(left_lines)
 
@@ -527,6 +527,15 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
     except Exception:
         pass
 
+    # ── 公司落款：鑫霖科技 (右下角) ──
+    right_lines.append(f"[dim {dim}]{"─" * 38}[/]")
+    co_pad = " " * 9  # center 30-wide box in ~51-wide right column
+    co_w = 30
+    right_lines.append(f"{co_pad}[dim {dim}]╭{"─" * co_w}╮[/]")
+    right_lines.append(f"{co_pad}[dim {dim}]│[/]  [bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/]  [dim {dim}]│[/]")
+    right_lines.append(f"{co_pad}[dim {dim}]│[/]  [dim italic]智能驱动 · 科技赋能[/]  [dim {dim}]│[/]")
+    right_lines.append(f"{co_pad}[dim {dim}]╰{"─" * co_w}╯[/]")
+    right_lines.append("")
     right_lines.append("")
     right_content = "\n".join(right_lines)
 
