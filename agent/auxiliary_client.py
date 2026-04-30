@@ -2100,7 +2100,7 @@ def _normalize_vision_provider(provider: Optional[str]) -> str:
     return _normalize_aux_provider(provider)
 
 
-def _resolve_strict_vision_backend(provider: str) -> Tuple[Optional[Any], Optional[str]]:
+def _resolve_strict_vision_backend(provider: str, resolved_model: str = None) -> Tuple[Optional[Any], Optional[str]]:
     provider = _normalize_vision_provider(provider)
     if provider == "openrouter":
         return _try_openrouter()
@@ -2120,6 +2120,14 @@ def _resolve_strict_vision_backend(provider: str) -> Tuple[Optional[Any], Option
 def _try_alibaba_vision() -> Tuple[Optional[Any], Optional[str]]:
     """Alibaba DashScope vision (Qwen-VL)."""
     client, model = resolve_provider_client("alibaba", "qwen-vl-max")
+    if client is None:
+        return None, None
+    return client, model
+
+
+def _try_alibaba_vision(model_override: str = None) -> Tuple[Optional[Any], Optional[str]]:
+    _model = model_override or "qwen-vl-max"
+    client, model = resolve_provider_client("alibaba", _model)
     if client is None:
         return None, None
     return client, model
@@ -2177,7 +2185,7 @@ def resolve_vision_provider_client(
     def _finalize(resolved_provider: str, sync_client: Any, default_model: Optional[str]):
         if sync_client is None:
             return resolved_provider, None, None
-        final_model = resolved_model or default_model
+        final_model = default_model or resolved_model
         if async_mode:
             async_client, async_model = _to_async_client(sync_client, final_model)
             return resolved_provider, async_client, async_model
@@ -2212,7 +2220,7 @@ def resolve_vision_provider_client(
         main_model = _read_main_model()
         if main_provider and main_provider not in ("auto", ""):
             if main_provider == "bookwormpro":
-                sync_client, default_model = _resolve_strict_vision_backend(main_provider)
+                sync_client, default_model = _resolve_strict_vision_backend(main_provider, resolved_model)
                 if sync_client is not None:
                     logger.info(
                         "Vision auto-detect: using main provider %s (%s)",
@@ -2237,7 +2245,7 @@ def resolve_vision_provider_client(
         for candidate in _VISION_AUTO_PROVIDER_ORDER:
             if candidate == main_provider:
                 continue  # already tried above
-            sync_client, default_model = _resolve_strict_vision_backend(candidate)
+            sync_client, default_model = _resolve_strict_vision_backend(candidate, resolved_model)
             if sync_client is not None:
                 return _finalize(candidate, sync_client, default_model)
 
@@ -2245,7 +2253,7 @@ def resolve_vision_provider_client(
         return None, None, None
 
     if requested in _VISION_AUTO_PROVIDER_ORDER:
-        sync_client, default_model = _resolve_strict_vision_backend(requested)
+        sync_client, default_model = _resolve_strict_vision_backend(requested, resolved_model)
         return _finalize(requested, sync_client, default_model)
 
     client, final_model = _get_cached_client(requested, resolved_model, async_mode,

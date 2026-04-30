@@ -575,6 +575,9 @@ async def vision_analyze_tool(
         }
         if model:
             call_kwargs["model"] = model
+            # Infer provider from model prefix (e.g. "alibaba/qwen-vl-max" → "alibaba")
+            if "/" in model and not model.startswith("openrouter/"):
+                call_kwargs["provider"] = model.split("/")[0]
         # Try full-size image first; on size-related rejection, downscale and retry.
         try:
             response = await async_call_llm(**call_kwargs)
