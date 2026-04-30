@@ -6179,6 +6179,8 @@ class HermesCLI:
             self._handle_voice_command(cmd_original)
         elif canonical == "busy":
             self._handle_busy_command(cmd_original)
+        elif canonical == "soul":
+            self._handle_soul_command(cmd_original)
         else:
             # Check for user-defined quick commands (bypass agent loop, no LLM call)
             base_cmd = cmd_lower.split()[0]
@@ -7076,6 +7078,24 @@ class HermesCLI:
 
             except Exception as e:
                 print(f"  [失败] Compression failed: {e}")
+
+    def _handle_soul_command(self, cmd: str):
+        """Handle /soul [audit|drift] command."""
+        import subprocess, sys
+        parts = cmd.strip().split()
+        sub = parts[1] if len(parts) > 1 else 'audit'
+        script = os.path.expanduser('~/.claude/scripts/soul-drift.py')
+        if sub == 'drift':
+            result = subprocess.run([sys.executable, script], capture_output=True, text=True)
+            self._console_print(result.stdout)
+        else:
+            result = subprocess.run([sys.executable, script, '--cron'], capture_output=True, text=True)
+            self._console_print(f'[bold]soul.md Self-Audit[/]')
+            self._console_print(result.stdout)
+            # Also show full report
+            result2 = subprocess.run([sys.executable, script], capture_output=True, text=True)
+            for line in result2.stdout.strip().split(chr(10)):
+                self._console_print(line)
 
     def _handle_debug_command(self):
         """Handle /debug — upload debug report + logs and print paste URLs."""

@@ -174,6 +174,9 @@ COMMAND_REGISTRY: list[CommandDef] = [
                gateway_only=True),
     CommandDef("debug", _("Upload debug report (system info + logs) and get shareable links"), _("Info")),
 
+    CommandDef("soul", _("Run soul.md self-audit (closure rate, drift detection)"), _("Info"),
+               args_hint="[audit|drift]"),
+
     # Exit
     CommandDef("quit", _("Exit the CLI"), _("Exit"),
                cli_only=True, aliases=("exit",)),
