@@ -527,18 +527,26 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
     except Exception:
         pass
 
-    # ── 公司落款：鑫霖科技 (右下角) ──
-    right_lines.append(f"[dim {dim}]{"─" * 38}[/]")
-    co_pad = " " * 9  # center 30-wide box in ~51-wide right column
-    co_w = 30
-    right_lines.append(f"{co_pad}[dim {dim}]╭{"─" * co_w}╮[/]")
-    right_lines.append(f"{co_pad}[dim {dim}]│[/]  [bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/]  [dim {dim}]│[/]")
-    right_lines.append(f"{co_pad}[dim {dim}]│[/]  [dim italic]智能驱动 · 科技赋能[/]  [dim {dim}]│[/]")
-    right_lines.append(f"{co_pad}[dim {dim}]╰{"─" * co_w}╯[/]")
-    right_lines.append("")
-    right_lines.append("")
-    right_content = "\n".join(right_lines)
 
+    # Box 2: Xinlin Tech (bottom-left)
+    b2_t1 = "  [bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/]  "
+    b2_t2 = "  [dim italic]智能驱动 · 科技赋能[/]  "
+    b2_w = 30
+    b2_p = (LEFT_W - b2_w) // 2
+    _bl = [
+        f"{' ' * b2_p}[dim {dim}]╭{'─' * b2_w}╮[/]",
+        f"{' ' * b2_p}[dim {dim}]│[/]{b2_t1}[dim {dim}]│[/]",
+        f"{' ' * b2_p}[dim {dim}]│[/]{b2_t2}[dim {dim}]│[/]",
+        f"{' ' * b2_p}[dim {dim}]╰{'─' * b2_w}╯[/]",
+    ]
+    _pad = max(3, len(right_lines) - len(left_lines) - len(_bl) + 4)
+    for _i in range(_pad):
+        left_lines.append("")
+    left_lines.extend(_bl)
+    left_lines.append("")
+    left_content = "\n".join(left_lines)
+
+    right_content = "\n".join(right_lines)
     if USE_DUAL:
         # 自适应 divider: 取左右两栏中行数较多者
         n_div = max(len(left_lines), len(right_lines))
