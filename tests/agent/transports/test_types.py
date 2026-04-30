@@ -270,3 +270,101 @@ class TestNormalizedResponseBackwardCompat:
     def test_codex_reasoning_items_none_when_absent(self):
         nr = NormalizedResponse(content="hi", tool_calls=None, finish_reason="stop")
         assert nr.codex_reasoning_items is None
+
+
+# ---------------------------------------------------------------------------
+# Pydantic validation tests
+# ---------------------------------------------------------------------------
+
+class TestToolCallValidation:
+    """Pydantic validators on ToolCall fields."""
+
+    def test_empty_name_defaults_to_unknown(self):
+        tc = ToolCall(id="1", name="  ", arguments="{}")
+        assert tc.name == "unknown"
+
+    def test_valid_json_arguments_pass_through(self):
+        tc = ToolCall(id="1", name="fn", arguments='{"key": "value"}')
+        assert tc.arguments == '{"key": "value"}'
+
+    def test_invalid_json_arguments_kept_for_downstream_repair(self):
+        tc = ToolCall(id="1", name="fn", arguments='{broken')
+        assert tc.arguments == '{broken'
+
+    def test_dict_arguments_auto_serialized(self):
+        tc = ToolCall(id="1", name="fn", arguments={"path": "README.md"})
+        assert tc.arguments == '{"path": "README.md"}'
+        assert isinstance(tc.arguments, str)
+
+    def test_list_arguments_auto_serialized(self):
+        tc = ToolCall(id="1", name="fn", arguments=["a", "b"])
+        assert tc.arguments == '["a", "b"]'
+
+    def test_non_string_non_dict_arguments_default_to_empty(self):
+        tc = ToolCall(id="1", name="fn", arguments=42)
+        assert tc.arguments == "{}"
+
+    def test_empty_arguments_default_to_empty_object(self):
+        tc = ToolCall(id="1", name="fn", arguments="")
+        assert tc.arguments == "{}"
+
+    def test_whitespace_arguments_default_to_empty_object(self):
+        tc = ToolCall(id="1", name="fn", arguments="   ")
+        assert tc.arguments == "{}"
+
+
+class TestUsageValidation:
+    """Pydantic validators on Usage fields."""
+
+    def test_negative_tokens_clamped_to_zero(self):
+        u = Usage(prompt_tokens=-5, completion_tokens=-10)
+        assert u.prompt_tokens == 0
+        assert u.completion_tokens == 0
+
+    def test_valid_tokens_pass_through(self):
+        u = Usage(prompt_tokens=100, completion_tokens=50, total_tokens=150, cached_tokens=80)
+        assert u.prompt_tokens == 100
+        assert u.total_tokens == 150
+
+
+class TestNormalizedResponseValidation:
+    """Pydantic validators on NormalizedResponse fields."""
+
+    def test_unknown_finish_reason_normalized_to_stop(self):
+        nr = NormalizedResponse(content="hi", tool_calls=None, finish_reason="some_unknown_reason")
+        assert nr.finish_reason == "stop"
+
+    def test_valid_finish_reasons_preserved(self):
+        for reason in ("stop", "tool_calls", "length", "content_filter"):
+            nr = NormalizedResponse(content=None, tool_calls=None, finish_reason=reason)
+            assert nr.finish_reason == reason
+
+    def test_content_is_mutable(self):
+        """NormalizedResponse.content is mutated in-place in run_agent.py line 11699-11715."""
+        nr = NormalizedResponse(content="original", tool_calls=None, finish_reason="stop")
+        nr.content = "modified"
+        assert nr.content == "modified"
+
+    def test_model_dump_roundtrip(self):
+        tc = ToolCall(id="c1", name="terminal", arguments='{"cmd":"ls"}')
+        nr = NormalizedResponse(
+            content="hello",
+            tool_calls=[tc],
+            finish_reason="tool_calls",
+            reasoning="I thought",
+            usage=Usage(prompt_tokens=10, completion_tokens=5),
+        )
+        data = nr.model_dump()
+        assert data["content"] == "hello"
+        assert data["finish_reason"] == "tool_calls"
+        assert len(data["tool_calls"]) == 1
+        assert data["tool_calls"][0]["name"] == "terminal"
+        assert data["usage"]["prompt_tokens"] == 10
+
+    def test_defaults_when_minimal(self):
+        nr = NormalizedResponse(finish_reason="stop")
+        assert nr.content is None
+        assert nr.tool_calls is None
+        assert nr.reasoning is None
+        assert nr.usage is None
+        assert nr.provider_data is None

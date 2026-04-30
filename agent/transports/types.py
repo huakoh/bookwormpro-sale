@@ -1,22 +1,33 @@
 """Shared types for normalized provider responses.
 
-These dataclasses define the canonical shape that all provider adapters
+Pydantic models defining the canonical shape that all provider adapters
 normalize responses to.  The shared surface is intentionally minimal —
 only fields that every downstream consumer reads are top-level.
 Protocol-specific state goes in ``provider_data`` dicts (response-level
 and per-tool-call) so that protocol-aware code paths can access it
 without polluting the shared type.
+
+Migrated from dataclasses to Pydantic v2 BaseModel for runtime validation.
 """
 
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+import logging
+from enum import Enum
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+logger = logging.getLogger(__name__)
+
+# Canonical finish_reason values used across all transports.
+VALID_FINISH_REASONS = frozenset({
+    "stop", "tool_calls", "length", "content_filter",
+})
 
 
-@dataclass
-class ToolCall:
+class ToolCall(BaseModel):
     """A normalized tool call from any provider.
 
     ``id`` is the protocol's canonical identifier — what gets used in
@@ -32,16 +43,42 @@ class ToolCall:
     * Others: ``None``
     """
 
-    id: Optional[str]
+    model_config = ConfigDict(frozen=False, populate_by_name=True)
+
+    id: Optional[str] = None
     name: str
-    arguments: str  # JSON string
-    provider_data: Optional[Dict[str, Any]] = field(default=None, repr=False)
+    arguments: str = "{}"
+    provider_data: Optional[Dict[str, Any]] = Field(default=None, repr=False)
+
+    @field_validator("name")
+    @classmethod
+    def _name_must_be_nonempty(cls, v: str) -> str:
+        if not v.strip():
+            logger.warning("ToolCall created with empty name — defaulting to 'unknown'")
+            return "unknown"
+        return v
+
+    @field_validator("arguments", mode="before")
+    @classmethod
+    def _coerce_and_validate_arguments(cls, v: Any) -> str:
+        if isinstance(v, (dict, list)):
+            return json.dumps(v)
+        if not isinstance(v, str):
+            return "{}"
+        if not v.strip():
+            return "{}"
+        try:
+            json.loads(v)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            logger.warning(
+                "ToolCall arguments failed JSON parse (len=%d) — keeping raw for downstream repair",
+                len(v),
+            )
+        return v
 
     # ── Backward compatibility ──────────────────────────────────
     # The agent loop reads tc.function.name / tc.function.arguments
-    # throughout run_agent.py (45+ sites).  These properties let
-    # NormalizedResponse pass through without the _nr_to_assistant_message
-    # shim, while keeping ToolCall's canonical fields flat.
+    # throughout run_agent.py (45+ sites).
     @property
     def type(self) -> str:
         return "function"
@@ -53,7 +90,7 @@ class ToolCall:
 
     @property
     def call_id(self) -> Optional[str]:
-        """Codex call_id from provider_data, accessed via getattr by _build_assistant_message."""
+        """Codex call_id from provider_data."""
         return (self.provider_data or {}).get("call_id")
 
     @property
@@ -63,31 +100,27 @@ class ToolCall:
 
     @property
     def extra_content(self) -> Optional[Dict[str, Any]]:
-        """Gemini extra_content (thought_signature) from provider_data.
-
-        Gemini 3 thinking models attach ``extra_content`` with a
-        ``thought_signature`` to each tool call.  This signature must be
-        replayed on subsequent API calls — without it the API rejects the
-        request with HTTP 400.  The chat_completions transport stores this
-        in ``provider_data["extra_content"]``; this property exposes it so
-        ``_build_assistant_message`` can ``getattr(tc, "extra_content")``
-        uniformly.
-        """
+        """Gemini extra_content (thought_signature) from provider_data."""
         return (self.provider_data or {}).get("extra_content")
 
 
-@dataclass
-class Usage:
+class Usage(BaseModel):
     """Token usage from an API response."""
+
+    model_config = ConfigDict(frozen=False)
 
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
     cached_tokens: int = 0
 
+    @field_validator("prompt_tokens", "completion_tokens", "total_tokens", "cached_tokens")
+    @classmethod
+    def _tokens_non_negative(cls, v: int) -> int:
+        return max(0, v) if isinstance(v, int) else 0
 
-@dataclass
-class NormalizedResponse:
+
+class NormalizedResponse(BaseModel):
     """Normalized API response from any provider.
 
     Shared fields are truly cross-provider — every caller can rely on
@@ -101,16 +134,24 @@ class NormalizedResponse:
     * Others: ``None``
     """
 
-    content: Optional[str]
-    tool_calls: Optional[List[ToolCall]]
-    finish_reason: str  # "stop", "tool_calls", "length", "content_filter"
+    model_config = ConfigDict(frozen=False)
+
+    content: Optional[str] = None
+    tool_calls: Optional[List[ToolCall]] = None
+    finish_reason: str = "stop"
     reasoning: Optional[str] = None
     usage: Optional[Usage] = None
-    provider_data: Optional[Dict[str, Any]] = field(default=None, repr=False)
+    provider_data: Optional[Dict[str, Any]] = Field(default=None, repr=False)
+
+    @field_validator("finish_reason")
+    @classmethod
+    def _normalize_finish_reason(cls, v: str) -> str:
+        if v in VALID_FINISH_REASONS:
+            return v
+        logger.debug("Unknown finish_reason '%s' — normalizing to 'stop'", v)
+        return "stop"
 
     # ── Backward compatibility ──────────────────────────────────
-    # The shim _nr_to_assistant_message() mapped these from provider_data.
-    # These properties let NormalizedResponse pass through directly.
     @property
     def reasoning_content(self) -> Optional[str]:
         pd = self.provider_data or {}
