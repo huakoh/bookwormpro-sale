@@ -158,6 +158,7 @@ _API_KEY_PROVIDER_AUX_MODELS: Dict[str, str] = {
 # differs from their main chat model, map it here.  The vision auto-detect
 # "exotic provider" branch checks this before falling back to the main model.
 _PROVIDER_VISION_MODELS: Dict[str, str] = {
+    "alibaba": "qwen-vl-max",
     "xiaomi": "mimo-v2.5",
     "zai": "glm-5v-turbo",
 }
@@ -2089,6 +2090,7 @@ def get_async_text_auxiliary_client(task: str = "", *, main_runtime: Optional[Di
 
 
 _VISION_AUTO_PROVIDER_ORDER = (
+    "alibaba",
     "openrouter",
     "bookwormpro",
 )
@@ -2108,9 +2110,19 @@ def _resolve_strict_vision_backend(provider: str) -> Tuple[Optional[Any], Option
         return _try_codex()
     if provider == "anthropic":
         return _try_anthropic()
+    if provider == "alibaba":
+        return _try_alibaba_vision()
     if provider == "custom":
         return _try_custom_endpoint()
     return None, None
+
+
+def _try_alibaba_vision() -> Tuple[Optional[Any], Optional[str]]:
+    """Alibaba DashScope vision (Qwen-VL)."""
+    client, model = resolve_provider_client("alibaba", "qwen-vl-max")
+    if client is None:
+        return None, None
+    return client, model
 
 
 def _strict_vision_backend_available(provider: str) -> bool:
