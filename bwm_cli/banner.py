@@ -532,7 +532,7 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
     b2_t1 = "  [bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/]  "
     b2_t2 = "  [dim italic]智能驱动 · 科技赋能[/]  "
     b2_w = 30
-    b2_p = (LEFT_W - b2_w) // 2
+    b2_p = LEFT_W - b2_w - 2  # right-aligned
     _bl = [
         f"{' ' * b2_p}[dim {dim}]╭{'─' * b2_w}╮[/]",
         f"{' ' * b2_p}[dim {dim}]│[/]{b2_t1}[dim {dim}]│[/]",
