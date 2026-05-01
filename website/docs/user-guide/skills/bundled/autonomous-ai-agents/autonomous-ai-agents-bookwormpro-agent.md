@@ -1,15 +1,32 @@
 ---
-name: bookwormpro
-description: Complete guide to using and extending BookwormPRO — CLI usage, setup, configuration, spawning additional agents, gateway platforms, skills, voice, tools, profiles, and a concise contributor reference. Load this skill when helping users configure BookwormPRO, troubleshoot issues, spawn agent instances, or make code contributions.
-version: 2.0.0
-author: BookwormPRO + Teknium
-license: MIT
-metadata:
-  bookworm:
-    tags: [bookworm, setup, configuration, multi-agent, spawning, cli, gateway, development]
-    homepage: https://github.com/huakoh/BookwormPRO
-    related_skills: [claude-code, codex, opencode]
+title: "BookwormPRO"
+sidebar_label: "BookwormPRO"
+description: "Complete guide to using and extending BookwormPRO — CLI usage, setup, configuration, spawning additional agents, gateway platforms, skills, voice, tools, pr..."
 ---
+
+{/* This page is auto-generated from the skill's SKILL.md by website/scripts/generate-skill-docs.py. Edit the source SKILL.md, not this page. */}
+
+# BookwormPRO
+
+Complete guide to using and extending BookwormPRO — CLI usage, setup, configuration, spawning additional agents, gateway platforms, skills, voice, tools, profiles, and a concise contributor reference. Load this skill when helping users configure BookwormPRO, troubleshoot issues, spawn agent instances, or make code contributions.
+
+## Skill metadata
+
+| | |
+|---|---|
+| Source | Bundled (installed by default) |
+| Path | `skills/autonomous-ai-agents/bookwormpro` |
+| Version | `2.0.0` |
+| Author | BookwormPRO + Teknium |
+| License | MIT |
+| Tags | `bookworm`, `setup`, `configuration`, `multi-agent`, `spawning`, `cli`, `gateway`, `development` |
+| Related skills | [`claude-code`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code), [`codex`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex), [`opencode`](/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-opencode) |
+
+## Reference: full SKILL.md
+
+:::info
+The following is the complete skill definition that BookwormPRO loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+:::
 
 # BookwormPRO
 

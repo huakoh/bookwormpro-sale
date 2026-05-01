@@ -34,7 +34,7 @@ CATEGORIES = {
         r'HermesAgentEnvConfig',
         r'hermes_pkce',
         r'NousResearch/hermes-agent',
-        r'openclaw_to_hermes',
+        r'openclaw_to_bookwormpro',
         r'DeepHermes',
     ],
 }

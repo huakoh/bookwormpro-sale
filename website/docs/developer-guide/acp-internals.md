@@ -26,7 +26,7 @@ bookworm acp / bookworm-acp / python -m acp_adapter
   -> acp_adapter.entry.main()
   -> load ~/.bookwormpro/.env
   -> configure stderr logging
-  -> construct HermesACPAgent
+  -> construct BookwormACPAgent
   -> acp.run_agent(agent)
 ```
 
@@ -34,7 +34,7 @@ Stdout is reserved for ACP JSON-RPC transport. Human-readable logs go to stderr.
 
 ## Major components
 
-### `HermesACPAgent`
+### `BookwormACPAgent`
 
 `acp_adapter/server.py` implements the ACP agent protocol.
 

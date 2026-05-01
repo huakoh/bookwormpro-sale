@@ -44,7 +44,7 @@ PROTECTED_LITERALS = [
     "hermes_pkce",
     "NousResearch/hermes-agent",
     "huakoh/BookwormPRO",  # 已经是新名
-    "openclaw_to_hermes",  # migration 脚本名
+    "openclaw_to_bookwormpro",  # migration 脚本名
     "DeepHermes",  # 模型家族 (BookwormPRO/DeepHermes-3-...)
     "hermes_parser",  # 解析器引用
     "hermes_base_env",  # 环境引用

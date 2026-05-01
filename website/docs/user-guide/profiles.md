@@ -233,7 +233,7 @@ Add the line to your `~/.bashrc` or `~/.zshrc` for persistent completion. Comple
 
 ## How it works
 
-Profiles use the `BOOKWORMPRO_HOME` environment variable. When you run `coder chat`, the wrapper script sets `BOOKWORMPRO_HOME=~/.bookwormpro/profiles/coder` before launching bookworm. Since 119+ files in the codebase resolve paths via `get_hermes_home()`, BookwormPRO state automatically scopes to the profile's directory — config, sessions, memory, skills, state database, gateway PID, logs, and cron jobs.
+Profiles use the `BOOKWORMPRO_HOME` environment variable. When you run `coder chat`, the wrapper script sets `BOOKWORMPRO_HOME=~/.bookwormpro/profiles/coder` before launching bookworm. Since 119+ files in the codebase resolve paths via `get_bookwormpro_home()`, BookwormPRO state automatically scopes to the profile's directory — config, sessions, memory, skills, state database, gateway PID, logs, and cron jobs.
 
 This is separate from terminal working directory. Tool execution starts from `terminal.cwd` (or the launch directory when `cwd: "."` on the local backend), not automatically from `BOOKWORMPRO_HOME`.
 

@@ -4,7 +4,7 @@ P0 + P1 全面 Hermes → BookwormPRO 替换。
 策略:
 - 跳过 Hermes 模型功能代码 (绝对路径白名单)
 - 字面量替换: Hermes → BookwormPRO, hermes-agent → bookwormpro
-- 保护词不动: HermesAgent 类名、hermes_pkce、DeepHermes、NousResearch、HermesClaw、openclaw_to_hermes
+- 保护词不动: HermesAgent 类名、hermes_pkce、DeepHermes、NousResearch、HermesClaw、openclaw_to_bookwormpro
 - 受信任的字面量替换: User-Agent / 文档字串 / 标题
 """
 import os
@@ -51,7 +51,7 @@ PROTECTED_TOKENS = [
     "NousResearch/hermes-agent",
     "NousResearch",
     "huakoh/BookwormPRO",
-    "openclaw_to_hermes",
+    "openclaw_to_bookwormpro",
     "DeepHermes",
     "hermes_parser",
     "hermes_base_env",

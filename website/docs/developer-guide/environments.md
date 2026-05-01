@@ -37,7 +37,7 @@ classDiagram
       CLI: serve / process / evaluate
     }
 
-    class HermesAgentBaseEnv {
+    class BookwormproAgentBaseEnv {
       Terminal backend configuration
       Tool resolution
       Agent loop engine
@@ -48,7 +48,7 @@ classDiagram
       Stack testing
     }
 
-    class HermesSweEnv {
+    class BookwormproSweEnv {
       SWE training
     }
 
@@ -64,10 +64,10 @@ classDiagram
       Long-horizon benchmark
     }
 
-    BaseEnv <|-- HermesAgentBaseEnv
-    HermesAgentBaseEnv <|-- TerminalTestEnv
-    HermesAgentBaseEnv <|-- HermesSweEnv
-    HermesAgentBaseEnv <|-- TerminalBench2EvalEnv
+    BaseEnv <|-- BookwormproAgentBaseEnv
+    BookwormproAgentBaseEnv <|-- TerminalTestEnv
+    BookwormproAgentBaseEnv <|-- BookwormproSweEnv
+    BookwormproAgentBaseEnv <|-- TerminalBench2EvalEnv
     TerminalBench2EvalEnv <|-- TBLiteEvalEnv
     TerminalBench2EvalEnv <|-- YCBenchEvalEnv
 ```
@@ -81,18 +81,18 @@ The foundation from `atroposlib`. Provides:
 - **CLI interface** — three subcommands: `serve`, `process`, `evaluate`
 - **Eval logging** — `evaluate_log()` saves results to JSON + JSONL
 
-### HermesAgentBaseEnv
+### BookwormproAgentBaseEnv
 
-The bookwormpro layer (`environments/hermes_base_env.py`). Adds:
+The bookwormpro layer (`environments/bookwormpro_base_env.py`). Adds:
 - **Terminal backend configuration** — sets `TERMINAL_ENV` for sandboxed execution (local, Docker, Modal, Daytona, SSH, Singularity)
 - **Tool resolution** — `_resolve_tools_for_group()` calls bookwormpro's `get_tool_definitions()` to get the right tool schemas based on enabled/disabled toolsets
-- **Agent loop integration** — `collect_trajectory()` runs `HermesAgentLoop` and scores the result
+- **Agent loop integration** — `collect_trajectory()` runs `BookwormproAgentLoop` and scores the result
 - **Two-phase operation** — Phase 1 (OpenAI server) for eval/SFT, Phase 2 (VLLM ManagedServer) for full RL with logprobs
 - **Async safety patches** — monkey-patches Modal backend to work inside Atropos's event loop
 
 ### Concrete Environments
 
-Your environment inherits from `HermesAgentBaseEnv` and implements five methods:
+Your environment inherits from `BookwormproAgentBaseEnv` and implements five methods:
 
 | Method | Purpose |
 |--------|---------|
@@ -106,7 +106,7 @@ Your environment inherits from `HermesAgentBaseEnv` and implements five methods:
 
 ### Agent Loop
 
-`HermesAgentLoop` (`environments/agent_loop.py`) is the reusable multi-turn agent engine. It runs the same tool-calling pattern as bookwormpro's main loop:
+`BookwormproAgentLoop` (`environments/agent_loop.py`) is the reusable multi-turn agent engine. It runs the same tool-calling pattern as bookwormpro's main loop:
 
 1. Send messages + tool schemas to the API via `server.chat_completion()`
 2. If the response contains `tool_calls`, dispatch each via `handle_function_call()`
@@ -273,12 +273,12 @@ python environments/terminal_test_env/terminal_test_env.py process \
 python environments/terminal_test_env/terminal_test_env.py serve
 ```
 
-### HermesSweEnv
+### BookwormproSweEnv
 
 SWE-bench style training environment. The model gets a coding task, uses terminal + file + web tools to solve it, and the reward function runs tests in the same Modal sandbox.
 
 ```bash
-python environments/hermes_swe_env/hermes_swe_env.py serve \
+python environments/bookwormpro_swe_env/bookwormpro_swe_env.py serve \
     --openai.model_name YourModel \
     --env.dataset_name bigcode/humanevalpack \
     --env.terminal_backend modal
@@ -321,7 +321,7 @@ Connects the environment to a running Atropos API server (`run-api`). Used durin
 run-api
 
 # Terminal 2: Start the environment
-python environments/hermes_swe_env/hermes_swe_env.py serve \
+python environments/bookwormpro_swe_env/bookwormpro_swe_env.py serve \
     --openai.model_name YourModel
 ```
 
@@ -349,13 +349,13 @@ Uses ManagedServer for exact token IDs + logprobs via `/generate`. A client-side
 ### Training Environment
 
 ```python
-from environments.bookwormpro_base_env import HermesAgentBaseEnv, HermesAgentEnvConfig
+from environments.bookwormpro_base_env import BookwormproAgentBaseEnv, BookwormproAgentEnvConfig
 from atroposlib.envs.server_handling.server_manager import APIServerConfig
 
-class MyEnvConfig(HermesAgentEnvConfig):
+class MyEnvConfig(BookwormproAgentEnvConfig):
     my_custom_field: str = "default_value"
 
-class MyEnv(HermesAgentBaseEnv):
+class MyEnv(BookwormproAgentBaseEnv):
     name = "my-env"
     env_config_cls = MyEnvConfig
 
@@ -416,7 +416,7 @@ See `environments/benchmarks/yc_bench/yc_bench_env.py` for a clean, well-documen
 
 ## Configuration Reference
 
-### HermesAgentEnvConfig Fields
+### BookwormproAgentEnvConfig Fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -497,8 +497,8 @@ See [RL Training](/user-guide/features/rl-training) for the agent-driven RL work
 
 ```
 environments/
-├── hermes_base_env.py          # Abstract base class (HermesAgentBaseEnv)
-├── agent_loop.py               # Multi-turn agent engine (HermesAgentLoop)
+├── bookwormpro_base_env.py          # Abstract base class (BookwormproAgentBaseEnv)
+├── agent_loop.py               # Multi-turn agent engine (BookwormproAgentLoop)
 ├── tool_context.py             # Per-rollout tool access for reward functions
 ├── patches.py                  # Async-safety patches for Modal backend
 │
@@ -511,7 +511,7 @@ environments/
 │   └── ...                     # + kimi_k2, longcat, glm45/47, etc.
 │
 ├── terminal_test_env/          # Stack validation (inline tasks)
-├── hermes_swe_env/             # SWE-bench training environment
+├── bookwormpro_swe_env/             # SWE-bench training environment
 │
 └── benchmarks/                 # Evaluation benchmarks
     ├── terminalbench_2/        # 89 terminal tasks, Modal sandboxes

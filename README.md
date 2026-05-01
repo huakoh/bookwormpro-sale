@@ -2,7 +2,7 @@
   <img src="assets/banner.png" alt="BookwormPRO" width="100%">
 </p>
 
-# BookwormPRO ☤
+# BookwormPRO 📚
 
 <p align="center">
   <a href="https://bookwormpro.local/docs/"><img src="https://img.shields.io/badge/Docs-bookworm--agent.bookwormpro.local-FFD700?style=for-the-badge" alt="Documentation"></a>
@@ -223,7 +223,6 @@ scripts/run_tests.sh
 - [对话] [Discord](https://discord.gg/BookwormPRO)
 - 📚 [Skills Hub](https://agentskills.io)
 - 🐛 [Issues](https://github.com/huakoh/BookwormPRO/issues)
-- [网络] [HermesClaw](https://github.com/AaronWong1999/hermesclaw) — Community WeChat bridge: Run BookwormPRO and OpenClaw on the same WeChat account.
 
 ---
 

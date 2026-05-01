@@ -53,7 +53,7 @@ This page is the top-level map of BookwormPRO internals. Use it to orient yourse
 ```text
 bookwormpro/
 ├── run_agent.py              # AIAgent — core conversation loop (~10,700 lines)
-├── cli.py                    # HermesCLI — interactive terminal UI (~10,000 lines)
+├── cli.py                    # BookwormCLI — interactive terminal UI (~10,000 lines)
 ├── model_tools.py            # Tool discovery, schema collection, dispatch
 ├── toolsets.py               # Tool groupings and platform presets
 ├── bwm_state.py           # SQLite session/state database with FTS5
@@ -138,7 +138,7 @@ bookwormpro/
 ### CLI Session
 
 ```text
-User input → HermesCLI.process_input()
+User input → BookwormCLI.process_input()
   → AIAgent.run_conversation()
     → prompt_builder.build_system_prompt()
     → runtime_provider.resolve_runtime_provider()

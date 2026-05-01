@@ -30,7 +30,7 @@ PROTECTED = [
     "hermes-atropos-environments",
     "hermes-agent skill", "hermes-agent SKILL",
     "DeepHermes", "Nous Hermes", "NousResearch",
-    "openclaw_to_hermes", "openclaw-migration",
+    "openclaw_to_bookwormpro", "openclaw-migration",
     "<hermes_im_start>", "<hermes_im_end>",
 ]
 

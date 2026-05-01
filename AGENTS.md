@@ -24,9 +24,9 @@ bookwormpro/
 ├── run_agent.py          # AIAgent class — core conversation loop (~12k LOC)
 ├── model_tools.py        # Tool orchestration, discover_builtin_tools(), handle_function_call()
 ├── toolsets.py           # Toolset definitions, _HERMES_CORE_TOOLS list
-├── cli.py                # HermesCLI class — interactive CLI orchestrator (~11k LOC)
+├── cli.py                # BookwormCLI class — interactive CLI orchestrator (~11k LOC)
 ├── bwm_state.py       # SessionDB — SQLite session store (FTS5 search)
-├── bwm_constants.py   # get_hermes_home(), display_hermes_home() — profile-aware paths
+├── bwm_constants.py   # get_bookwormpro_home(), display_bookwormpro_home() — profile-aware paths
 ├── bwm_logging.py     # setup_logging() — agent.log / errors.log / gateway.log (profile-aware)
 ├── batch_runner.py       # Parallel batch processing
 ├── agent/                # Agent internals (provider adapters, memory, caching, compression, etc.)
@@ -58,7 +58,7 @@ bookwormpro/
 
 **User config:** `~/.bookwormpro/config.yaml` (settings), `~/.bookwormpro/.env` (API keys only).
 **Logs:** `~/.bookwormpro/logs/` — `agent.log` (INFO+), `errors.log` (WARNING+),
-`gateway.log` when running the gateway. Profile-aware via `get_hermes_home()`.
+`gateway.log` when running the gateway. Profile-aware via `get_bookwormpro_home()`.
 Browse with `bookworm logs [--follow] [--level ...] [--session ...]`.
 
 ## File Dependency Chain
@@ -141,7 +141,7 @@ Reasoning content is stored in `assistant_msg["reasoning"]`.
 - **KawaiiSpinner** (`agent/display.py`) — animated faces during API calls, `┊` activity feed for tool results
 - `load_cli_config()` in cli.py merges hardcoded defaults + user config YAML
 - **Skin engine** (`bwm_cli/skin_engine.py`) — data-driven CLI theming; initialized from `display.skin` config key at startup; skins customize banner colors, spinner faces/verbs/wings, tool prefix, response box, branding text
-- `process_command()` is a method on `HermesCLI` — dispatches on canonical command name resolved via `resolve_command()` from the central registry
+- `process_command()` is a method on `BookwormCLI` — dispatches on canonical command name resolved via `resolve_command()` from the central registry
 - Skill slash commands: `agent/skill_commands.py` scans `~/.bookwormpro/skills/`, injects as **user message** (not system prompt) to preserve prompt caching
 
 ### Slash Command Registry (`bwm_cli/commands.py`)
@@ -163,7 +163,7 @@ All slash commands are defined in a central `COMMAND_REGISTRY` list of `CommandD
 CommandDef("mycommand", "Description of what it does", "Session",
            aliases=("mc",), args_hint="[arg]"),
 ```
-2. Add handler in `HermesCLI.process_command()` in `cli.py`:
+2. Add handler in `BookwormCLI.process_command()` in `cli.py`:
 ```python
 elif canonical == "mycommand":
     self._handle_mycommand(cmd_original)
@@ -286,9 +286,9 @@ Auto-discovery: any `tools/*.py` file with a top-level `registry.register()` cal
 
 The registry handles schema collection, dispatch, availability checking, and error wrapping. All handlers MUST return a JSON string.
 
-**Path references in tool schemas**: If the schema description mentions file paths (e.g. default output directories), use `display_hermes_home()` to make them profile-aware. The schema is generated at import time, which is after `_apply_profile_override()` sets `BOOKWORMPRO_HOME`.
+**Path references in tool schemas**: If the schema description mentions file paths (e.g. default output directories), use `display_bookwormpro_home()` to make them profile-aware. The schema is generated at import time, which is after `_apply_profile_override()` sets `BOOKWORMPRO_HOME`.
 
-**State files**: If a tool stores persistent state (caches, logs, checkpoints), use `get_hermes_home()` for the base directory — never `Path.home() / ".bookwormpro"`. This ensures each profile gets its own state.
+**State files**: If a tool stores persistent state (caches, logs, checkpoints), use `get_bookwormpro_home()` for the base directory — never `Path.home() / ".bookwormpro"`. This ensures each profile gets its own state.
 
 **Agent-level tools** (todo, memory): intercepted by `run_agent.py` before `handle_function_call()`. See `tools/todo_tool.py` for the pattern.
 
@@ -466,7 +466,7 @@ holographic, openviking, retaindb**.
 Each provider implements the `MemoryProvider` ABC (see `agent/memory_provider.py`)
 and is orchestrated by `agent/memory_manager.py`. Lifecycle hooks include
 `sync_turn(turn_messages)`, `prefetch(query)`, `shutdown()`, and optional
-`post_setup(hermes_home, config)` for setup-wizard integration.
+`post_setup(bookwormpro_home, config)` for setup-wizard integration.
 
 **CLI commands via `plugins/memory/<name>/cli.py`:** if a memory plugin
 defines `register_cli(subparser)`, `discover_plugin_cli_commands()` finds
@@ -554,39 +554,39 @@ BookwormPRO supports **profiles** — multiple fully isolated instances, each wi
 `BOOKWORMPRO_HOME` directory (config, API keys, memory, sessions, skills, gateway, etc.).
 
 The core mechanism: `_apply_profile_override()` in `bwm_cli/main.py` sets
-`BOOKWORMPRO_HOME` before any module imports. All `get_hermes_home()` references
+`BOOKWORMPRO_HOME` before any module imports. All `get_bookwormpro_home()` references
 automatically scope to the active profile.
 
 ### Rules for profile-safe code
 
-1. **Use `get_hermes_home()` for all BOOKWORMPRO_HOME paths.** Import from `bwm_constants`.
+1. **Use `get_bookwormpro_home()` for all BOOKWORMPRO_HOME paths.** Import from `bwm_constants`.
    NEVER hardcode `~/.bookwormpro` or `Path.home() / ".bookwormpro"` in code that reads/writes state.
    ```python
    # GOOD
-   from bwm_constants import get_hermes_home
-   config_path = get_hermes_home() / "config.yaml"
+   from bwm_constants import get_bookwormpro_home
+   config_path = get_bookwormpro_home() / "config.yaml"
 
    # BAD — breaks profiles
    config_path = Path.home() / ".bookwormpro" / "config.yaml"
    ```
 
-2. **Use `display_hermes_home()` for user-facing messages.** Import from `bwm_constants`.
+2. **Use `display_bookwormpro_home()` for user-facing messages.** Import from `bwm_constants`.
    This returns `~/.bookwormpro` for default or `~/.bookwormpro/profiles/<name>` for profiles.
    ```python
    # GOOD
-   from bwm_constants import display_hermes_home
-   print(f"Config saved to {display_hermes_home()}/config.yaml")
+   from bwm_constants import display_bookwormpro_home
+   print(f"Config saved to {display_bookwormpro_home()}/config.yaml")
 
    # BAD — shows wrong path for profiles
    print("Config saved to ~/.bookwormpro/config.yaml")
    ```
 
-3. **Module-level constants are fine** — they cache `get_hermes_home()` at import time,
-   which is AFTER `_apply_profile_override()` sets the env var. Just use `get_hermes_home()`,
+3. **Module-level constants are fine** — they cache `get_bookwormpro_home()` at import time,
+   which is AFTER `_apply_profile_override()` sets the env var. Just use `get_bookwormpro_home()`,
    not `Path.home() / ".bookwormpro"`.
 
 4. **Tests that mock `Path.home()` must also set `BOOKWORMPRO_HOME`** — since code now uses
-   `get_hermes_home()` (reads env var), not `Path.home() / ".bookwormpro"`:
+   `get_bookwormpro_home()` (reads env var), not `Path.home() / ".bookwormpro"`:
    ```python
    with patch.object(Path, "home", return_value=tmp_path), \
         patch.dict(os.environ, {"BOOKWORMPRO_HOME": str(tmp_path / ".bookwormpro")}):
@@ -600,14 +600,14 @@ automatically scope to the active profile.
    See `gateway/platforms/telegram.py` for the canonical pattern.
 
 6. **Profile operations are HOME-anchored, not BOOKWORMPRO_HOME-anchored** — `_get_profiles_root()`
-   returns `Path.home() / ".bookwormpro" / "profiles"`, NOT `get_hermes_home() / "profiles"`.
+   returns `Path.home() / ".bookwormpro" / "profiles"`, NOT `get_bookwormpro_home() / "profiles"`.
    This is intentional — it lets `bookworm -p coder profile list` see all profiles regardless
    of which one is active.
 
 ## Known Pitfalls
 
 ### DO NOT hardcode `~/.bookwormpro` paths
-Use `get_hermes_home()` from `bwm_constants` for code paths. Use `display_hermes_home()`
+Use `get_bookwormpro_home()` from `bwm_constants` for code paths. Use `display_bookwormpro_home()`
 for user-facing print/log messages. Hardcoding `~/.bookwormpro` breaks profiles — each profile
 has its own `BOOKWORMPRO_HOME` directory. This was the source of 5 bugs fixed in PR #3575.
 
@@ -652,10 +652,10 @@ unused module into a live code path, E2E test the real resolution chain
 with actual imports (not mocks) against a temp `BOOKWORMPRO_HOME`.
 
 ### Tests must not write to `~/.bookwormpro/`
-The `_isolate_hermes_home` autouse fixture in `tests/conftest.py` redirects `BOOKWORMPRO_HOME` to a temp dir. Never hardcode `~/.bookwormpro/` paths in tests.
+The `_isolate_bookwormpro_home` autouse fixture in `tests/conftest.py` redirects `BOOKWORMPRO_HOME` to a temp dir. Never hardcode `~/.bookwormpro/` paths in tests.
 
 **Profile tests**: When testing profile features, also mock `Path.home()` so that
-`_get_profiles_root()` and `_get_default_hermes_home()` resolve within the temp dir.
+`_get_profiles_root()` and `_get_default_bookwormpro_home()` resolve within the temp dir.
 Use the pattern from `tests/bwm_cli/test_profiles.py`:
 ```python
 @pytest.fixture
