@@ -176,7 +176,7 @@ from bwm_cli import __version__ as _HERMES_VERSION
 _AI_GATEWAY_HEADERS = {
     "HTTP-Referer": "https://bookwormpro.local",
     "X-Title": "BookwormPRO",
-    "User-Agent": f"HermesAgent/{_HERMES_VERSION}",
+    "User-Agent": f"BookwormPRO/{_HERMES_VERSION}",
 }
 
 # BookwormPRO Portal extra_body for product attribution.

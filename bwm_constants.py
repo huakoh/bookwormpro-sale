@@ -8,11 +8,19 @@ import os
 from pathlib import Path
 
 
+def get_bookwormpro_home() -> Path:
+    """Return the BookwormPRO home directory (default: ~/.bookwormpro).
+    Preferred name — use this in new code.
+    """
+    return get_hermes_home()
+
+
 def get_hermes_home() -> Path:
     """Return the BookwormPRO home directory (default: ~/.bookwormpro).
+    Legacy name kept for backward compatibility — use get_bookwormpro_home().
 
     Reads BOOKWORMPRO_HOME env var, falls back to ~/.bookwormpro.
-    This is the single source of truth — all other copies should import this.
+    This is the single source of truth.
     """
     val = os.environ.get("BOOKWORMPRO_HOME", "").strip()
     return Path(val) if val else Path.home() / ".bookwormpro"
