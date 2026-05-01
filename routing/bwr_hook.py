@@ -72,5 +72,16 @@ class BWRHook:
                 return d + "\n" + user_message
         return user_message
 
+    def report_actual(self, query: str, actual_skill: str):
+        """Agent 调用 Skill 后回填实际结果，供反馈闭环学习"""
+        try:
+            from routing.bwr_reporter import report_skill_usage
+            last = self._cache.get(query[:100].strip().lower(), {})
+            predicted = last.get('routing', {}).get('primary')
+            confidence = last.get('routing', {}).get('confidence')
+            report_skill_usage(query, actual_skill, predicted, confidence)
+        except Exception:
+            pass
+
     def flush_cache(self):
         self._cache.clear()

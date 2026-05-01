@@ -837,6 +837,18 @@ function applyDisambiguation(results, queryText, index) {
     if (boosted) {
       const current = boostVotes.get(rule.boost) || 0;
       boostVotes.set(rule.boost, Math.max(current, effectiveWeight)); // 取最大值防止叠加虚高
+    } else if (rule.boost) {
+      // v1.8 submit: 规则匹配但目标 skill 不在 BM25 结果中 → 注入虚拟条目
+      const maxScore = results.length > 0 ? Math.max(...results.map(r => r.score || 0)) : 0.001;
+      results.push({
+        name: rule.boost,
+        score: maxScore * 0.5,  // 基准分 = 最高分 * 50%
+        _submitted: true,
+        _ruleId: rule.id,
+        matched: [],
+        weights: {}
+      });
+      boostVotes.set(rule.boost, effectiveWeight);
     }
 
     // 累积 penalty 投票
