@@ -113,7 +113,7 @@ function runRouteEngine(prompt, cwd, precomputedIntent) {
 
 
 
-  const indexFile = path.join(CLAUDE_ROOT, 'skills-index-lite.json');
+  const indexFile = path.join(CLAUDE_ROOT, 'skills-index.json');
 
   const index = loadSkillsIndex(indexFile);
 

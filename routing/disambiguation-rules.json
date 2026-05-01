@@ -1,9 +1,9 @@
 {
   "_meta": {
-    "version": "v1.6",
+    "version": "v1.7",
     "description": "消歧规则外部化 — v6.5.1 扩展至 93 条，R81-R83 新增路由精准度修复 (bookworm自检→self-auditor, 自动修复→self-healer, 裸字自动 BAE penalty) | v1.5 (2026-04-24): R84-R88 Bookworm 元词路由修复 | L1d (2026-04-25): R84/R86 追加无 bookworm 短词分支 (路由分析/钩子管线/系统自检 等) | L1d (2026-04-25): R84/R86 追加无 bookworm 短词分支 (路由分析/钩子管线/系统自检 等) | v1.5.1 (2026-04-25): R89 路由自愈场景修复 (D1 Q7) | v1.5.2 (2026-04-25): R87 penalty 清理 + R84 L1d 业务前缀扩展",
     "generatedFrom": "route-analyzer.js DISAMBIGUATION_RULES (v6.5.1 消歧 83 条)",
-    "ruleCount": 109,
+    "ruleCount": 118,
     "changelog": [
       "v1.6 (16 new rules): R94-R109 — golden-set accuracy fixes (api-designer, golang-pro, nextjs, python-pro, typescript-pro, legal, data-analyst, planning, ultimate-code, devops-vpn, flutter, vue, k8s, terraform, regex, mcp-probe)",
       "R01: 添加 mutual_exclusion 注解，memory leak 场景排除 performance-expert 误触",
@@ -1350,6 +1350,100 @@
         "mobile-expert"
       ],
       "weight": 0.45
+    },
+    {
+      "id": "R110",
+      "note": "安全守护命令 → guardian (非 security-expert)",
+      "trigger": "安全守护|guard\\s*mode|freeze\\s+冻结|careful\\s+破坏|unfreeze\\s+解除|\\bguard\\b.*安全",
+      "boost": "guardian",
+      "penalty": [
+        "security-expert",
+        "pricing-strategist",
+        "database-tuning-expert"
+      ],
+      "weight": 0.45
+    },
+    {
+      "id": "R111",
+      "note": "brainstorm/office-hours → plan-ceo-review",
+      "trigger": "brainstorm.*想法|office\\s*hours.*创业|值不值得做|验证.*创业",
+      "boost": "plan-ceo-review",
+      "penalty": [
+        "backend-builder",
+        "retro"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R112",
+      "note": "进化追踪 → evolution-tracker",
+      "trigger": "系统.*进化.*时间线|evolution.log|evolution.*tracker|进化.*追踪|版本.*历史.*变更",
+      "boost": "evolution-tracker",
+      "penalty": [
+        "ultimate-code-expert",
+        "designer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R113",
+      "note": "gstack升级 → gstack-upgrade",
+      "trigger": "upgrade\\s+gstack|gstack.*更新.*版本",
+      "boost": "gstack-upgrade",
+      "penalty": [
+        "document-release"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R114",
+      "note": "CSS/Grid/Flexbox → designer-expert",
+      "trigger": "CSS\\s+Grid|Flexbox.*布局|Grid.*布局.*CSS",
+      "boost": "designer-expert",
+      "penalty": [
+        "frontend-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R115",
+      "note": "PPT → powerpoint",
+      "trigger": "\\bPPT\\b.*制作|演示文稿.*制作|幻灯片",
+      "boost": "powerpoint",
+      "penalty": [
+        "business-plan-skill"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R116",
+      "note": "PDF编辑 → nano-pdf",
+      "trigger": "PDF.*文档.*编辑|PDF.*修改",
+      "boost": "nano-pdf",
+      "penalty": [
+        "tech-writer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R117",
+      "note": "MCP prune → mcp-prune",
+      "trigger": "mcp.*prune|MCP.*剪枝",
+      "boost": "mcp-prune",
+      "penalty": [
+        "mobile-expert"
+      ],
+      "weight": 0.45
+    },
+    {
+      "id": "R118",
+      "note": "terminator MCP → mcp-probe (stronger)",
+      "trigger": "\\bterminator\\b.*mcp|\\bMCP\\b.*\\b体检\\b|\\bMCP\\b.*全量",
+      "boost": "mcp-probe",
+      "penalty": [
+        "mobile-expert"
+      ],
+      "weight": 0.5
     }
   ]
 }
