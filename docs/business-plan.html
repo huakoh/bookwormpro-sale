@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookwormPRO 商业推广方案 v3.0 (Final)</title>
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --bg-primary:    #0a0a0a;
+      --bg-secondary:  #111111;
+      --bg-card:       #161616;
+      --bg-table-alt:  #1a1a1a;
+      --border:        #2a2a2a;
+      --teal:          #14b8a6;
+      --teal-dim:      rgba(20, 184, 166, 0.12);
+      --teal-glow:     rgba(20, 184, 166, 0.3);
+      --amber:         #f59e0b;
+      --amber-dim:     rgba(245, 158, 11, 0.12);
+      --red:           #ef4444;
+      --red-dim:       rgba(239, 68, 68, 0.12);
+      --green:         #22c55e;
+      --green-dim:     rgba(34, 197, 94, 0.12);
+      --yellow:        #eab308;
+      --yellow-dim:    rgba(234, 179, 8, 0.12);
+      --text-primary:  #e8e8e8;
+      --text-secondary:#9ca3af;
+      --text-muted:    #6b7280;
+      --nav-width:     260px;
+      --font-mono:     'Consolas', 'Monaco', 'Courier New', monospace;
+      --font-sans:     'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    /* ===== Reset ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ===== Base ===== */
+    html { scroll-behavior: smooth; font-size: 15px; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.7;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== Side Nav ===== */
+    nav {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--nav-width);
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    nav .nav-header {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    nav .nav-logo {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    nav .nav-version {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-family: var(--font-mono);
+    }
+    nav ul {
+      list-style: none;
+      padding: 12px 0;
+      flex: 1;
+    }
+    nav ul li a {
+      display: block;
+      padding: 8px 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.2s;
+      line-height: 1.4;
+    }
+    nav ul li a:hover,
+    nav ul li a.active {
+      color: var(--teal);
+      border-left-color: var(--teal);
+      background: var(--teal-dim);
+    }
+    nav ul li a .nav-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-right: 6px;
+    }
+    nav .nav-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* ===== Main Content ===== */
+    main {
+      margin-left: var(--nav-width);
+      flex: 1;
+      max-width: 960px;
+      padding: 0 48px 80px;
+    }
+
+    /* ===== Hero ===== */
+    .hero {
+      padding: 64px 0 48px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 56px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--teal-dim);
+      border: 1px solid var(--teal-glow);
+      color: var(--teal);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+    .hero h1 span.teal { color: var(--teal); }
+    .hero .slogan-cn {
+      font-size: 20px;
+      color: var(--text-primary);
+      font-weight: 500;
+      margin: 20px 0 8px;
+    }
+    .hero .slogan-en {
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-style: italic;
+      letter-spacing: 0.02em;
+      margin-bottom: 24px;
+    }
+    .hero .meta-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .meta-chip {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    .meta-chip span { color: var(--amber); }
+
+    /* ===== Section ===== */
+    section {
+      margin-bottom: 64px;
+      scroll-margin-top: 24px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 8px;
+    }
+    section h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+    }
+    section h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--amber);
+      margin: 28px 0 12px;
+    }
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    /* ===== Tables ===== */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin: 16px 0 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead tr {
+      background: var(--bg-card);
+    }
+    thead th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: var(--bg-table-alt); }
+    tbody tr:hover { background: var(--teal-dim); }
+    tbody td {
+      padding: 11px 16px;
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+    tbody td:first-child {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .highlight-num { color: var(--teal); font-weight: 600; font-family: var(--font-mono); }
+    .highlight-amber { color: var(--amber); font-weight: 600; }
+
+    /* ===== Threat level badges ===== */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .badge-high   { background: rgba(239,68,68,0.18);  color: #f87171; border: 1px solid rgba(239,68,68,0.35); }
+    .badge-mid    { background: rgba(234,179,8,0.18);  color: #fbbf24; border: 1px solid rgba(234,179,8,0.35); }
+    .badge-low    { background: rgba(34,197,94,0.18);  color: #4ade80; border: 1px solid rgba(34,197,94,0.35); }
+    .badge-max    { background: rgba(168,85,247,0.18); color: #c084fc; border: 1px solid rgba(168,85,247,0.35); }
+    .badge-info   { background: var(--teal-dim);       color: var(--teal); border: 1px solid var(--teal-glow); }
+    .badge-same   { background: var(--amber-dim);      color: var(--amber); border: 1px solid rgba(245,158,11,0.35); }
+
+    /* ===== Alert boxes ===== */
+    .alert {
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .alert-danger {
+      background: var(--red-dim);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-left: 4px solid var(--red);
+      color: #fca5a5;
+    }
+    .alert-danger strong { color: #f87171; display: block; margin-bottom: 6px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .alert-info {
+      background: var(--teal-dim);
+      border: 1px solid var(--teal-glow);
+      border-left: 4px solid var(--teal);
+      color: #a7f3d0;
+    }
+    .alert-info strong { color: var(--teal); display: block; margin-bottom: 6px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .alert-warn {
+      background: var(--amber-dim);
+      border: 1px solid rgba(245,158,11,0.35);
+      border-left: 4px solid var(--amber);
+      color: #fde68a;
+    }
+    .alert-warn strong { color: var(--amber); display: block; margin-bottom: 6px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+    /* ===== Feature grid ===== */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 16px 0 24px;
+    }
+    .feat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+      transition: border-color 0.2s;
+    }
+    .feat-card:hover { border-color: var(--teal-glow); }
+    .feat-card .card-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--teal);
+      margin-bottom: 8px;
+      letter-spacing: 0.08em;
+    }
+    .feat-card .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .feat-card .card-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+    .feat-card.negative { border-color: rgba(239,68,68,0.25); }
+    .feat-card.negative .card-num { color: var(--red); }
+    .feat-card.negative .card-title { color: #f87171; }
+
+    /* ===== Steps ===== */
+    .steps {
+      margin: 16px 0 24px;
+      display: grid;
+      gap: 12px;
+    }
+    .step {
+      display: flex;
+      gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      background: var(--teal-dim);
+      border: 1px solid var(--teal-glow);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--teal);
+      margin-top: 2px;
+    }
+    .step-body { flex: 1; }
+    .step-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .step-desc  { font-size: 13px; color: var(--text-secondary); }
+    code { font-family: var(--font-mono); font-size: 12.5px; background: var(--bg-card); border: 1px solid var(--border); color: var(--teal); padding: 1px 5px; border-radius: 3px; }
+
+    /* ===== Timeline / Week plan ===== */
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .week-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+    .week-label {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--amber);
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .week-card ul { list-style: none; }
+    .week-card ul li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 3px 0;
+      border-bottom: 1px solid var(--border);
+      padding-left: 12px;
+      position: relative;
+    }
+    .week-card ul li:last-child { border-bottom: none; }
+    .week-card ul li::before {
+      content: '';
+      position: absolute; left: 0; top: 11px;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    /* ===== Content list ===== */
+    .content-list {
+      display: grid;
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .content-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .content-rank {
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      width: 24px;
+      text-align: center;
+    }
+    .content-text {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+    }
+
+    /* ===== Expert rounds ===== */
+    .round-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .round-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+    .round-num {
+      font-size: 11px; font-family: var(--font-mono);
+      color: var(--teal); font-weight: 700; margin-bottom: 6px;
+    }
+    .round-label {
+      font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;
+    }
+    .round-experts {
+      font-size: 12.5px; color: var(--text-secondary); line-height: 1.65;
+    }
+
+    /* ===== Sources ===== */
+    .sources {
+      display: grid;
+      gap: 6px;
+      margin: 16px 0;
+    }
+    .source-row {
+      display: flex;
+      gap: 12px;
+      font-size: 12.5px;
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .source-label {
+      flex-shrink: 0;
+      color: var(--text-primary);
+      font-weight: 500;
+      min-width: 200px;
+    }
+    .source-ref {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+    }
+
+    /* ===== Divider ===== */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      margin-left: var(--nav-width);
+      border-top: 1px solid var(--border);
+      background: var(--bg-secondary);
+      padding: 24px 48px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    footer .footer-brand { color: var(--teal); font-weight: 600; }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+    /* ===== Print ===== */
+    @media print {
+      :root { --bg-primary: #fff; --bg-secondary: #f8f8f8; --bg-card: #f2f2f2; --bg-table-alt: #f9f9f9; --border: #ddd; --text-primary: #111; --text-secondary: #444; --text-muted: #888; }
+      nav { display: none; }
+      main { margin-left: 0; padding: 20px 32px; max-width: 100%; }
+      footer { margin-left: 0; }
+      .hero { padding: 32px 0 24px; }
+      section { page-break-inside: avoid; }
+      a { color: inherit; }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      :root { --nav-width: 0px; }
+      nav { transform: translateX(-260px); }
+      main { margin-left: 0; padding: 24px 20px 60px; }
+      footer { margin-left: 0; padding: 16px 20px; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .round-grid { grid-template-columns: 1fr; }
+      .week-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 28px; }
+      .hero .slogan-cn { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== Side Nav ===== -->
+<nav id="sidebar">
+  <div class="nav-header">
+    <div class="nav-logo">BookwormPRO</div>
+    <div class="nav-version">business-plan v3.0 · Final</div>
+  </div>
+  <ul>
+    <li><a href="#positioning"><span class="nav-num">01</span>产品定位</a></li>
+    <li><a href="#competition"><span class="nav-num">02</span>竞品格局</a></li>
+    <li><a href="#pricing"><span class="nav-num">03</span>付费层设计</a></li>
+    <li><a href="#finance"><span class="nav-num">04</span>财务模型</a></li>
+    <li><a href="#installation"><span class="nav-num">05</span>安装体验设计</a></li>
+    <li><a href="#gtm"><span class="nav-num">06</span>中国市场 GTM</a></li>
+    <li><a href="#execution"><span class="nav-num">07</span>P0 执行清单</a></li>
+    <li><a href="#risks"><span class="nav-num">08</span>风险矩阵</a></li>
+    <li><a href="#review"><span class="nav-num">09</span>审查记录</a></li>
+  </ul>
+  <div class="nav-footer">经三轮 16 位专家审查</div>
+</nav>
+
+<!-- ===== Main ===== -->
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">Business Plan &nbsp;|&nbsp; v3.0 Final &nbsp;|&nbsp; 2026-04-30</div>
+    <h1><span class="teal">Bookworm</span>PRO</h1>
+    <h1 style="font-size:22px;font-weight:500;color:var(--text-secondary);margin-top:4px;">商业推广方案</h1>
+    <div class="slogan-cn">你的终端，你的模型，你的 Agent</div>
+    <div class="slogan-en">Your terminal. Your models. Your agent.</div>
+    <div class="meta-row">
+      <div class="meta-chip">版本 <span>v3.0</span></div>
+      <div class="meta-chip">专家 <span>16 位</span></div>
+      <div class="meta-chip">审查轮次 <span>3 轮</span></div>
+      <div class="meta-chip">日期 <span>2026-04-30</span></div>
+      <div class="meta-chip">赛道 <span>Claude Code / Gemini CLI</span></div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 1: 产品定位 ===== -->
+  <section id="positioning">
+    <div class="section-label">Section 01</div>
+    <h2>产品定位</h2>
+
+    <p>BookwormPRO 是开发者本地 AI 操作系统 -- CLI 原生，多模型路由，<span class="highlight-num">73</span> 个专家技能即装即用。对标 Claude Code / Gemini CLI 赛道。</p>
+
+    <h3>关键差异化</h3>
+    <div class="grid-3">
+      <div class="feat-card">
+        <div class="card-num">DIFF 01</div>
+        <div class="card-title">CLI 原生可编程性</div>
+        <div class="card-desc">Skill 路由 + Hook 可编程性 + 多 MCP 协作，终端原生工作流。</div>
+      </div>
+      <div class="feat-card">
+        <div class="card-num">DIFF 02</div>
+        <div class="card-title">73 技能全栈覆盖</div>
+        <div class="card-desc">开发、AI/ML 为核心，商务/法务/财务为 LLM prompt 辅助，即装即用。</div>
+      </div>
+      <div class="feat-card">
+        <div class="card-num">DIFF 03</div>
+        <div class="card-title">与 Web UI 互补</div>
+        <div class="card-desc">与 Dify/Coze 等可视化平台互补而非竞争，走 CLI 原生差异化路线。</div>
+      </div>
+    </div>
+
+    <div class="alert alert-danger">
+      <strong>诚实边界 -- 不可对外声称</strong>
+      <ul style="list-style:none;display:grid;gap:6px;">
+        <li style="padding-left:14px;position:relative;"><span style="position:absolute;left:0;color:#f87171;">X</span> 不说"数据零上传" — 使用云 API 时数据经第三方处理</li>
+        <li style="padding-left:14px;position:relative;"><span style="position:absolute;left:0;color:#f87171;">X</span> 不说"替代 15 万/月团队" — 过度承诺，损害品牌信任</li>
+        <li style="padding-left:14px;position:relative;"><span style="position:absolute;left:0;color:#f87171;">X</span> 不说"国内没有成熟产品" — Dify 已有 132K+ Star</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 2: 竞品格局 ===== -->
+  <section id="competition">
+    <div class="section-label">Section 02</div>
+    <h2>竞品格局</h2>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px;">数据截至 2026-04-30</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>产品</th>
+            <th>GitHub Star</th>
+            <th>自托管</th>
+            <th>定位</th>
+            <th>对 BWP 威胁</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>n8n</td><td class="highlight-num">179K</td><td>是</td><td>工作流自动化 + AI</td><td><span class="badge badge-high">高</span></td></tr>
+          <tr><td>Dify</td><td class="highlight-num">132K</td><td>是</td><td>可视化 Agent 平台</td><td><span class="badge badge-max">最高</span></td></tr>
+          <tr><td>Open WebUI</td><td class="highlight-num">127K</td><td>是</td><td>通用 AI 前端</td><td><span class="badge badge-mid">中高</span></td></tr>
+          <tr><td>Cursor</td><td style="color:var(--text-muted);">~$50B 估值</td><td>否</td><td>AI IDE</td><td><span class="badge badge-info">不同赛道</span></td></tr>
+          <tr><td>Coze 扣子</td><td style="color:var(--text-muted);">未公开</td><td>否</td><td>字节 AI Bot 平台，9+ 渠道</td><td><span class="badge badge-mid">中</span></td></tr>
+          <tr><td>LobeChat</td><td class="highlight-num">50-70K</td><td>是</td><td>Agent 协作平台</td><td><span class="badge badge-mid">中</span></td></tr>
+          <tr><td>FastGPT</td><td class="highlight-num">28K</td><td>是</td><td>中国团队知识库 + Agent</td><td><span class="badge badge-mid">中</span></td></tr>
+          <tr><td>Claude Code</td><td style="color:var(--text-muted);">N/A</td><td>否</td><td>Anthropic 官方 CLI</td><td><span class="badge badge-same">同赛道</span></td></tr>
+          <tr><td>Gemini CLI</td><td class="highlight-num">97K</td><td>否</td><td>Google 官方 CLI</td><td><span class="badge badge-same">同赛道</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3 个不可复制优势</h3>
+    <div class="grid-3">
+      <div class="feat-card">
+        <div class="card-num">MOAT 01</div>
+        <div class="card-title">73 技能全栈覆盖</div>
+        <div class="card-desc">巨头没有动力为小微用户构建这么宽的非技术技能谱，差异化窗口期明显。</div>
+      </div>
+      <div class="feat-card">
+        <div class="card-num">MOAT 02</div>
+        <div class="card-title">11 平台跨生态网关</div>
+        <div class="card-desc">字节只有飞书、腾讯只有微信、阿里只有钉钉。BookwormPRO 全通 11 平台。</div>
+      </div>
+      <div class="feat-card">
+        <div class="card-num">MOAT 03</div>
+        <div class="card-title">CLI 原生可编程性</div>
+        <div class="card-desc">Skill 路由 + Hook 可编程 + 多 MCP 协作，终端原生架构无法被 Web UI 复制。</div>
+      </div>
+    </div>
+
+    <h3>3 个致命劣势</h3>
+    <div class="grid-3">
+      <div class="feat-card negative">
+        <div class="card-num">RISK 01</div>
+        <div class="card-title">社区规模差距</div>
+        <div class="card-desc">差 3-4 个数量级 vs Dify 132K Star，冷启动期获客成本高企。</div>
+      </div>
+      <div class="feat-card negative">
+        <div class="card-num">RISK 02</div>
+        <div class="card-title">依赖第三方 API</div>
+        <div class="card-desc">模型能力后发，依赖上游 Provider，无法完全自主控制核心能力。</div>
+      </div>
+      <div class="feat-card negative">
+        <div class="card-num">RISK 03</div>
+        <div class="card-title">单人维护风险</div>
+        <div class="card-desc">企业用户担忧可持续性，单人研发团队缺乏 SLA 承诺能力。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 3: 付费层设计 ===== -->
+  <section id="pricing">
+    <div class="section-label">Section 03</div>
+    <h2>付费层设计 (UX 优化版)</h2>
+
+    <div class="alert alert-info">
+      <strong>核心原则</strong>
+      Free 不阉割核心价值，限制的是规模和效率，让用户因"用着用着不够了"而自然升级。
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th>Free (个人体验)</th>
+            <th>Pro <span class="highlight-num">99元/月</span></th>
+            <th>Business <span class="highlight-num">299元/月/席</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>技能</td>
+            <td>全部 <span class="highlight-num">73+</span> 可用</td>
+            <td>全部 <span class="highlight-num">73+</span> 可用</td>
+            <td>73+ + 自定义私有技能</td>
+          </tr>
+          <tr>
+            <td>通信</td>
+            <td>CLI + 1 平台</td>
+            <td>全部 <span class="highlight-num">11</span> 平台</td>
+            <td>11 + API Server + Webhook</td>
+          </tr>
+          <tr>
+            <td>会话</td>
+            <td>1 个同时进行</td>
+            <td><span class="highlight-num">3</span> 个并发</td>
+            <td><span class="highlight-num">10</span> 并发 + 批量处理</td>
+          </tr>
+          <tr>
+            <td>自动化</td>
+            <td>手动触发</td>
+            <td>cron 调度 + <span class="highlight-num">50</span> 钩子</td>
+            <td>+ 多 Agent 编排</td>
+          </tr>
+          <tr>
+            <td>记忆</td>
+            <td>本地存储</td>
+            <td>+ 全文检索 (FTS5)</td>
+            <td>+ 团队知识库共享</td>
+          </tr>
+          <tr>
+            <td>模型</td>
+            <td>自带 Key 任意模型</td>
+            <td>+ 多 Provider 智能路由</td>
+            <td>+ 凭证池轮转 + 审计</td>
+          </tr>
+          <tr>
+            <td>支持</td>
+            <td>社区 (GitHub Issues)</td>
+            <td>优先响应</td>
+            <td>专属技术支持</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>用户升级旅程</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">安装后全部技能体验</div>
+          <div class="step-desc">Free 无门槛，73 个技能立即可用，建立产品认知。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">想接钉钉/飞书</div>
+          <div class="step-desc">发现 Free 只能接 1 个平台 &rarr; 自然升级 <span class="highlight-amber">Pro</span>。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">想定时跑任务</div>
+          <div class="step-desc">发现没有 cron 调度功能 &rarr; 升级 <span class="highlight-amber">Pro</span>。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">团队想共享技能</div>
+          <div class="step-desc">发现没有协作和团队知识库 &rarr; 升级 <span class="highlight-amber">Business</span>。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 4: 财务模型 ===== -->
+  <section id="finance">
+    <div class="section-label">Section 04</div>
+    <h2>修正后的财务模型 (经事实核查)</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>原始假设</th>
+            <th>修正值</th>
+            <th>来源</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pro 定价</td>
+            <td style="color:var(--text-muted);text-decoration:line-through;">$12/月</td>
+            <td><span class="highlight-num">$15-20</span> (国际) / <span class="highlight-num">99元</span> (中国)</td>
+            <td>行业中位 $20 (Cursor/Claude Code)</td>
+          </tr>
+          <tr>
+            <td>毛利率</td>
+            <td style="color:var(--text-muted);text-decoration:line-through;">85-90%</td>
+            <td><span class="highlight-num">55-65%</span> (混合)</td>
+            <td>Bessemer AI SaaS 基准；OpenRouter 仅 5.5% 手续费</td>
+          </tr>
+          <tr>
+            <td>CAC 冷启动</td>
+            <td style="color:var(--text-muted);text-decoration:line-through;">$5-15</td>
+            <td><span class="highlight-num">$30-80</span></td>
+            <td>First Page Sage 2026，无自然流量阶段</td>
+          </tr>
+          <tr>
+            <td>CAC 规模化</td>
+            <td>—</td>
+            <td><span class="highlight-num">$10-25</span></td>
+            <td>社区驱动后降低</td>
+          </tr>
+          <tr>
+            <td>付费转化率</td>
+            <td>3-5%</td>
+            <td><span class="highlight-num">3-5%</span> (确认)</td>
+            <td>ChartMogul freemium 基准</td>
+          </tr>
+          <tr>
+            <td>月流失率</td>
+            <td>5-8%</td>
+            <td><span class="highlight-num">3-5%</span></td>
+            <td>Focus Digital SaaS 基准</td>
+          </tr>
+          <tr>
+            <td>LTV:CAC</td>
+            <td>12-30x</td>
+            <td>目标 <span class="highlight-num">5-8x</span></td>
+            <td>SaaS 健康区间</td>
+          </tr>
+          <tr>
+            <td>盈亏平衡</td>
+            <td style="color:var(--text-muted);text-decoration:line-through;">200 用户</td>
+            <td><span class="highlight-num">300</span> (不含人力) / <span class="highlight-num">500+</span> (含人力)</td>
+            <td>毛利率修正后重算</td>
+          </tr>
+          <tr>
+            <td>M6 MRR</td>
+            <td style="color:var(--text-muted);text-decoration:line-through;">$2K+</td>
+            <td><span class="highlight-num">$800-1,500</span> (保守)</td>
+            <td>独立项目中位数</td>
+          </tr>
+          <tr>
+            <td>30 天 Star</td>
+            <td style="color:var(--text-muted);text-decoration:line-through;">+500</td>
+            <td><span class="highlight-num">+50-100</span></td>
+            <td>Fork 项目现实值</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>收入模式调整 (关键修正)</h3>
+    <div class="alert alert-warn">
+      <strong>重要调整</strong>
+      <p style="margin:0;color:inherit;"><strong>原方案：</strong>中转站差价 60% + 订阅 30% + Skills Hub 10%</p>
+      <p style="margin:8px 0 0;color:inherit;"><strong>修正后：</strong>纯 License 订阅为主 (毛利 85%) + Skills Hub (长期)</p>
+      <p style="margin:8px 0 0;color:inherit;"><strong>原因：</strong>中转站需增值电信许可证 (法律硬性障碍) + 中转毛利仅 30-50%，不值得冒合规风险。</p>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 5: 安装体验 ===== -->
+  <section id="installation">
+    <div class="section-label">Section 05</div>
+    <h2>安装体验设计</h2>
+
+    <p>目标：一键下载，双击安装，马上使用。MVP 开发时间 <span class="highlight-num">6-7</span> 个工作日（复用千牛项目经验）。</p>
+
+    <h3>三平台方案</h3>
+    <div class="grid-3">
+      <div class="feat-card">
+        <div class="card-num">PLATFORM 01</div>
+        <div class="card-title">Windows</div>
+        <div class="card-desc">PyInstaller <code>onedir</code> + NSIS 安装器，约 <span class="highlight-num">80MB</span>，内嵌 Python 3.11。</div>
+      </div>
+      <div class="feat-card">
+        <div class="card-num">PLATFORM 02</div>
+        <div class="card-title">macOS</div>
+        <div class="card-desc">PyInstaller <code>.app</code> + <code>create-dmg</code> 打包 <code>.dmg</code>，符合 macOS 用户习惯。</div>
+      </div>
+      <div class="feat-card">
+        <div class="card-num">PLATFORM 03</div>
+        <div class="card-title">Linux</div>
+        <div class="card-desc"><code>AppImage</code> 单文件零依赖 + <code>deb</code> 包，覆盖主流发行版。</div>
+      </div>
+    </div>
+
+    <h3>首次运行 Setup Wizard</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">选择 Provider</div>
+          <div class="step-desc">DeepSeek / Kimi / OpenRouter / OpenAI，下拉选择。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">粘贴 API Key</div>
+          <div class="step-desc">即时验证 + "获取 Key" 跳转链接，失败时给出精准错误提示。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">选择模型</div>
+          <div class="step-desc">Key 验证通过后自动拉取可用模型列表，不再手动填写。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">一键完成</div>
+          <div class="step-desc"><span class="highlight-num">73</span> 技能 + <span class="highlight-num">9</span> MCP + <span class="highlight-num">50</span> 钩子自动就绪，进入主界面。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 6: GTM ===== -->
+  <section id="gtm">
+    <div class="section-label">Section 06</div>
+    <h2>中国市场 GTM</h2>
+
+    <div class="alert alert-info">
+      <strong>差异化定位一句话</strong>
+      "Coze/通义是在线平台，BookwormPRO 跑在你自己电脑上 -- 73 个专家技能、数据自控、支持国产模型。"
+    </div>
+
+    <h3>渠道策略 TOP 5 (按 ROI 排序)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>渠道</th><th>说明</th><th>CAC 预估</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="highlight-num">1</td><td>GitHub + 技术社区</td><td>掘金 / V2EX / W2solo 首发</td><td><span class="badge badge-low">近零</span></td></tr>
+          <tr><td class="highlight-num">2</td><td>B站 + 抖音技术号</td><td>短视频"5 分钟完成 XX"</td><td><span class="badge badge-low">低</span></td></tr>
+          <tr><td class="highlight-num">3</td><td>微信生态</td><td>公众号 + 社群"一人公司 AI 研习社"</td><td><span class="badge badge-mid">中</span></td></tr>
+          <tr><td class="highlight-num">4</td><td>知乎专栏 + 即刻</td><td>回答高流量问题，长尾 SEO</td><td><span class="badge badge-low">低</span></td></tr>
+          <tr><td class="highlight-num">5</td><td>独立开发者大会 + Meetup</td><td>线下 Workshop，高质量用户</td><td><span class="badge badge-high">高</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>爆款内容 TOP 5</h3>
+    <div class="content-list">
+      <div class="content-item"><div class="content-rank">01</div><div class="content-text">《一人公司 AI 操作系统：<span class="highlight-num">73</span> 个 AI 专家即装即用》</div></div>
+      <div class="content-item"><div class="content-rank">02</div><div class="content-text">《DeepSeek + BookwormPRO：零成本本地 AI 全栈助理》</div></div>
+      <div class="content-item"><div class="content-rank">03</div><div class="content-text">《数据自主！自托管 AI Agent 对比 (BookwormPRO vs Coze vs Dify)》</div></div>
+      <div class="content-item"><div class="content-rank">04</div><div class="content-text">《用 AI 辅助写合同、查法规、做财报 -- 创业者的 BookwormPRO 实战》</div></div>
+      <div class="content-item"><div class="content-rank">05</div><div class="content-text">《独立开发者的 AI 工作流公开 (附配置文件)》</div></div>
+    </div>
+
+    <h3>本土化 P0 清单</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>事项</th></tr></thead>
+        <tbody>
+          <tr><td class="highlight-num">P0-1</td><td>中文 CLI 交互 + 中文错误提示</td></tr>
+          <tr><td class="highlight-num">P0-2</td><td>国产模型开箱即用 (DeepSeek / Kimi / GLM / 通义预置)</td></tr>
+          <tr><td class="highlight-num">P0-3</td><td>PyPI 镜像安装说明 (清华源 / 阿里源)</td></tr>
+          <tr><td class="highlight-num">P0-4</td><td>微信公众号 / 社群客服</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>30 天启动计划</h3>
+    <div class="week-grid">
+      <div class="week-card">
+        <div class="week-label">WEEK 1</div>
+        <ul>
+          <li>中文 README + 国产模型预置</li>
+          <li>建微信群 50 人</li>
+          <li>V2EX / 掘金首发</li>
+        </ul>
+      </div>
+      <div class="week-card">
+        <div class="week-label">WEEK 2</div>
+        <ul>
+          <li>B站首个演示视频</li>
+          <li>知乎 3 个高质量回答</li>
+          <li>即刻日更开启</li>
+        </ul>
+      </div>
+      <div class="week-card">
+        <div class="week-label">WEEK 3</div>
+        <ul>
+          <li>微信群 Workshop 直播</li>
+          <li>公众号深度案例文章</li>
+        </ul>
+      </div>
+      <div class="week-card">
+        <div class="week-label">WEEK 4</div>
+        <ul>
+          <li>KOL 评测上线</li>
+          <li>百度 SEO 布局</li>
+          <li>社区大使招募</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <strong>30 天目标</strong>
+      GitHub Star <span class="highlight-num">+50-100</span>&nbsp;&nbsp;|&nbsp;&nbsp;微信群 <span class="highlight-num">200</span> 人&nbsp;&nbsp;|&nbsp;&nbsp;PyPI 下载 <span class="highlight-num">1,000+</span>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 7: 执行清单 ===== -->
+  <section id="execution">
+    <div class="section-label">Section 07</div>
+    <h2>P0 执行清单</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>优先级</th><th>事项</th><th>耗时</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-high">P0</span></td>
+            <td>Windows <code>.exe</code> 安装器 (PyInstaller + NSIS)</td>
+            <td class="highlight-num">3-4 天</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-high">P0</span></td>
+            <td>README 修正 -- 删除不实声称，加诚实表述</td>
+            <td class="highlight-num">0.5 天</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-high">P0</span></td>
+            <td>收入模式确认：纯订阅，放弃中转差价</td>
+            <td style="color:var(--amber);">决策</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-mid">P1</span></td>
+            <td>国产模型预置 profile</td>
+            <td class="highlight-num">1 天</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-mid">P1</span></td>
+            <td>中文首发内容 (V2EX / 掘金)</td>
+            <td class="highlight-num">2 天</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-mid">P1</span></td>
+            <td>tkinter Setup Wizard GUI</td>
+            <td class="highlight-num">2 天</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-mid">P1</span></td>
+            <td>B站演示视频</td>
+            <td class="highlight-num">1 天</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-low">P2</span></td>
+            <td>macOS <code>.dmg</code> + Linux AppImage</td>
+            <td class="highlight-num">1.5 天</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-low">P2</span></td>
+            <td>Pro 版付费 + 微信 / 支付宝支付</td>
+            <td class="highlight-num">3 天</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-low">P2</span></td>
+            <td>GitHub Actions 三平台自动构建</td>
+            <td class="highlight-num">1 天</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 8: 风险矩阵 ===== -->
+  <section id="risks">
+    <div class="section-label">Section 08</div>
+    <h2>风险矩阵</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>风险</th><th>严重度</th><th>应对策略</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>上游 API 涨价/断供</td>
+            <td><span class="badge badge-high">高</span></td>
+            <td>多供应商冗余 + 本地模型支持路线</td>
+          </tr>
+          <tr>
+            <td>独立开发者精力瓶颈</td>
+            <td><span class="badge badge-high">高</span></td>
+            <td>Skills Hub 让社区贡献 + 收入后招第一人</td>
+          </tr>
+          <tr>
+            <td>大厂推类似 CLI Agent</td>
+            <td><span class="badge badge-mid">中</span></td>
+            <td>靠 Skill/Hook 生态护城河 + 中国本土化深耕</td>
+          </tr>
+          <tr>
+            <td>中转站合规风险</td>
+            <td><span class="badge badge-high">高</span></td>
+            <td style="color:#4ade80;">已决定放弃中转差价模式，规避增值电信许可证风险</td>
+          </tr>
+          <tr>
+            <td>Dify / n8n 生态碾压</td>
+            <td><span class="badge badge-mid">中</span></td>
+            <td>不对标，走 CLI 原生差异化，避免正面竞争</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== SECTION 9: 审查记录 ===== -->
+  <section id="review">
+    <div class="section-label">Section 09</div>
+    <h2>审查记录</h2>
+
+    <h3>三轮专家审查</h3>
+    <div class="round-grid">
+      <div class="round-card">
+        <div class="round-num">ROUND 01 — 方案设计</div>
+        <div class="round-label">2 位专家</div>
+        <div class="round-experts">定价策略专家 &nbsp;|&nbsp; 产品经理</div>
+      </div>
+      <div class="round-card">
+        <div class="round-num">ROUND 02 — 多维审查 v1</div>
+        <div class="round-label">4 位专家</div>
+        <div class="round-experts">投资分析师 &nbsp;|&nbsp; 增长黑客<br>系统架构师 &nbsp;|&nbsp; 财务顾问</div>
+      </div>
+      <div class="round-card">
+        <div class="round-num">ROUND 02 — 多维审查 v2 (新定位)</div>
+        <div class="round-label">4 位专家</div>
+        <div class="round-experts">竞品分析师 &nbsp;|&nbsp; 产品定位专家<br>安装体验专家 &nbsp;|&nbsp; 中国 GTM 专家</div>
+      </div>
+      <div class="round-card">
+        <div class="round-num">ROUND 03 — 事实核查</div>
+        <div class="round-label">4 位专家</div>
+        <div class="round-experts">行业调研 &nbsp;|&nbsp; 竞品验证<br>财务模型核查 &nbsp;|&nbsp; AI 幻觉审计</div>
+      </div>
+    </div>
+
+    <h3>关键数据来源</h3>
+    <div class="sources">
+      <div class="source-row">
+        <div class="source-label">Cursor ~$50B 估值</div>
+        <div class="source-ref">CNBC · 2026-04-19</div>
+      </div>
+      <div class="source-row">
+        <div class="source-label">Devin ~$25B 估值</div>
+        <div class="source-ref">Bloomberg · 2026-04-23</div>
+      </div>
+      <div class="source-row">
+        <div class="source-label">一人公司 1,600 万+</div>
+        <div class="source-ref">BBC 中文 / 新华网</div>
+      </div>
+      <div class="source-row">
+        <div class="source-label">个体工商户 1.25 亿</div>
+        <div class="source-ref">国家市场监督管理总局</div>
+      </div>
+      <div class="source-row">
+        <div class="source-label">AI 企业 509 万</div>
+        <div class="source-ref">天眼查 / 新浪财经</div>
+      </div>
+      <div class="source-row">
+        <div class="source-label">Freemium 转化率 3-5%</div>
+        <div class="source-ref">ChartMogul SaaS Benchmarks</div>
+      </div>
+      <div class="source-row">
+        <div class="source-label">AI SaaS 毛利 50-60%</div>
+        <div class="source-ref">Bessemer Venture Partners / Reddit 讨论</div>
+      </div>
+      <div class="source-row">
+        <div class="source-label">OpenRouter 手续费 5.5%</div>
+        <div class="source-ref">Hacker News</div>
+      </div>
+      <div class="source-row">
+        <div class="source-label">增值电信许可证要求</div>
+        <div class="source-ref">知乎 / 腾讯云文档</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== Footer ===== -->
+<footer>
+  <div>
+    <span class="footer-brand">BookwormPRO</span> &nbsp;
+    Generated by BookwormPRO Multi-Agent System &nbsp;|&nbsp; 16 Experts, 3 Rounds
+  </div>
+  <div>v3.0 Final &nbsp;|&nbsp; 2026-04-30</div>
+</footer>
+
+<script>
+  // Active nav highlight on scroll
+  (function () {
+    var sections = document.querySelectorAll('section[id]');
+    var navLinks = document.querySelectorAll('nav ul li a');
+
+    function onScroll() {
+      var scrollY = window.scrollY + 80;
+      var active = null;
+      sections.forEach(function (sec) {
+        if (sec.offsetTop <= scrollY) active = sec.id;
+      });
+      navLinks.forEach(function (link) {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + active);
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+</body>
+</html>

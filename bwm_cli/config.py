@@ -344,9 +344,6 @@ def _ensure_hermes_home_managed(home: Path):
 # =============================================================================
 
 DEFAULT_CONFIG = {
-    # UI display language: "zh_CN" (default), "en" for English.
-    # When empty/not set, auto-detects from LANG environment variable.
-    "language": "",
     "model": "",
     "providers": {},
     "fallback_providers": [],
@@ -709,7 +706,7 @@ DEFAULT_CONFIG = {
         "provider": "local",  # "local" (free, faster-whisper) | "groq" | "openai" (Whisper API) | "mistral" (Voxtral Transcribe)
         "local": {
             "model": "base",  # tiny, base, small, medium, large-v3
-            "language": "",  # auto-detect by default (zh_CN on Chinese systems); set to "en" for English, "zh_CN" for Chinese
+            "language": "",  # auto-detect by default; set to "en", "es", "fr", etc. to force
         },
         "openai": {
             "model": "whisper-1",  # whisper-1, gpt-4o-mini-transcribe, gpt-4o-transcribe

@@ -283,6 +283,7 @@ def _prompt_for_sudo_password(timeout_seconds: int = 45) -> str:
         try:
             return _sudo_cb() or ""
         except Exception:
+            logger.debug("sudo password callback failed", exc_info=True)
             return ""
 
     result = {"password": None, "done": False}
@@ -320,6 +321,7 @@ def _prompt_for_sudo_password(timeout_seconds: int = 45) -> str:
         except (EOFError, KeyboardInterrupt, OSError):
             result["password"] = ""
         except Exception:
+            logger.debug("password read thread failed", exc_info=True)
             result["password"] = ""
         finally:
             if tty_fd is not None and old_attrs is not None:

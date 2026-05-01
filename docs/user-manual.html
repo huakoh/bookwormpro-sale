@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookwormPRO 用户手册 v0.11.0</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222633;
+    --border: #2e3346;
+    --text: #e2e4ea;
+    --text-dim: #8b90a0;
+    --accent: #6c8cff;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --cyan: #22d3ee;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 0;
+  }
+
+  /* ── 侧边导航 ── */
+  .layout { display: flex; min-height: 100vh; }
+  nav {
+    width: 260px;
+    min-width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  nav .logo {
+    padding: 0 24px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  nav .logo h2 {
+    font-size: 18px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: .5px;
+  }
+  nav .logo span {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  nav a {
+    display: block;
+    padding: 7px 24px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13.5px;
+    transition: all .15s;
+    border-left: 3px solid transparent;
+  }
+  nav a:hover, nav a:focus {
+    color: var(--text);
+    background: rgba(108,140,255,.06);
+    border-left-color: var(--accent);
+  }
+  nav .section-title {
+    padding: 14px 24px 5px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  /* ── 主内容区 ── */
+  main {
+    flex: 1;
+    max-width: 900px;
+    padding: 48px 56px 80px;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 15px;
+    margin-bottom: 40px;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  h2:first-of-type { margin-top: 0; }
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 28px 0 10px;
+    color: var(--accent);
+  }
+  p { margin-bottom: 12px; }
+
+  /* ── 代码块 ── */
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--cyan);
+  }
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 12px 0 16px;
+    scrollbar-width: thin;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    color: var(--text);
+  }
+  .prompt::before { content: '$ '; color: var(--green); }
+
+  /* ── 卡片 ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 14px;
+    margin: 14px 0 20px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    transition: border-color .15s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card h4 {
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .card p {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ── 表格 ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    font-size: 13.5px;
+  }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  tr:hover td { background: rgba(108,140,255,.03); }
+
+  /* ── 标签 ── */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .badge-blue { background: rgba(108,140,255,.15); color: var(--accent); }
+  .badge-green { background: rgba(52,211,153,.15); color: var(--green); }
+  .badge-amber { background: rgba(251,191,36,.15); color: var(--amber); }
+  .badge-red { background: rgba(248,113,113,.15); color: var(--red); }
+
+  /* ── 提示框 ── */
+  .tip, .warn, .info {
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .tip  { background: rgba(52,211,153,.08); border-left: 3px solid var(--green); }
+  .warn { background: rgba(251,191,36,.08); border-left: 3px solid var(--amber); }
+  .info { background: rgba(108,140,255,.08); border-left: 3px solid var(--accent); }
+  .tip strong  { color: var(--green); }
+  .warn strong { color: var(--amber); }
+  .info strong { color: var(--accent); }
+
+  /* ── 快捷键 ── */
+  kbd {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--text-dim);
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  /* ── 响应式 ── */
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    nav {
+      width: 100%; min-width: 0;
+      height: auto; position: static;
+      display: flex; flex-wrap: wrap;
+      padding: 12px 16px; gap: 0;
+    }
+    nav .logo { width: 100%; padding: 0 0 10px; }
+    nav .section-title { display: none; }
+    nav a { padding: 5px 10px; font-size: 12px; border-left: 0; }
+    main { padding: 24px 20px 60px; }
+  }
+
+  /* ── 滚动条 ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── 锚点偏移 ── */
+  [id] { scroll-margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ════════ 侧边导航 ════════ -->
+<nav>
+  <div class="logo">
+    <h2>BookwormPRO</h2>
+    <span>用户手册 · v0.11.0</span>
+  </div>
+
+  <div class="section-title">快速开始</div>
+  <a href="#overview">产品简介</a>
+  <a href="#install">安装</a>
+  <a href="#setup">初始配置</a>
+  <a href="#first-chat">第一次对话</a>
+
+  <div class="section-title">核心功能</div>
+  <a href="#cli">命令行交互</a>
+  <a href="#slash">斜杠命令</a>
+  <a href="#models">模型 & 供应商</a>
+  <a href="#tools">工具系统</a>
+  <a href="#skills">技能系统</a>
+  <a href="#browser">浏览器</a>
+  <a href="#memory">记忆 & 上下文</a>
+
+  <div class="section-title">多平台</div>
+  <a href="#gateway">消息网关</a>
+  <a href="#platforms">支持平台</a>
+  <a href="#dashboard">Web 控制台</a>
+
+  <div class="section-title">高级功能</div>
+  <a href="#config">配置详解</a>
+  <a href="#terminal">终端后端</a>
+  <a href="#cron">定时任务</a>
+  <a href="#checkpoint">检查点 & 回滚</a>
+  <a href="#voice">语音模式</a>
+  <a href="#profiles">多配置文件</a>
+
+  <div class="section-title">参考</div>
+  <a href="#files">文件结构</a>
+  <a href="#env">环境变量速查</a>
+  <a href="#shortcuts">快捷键</a>
+  <a href="#faq">常见问题</a>
+</nav>
+
+<!-- ════════ 主内容 ════════ -->
+<main>
+
+<!-- ── 产品简介 ── -->
+<h1 id="overview">BookwormPRO</h1>
+<p class="subtitle">自托管、自进化的 AI Agent — CLI · 消息机器人 · Web 控制台</p>
+
+<p>BookwormPRO 是一个运行在你自己机器、VPS 或无服务器基础设施上的 AI 编程助手。它支持 <strong>30+ 大模型供应商</strong>、<strong>15+ 消息平台</strong>和 <strong>65+ 内置工具</strong>，通过闭环学习持续改进自身能力。</p>
+
+<div class="card-grid">
+  <div class="card">
+    <h4>多模型路由</h4>
+    <p>Anthropic、OpenAI、DeepSeek、Gemini、Qwen 等 30+ 供应商，自动故障转移</p>
+  </div>
+  <div class="card">
+    <h4>全平台交付</h4>
+    <p>CLI、Telegram、Discord、Slack、微信、钉钉、飞书等 15+ 消息平台</p>
+  </div>
+  <div class="card">
+    <h4>工具 & 技能</h4>
+    <p>65+ 内置工具 + 可扩展技能市场，从代码执行到浏览器控制</p>
+  </div>
+  <div class="card">
+    <h4>安全隔离</h4>
+    <p>Docker / SSH / Modal / Daytona 等多种沙箱后端，命令审批机制</p>
+  </div>
+</div>
+
+<!-- ── 安装 ── -->
+<h2 id="install">安装</h2>
+
+<h3>从源码安装（当前方式）</h3>
+<pre><code class="prompt">git clone https://github.com/huakoh/BookwormPRO.git
+cd BookwormPRO
+pip install -e .</code></pre>
+
+<div class="info"><strong>说明：</strong>BookwormPRO 尚未发布到 PyPI，当前需要 clone 仓库后本地安装。未来正式发布后可直接 <code>pip install bookwormpro</code>。</div>
+
+<h3>可选扩展</h3>
+<table>
+  <tr><th>扩展</th><th>功能</th><th>安装命令</th></tr>
+  <tr><td><code>[web]</code></td><td>Web 控制台</td><td><code>pip install bookwormpro[web]</code></td></tr>
+  <tr><td><code>[voice]</code></td><td>语音输入输出</td><td><code>pip install bookwormpro[voice]</code></td></tr>
+  <tr><td><code>[messaging]</code></td><td>全消息平台</td><td><code>pip install bookwormpro[messaging]</code></td></tr>
+  <tr><td><code>[cron]</code></td><td>定时调度</td><td><code>pip install bookwormpro[cron]</code></td></tr>
+  <tr><td><code>[mcp]</code></td><td>MCP 协议</td><td><code>pip install bookwormpro[mcp]</code></td></tr>
+  <tr><td><code>[honcho]</code></td><td>AI 记忆增强</td><td><code>pip install bookwormpro[honcho]</code></td></tr>
+</table>
+
+<div class="tip"><strong>提示：</strong>全量安装：<code>pip install -e ".[web,voice,messaging,cron,mcp,honcho]"</code></div>
+
+<h3>系统要求</h3>
+<ul>
+  <li>Python 3.11+</li>
+  <li>内存：5GB（可调）</li>
+  <li>模型要求最低 64K 上下文窗口</li>
+</ul>
+
+<!-- ── 初始配置 ── -->
+<h2 id="setup">初始配置</h2>
+
+<p>首次运行 <code>bookworm setup</code>，交互式向导会引导你完成：</p>
+<ol>
+  <li>选择 AI 供应商并输入 API Key</li>
+  <li>选择默认模型</li>
+  <li>配置终端后端（本地 / Docker / SSH）</li>
+  <li>（可选）配置消息平台</li>
+</ol>
+
+<pre><code class="prompt">bookworm setup</code></pre>
+
+<p>配置完成后，所有设置存储在：</p>
+<ul>
+  <li>主配置：<code>~/.bookwormpro/config.yaml</code></li>
+  <li>密钥文件：<code>~/.bookwormpro/.env</code></li>
+</ul>
+
+<!-- ── 第一次对话 ── -->
+<h2 id="first-chat">第一次对话</h2>
+
+<pre><code class="prompt">bookworm</code>
+<span style="color:var(--text-dim)"># 或显式进入对话模式</span>
+<code class="prompt">bookworm chat</code></pre>
+
+<p>进入交互界面后，直接输入自然语言即可。支持多行输入、历史记录和斜杠命令补全。</p>
+
+<div class="info"><strong>续接上次对话：</strong><code>bookworm -c</code> 或 <code>bookworm --continue</code></div>
+
+<!-- ── CLI 命令 ── -->
+<h2 id="cli">命令行交互</h2>
+
+<h3>顶层命令</h3>
+<table>
+  <tr><th>命令</th><th>说明</th></tr>
+  <tr><td><code>bookworm</code></td><td>启动交互式对话</td></tr>
+  <tr><td><code>bookworm --tui</code></td><td>现代 TUI 界面（支持鼠标、悬浮面板）</td></tr>
+  <tr><td><code>bookworm -c</code></td><td>继续上次会话</td></tr>
+  <tr><td><code>bookworm setup</code></td><td>交互式配置向导</td></tr>
+  <tr><td><code>bookworm model</code></td><td>切换模型</td></tr>
+  <tr><td><code>bookworm tools</code></td><td>管理工具开关</td></tr>
+  <tr><td><code>bookworm config</code></td><td>查看当前配置</td></tr>
+  <tr><td><code>bookworm gateway start</code></td><td>启动消息网关服务</td></tr>
+  <tr><td><code>bookworm dashboard</code></td><td>启动 Web 控制台</td></tr>
+  <tr><td><code>bookworm doctor</code></td><td>诊断配置问题</td></tr>
+  <tr><td><code>bookworm status</code></td><td>查看所有组件状态</td></tr>
+  <tr><td><code>bookworm version</code></td><td>版本信息</td></tr>
+  <tr><td><code>bookworm update</code></td><td>更新到最新版</td></tr>
+</table>
+
+<!-- ── 斜杠命令 ── -->
+<h2 id="slash">斜杠命令</h2>
+
+<p>在对话中输入 <code>/</code> 前缀触发。支持 Tab 补全。</p>
+
+<h3>会话管理</h3>
+<table>
+  <tr><th>命令</th><th>说明</th></tr>
+  <tr><td><code>/new</code></td><td>开始新会话</td></tr>
+  <tr><td><code>/history</code></td><td>查看当前会话历史</td></tr>
+  <tr><td><code>/save</code></td><td>保存当前会话</td></tr>
+  <tr><td><code>/branch [name]</code></td><td>分支当前会话（探索不同方向）</td></tr>
+  <tr><td><code>/resume [name]</code></td><td>恢复已命名的会话</td></tr>
+  <tr><td><code>/retry</code></td><td>重试上一条消息</td></tr>
+  <tr><td><code>/undo</code></td><td>撤销最后一轮对话</td></tr>
+  <tr><td><code>/rollback [n]</code></td><td>回滚文件系统检查点</td></tr>
+  <tr><td><code>/compress</code></td><td>手动压缩上下文</td></tr>
+</table>
+
+<h3>模型 & 配置</h3>
+<table>
+  <tr><th>命令</th><th>说明</th></tr>
+  <tr><td><code>/model [provider:model]</code></td><td>切换当前会话模型</td></tr>
+  <tr><td><code>/reasoning [level]</code></td><td>调整推理深度 (none → xhigh)</td></tr>
+  <tr><td><code>/fast</code></td><td>切换快速模式</td></tr>
+  <tr><td><code>/personality [name]</code></td><td>设置预设人格</td></tr>
+  <tr><td><code>/yolo</code></td><td>切换 YOLO 模式（跳过命令审批）</td></tr>
+  <tr><td><code>/verbose</code></td><td>循环切换工具输出详细度</td></tr>
+</table>
+
+<h3>工具 & 技能</h3>
+<table>
+  <tr><th>命令</th><th>说明</th></tr>
+  <tr><td><code>/tools list</code></td><td>列出所有可用工具</td></tr>
+  <tr><td><code>/skills search &lt;keyword&gt;</code></td><td>搜索技能</td></tr>
+  <tr><td><code>/skills install &lt;path&gt;</code></td><td>安装技能</td></tr>
+  <tr><td><code>/cron</code></td><td>管理定时任务</td></tr>
+  <tr><td><code>/browser connect</code></td><td>连接浏览器工具</td></tr>
+  <tr><td><code>/reload-mcp</code></td><td>重载 MCP 服务器</td></tr>
+</table>
+
+<h3>实用命令</h3>
+<table>
+  <tr><th>命令</th><th>说明</th></tr>
+  <tr><td><code>/bg &lt;prompt&gt;</code></td><td>后台运行任务</td></tr>
+  <tr><td><code>/btw &lt;question&gt;</code></td><td>临时侧问（不影响上下文）</td></tr>
+  <tr><td><code>/copy</code></td><td>复制最后回复到剪贴板</td></tr>
+  <tr><td><code>/paste</code></td><td>粘贴剪贴板图片</td></tr>
+  <tr><td><code>/image &lt;path&gt;</code></td><td>附加本地图片</td></tr>
+  <tr><td><code>/usage</code></td><td>查看 Token 用量</td></tr>
+  <tr><td><code>/cost</code></td><td>查看费用统计</td></tr>
+  <tr><td><code>/status</code></td><td>会话信息</td></tr>
+</table>
+
+<!-- ── 模型 & 供应商 ── -->
+<h2 id="models">模型 & 供应商</h2>
+
+<p>BookwormPRO 支持 <strong>30+ AI 供应商</strong>，统一接口切换。</p>
+
+<h3>主流供应商</h3>
+<table>
+  <tr><th>供应商</th><th>代表模型</th><th>环境变量</th></tr>
+  <tr><td>Anthropic</td><td>Claude Opus / Sonnet / Haiku</td><td><code>ANTHROPIC_API_KEY</code></td></tr>
+  <tr><td>OpenAI</td><td>GPT-4o, o1, o3</td><td><code>OPENAI_API_KEY</code></td></tr>
+  <tr><td>DeepSeek</td><td>DeepSeek-V4-Pro</td><td><code>DEEPSEEK_API_KEY</code></td></tr>
+  <tr><td>Google</td><td>Gemini 2.5 Pro/Flash</td><td><code>GOOGLE_API_KEY</code></td></tr>
+  <tr><td>Alibaba</td><td>Qwen 3</td><td><code>DASHSCOPE_API_KEY</code></td></tr>
+  <tr><td>xAI</td><td>Grok</td><td><code>XAI_API_KEY</code></td></tr>
+  <tr><td>OpenRouter</td><td>200+ 模型聚合</td><td><code>OPENROUTER_API_KEY</code></td></tr>
+  <tr><td>AWS Bedrock</td><td>Claude / Mistral 等</td><td>AWS 凭证链</td></tr>
+  <tr><td>Kimi / Moonshot</td><td>Kimi K2</td><td><code>KIMI_API_KEY</code></td></tr>
+  <tr><td>MiniMax</td><td>MiniMax</td><td><code>MINIMAX_API_KEY</code></td></tr>
+</table>
+
+<h3>自定义端点</h3>
+<p>支持任何 OpenAI 兼容 API（vLLM、llama.cpp、LiteLLM 等）：</p>
+<pre><code>providers:
+  custom:
+    base_url: http://localhost:8000/v1
+    api_key: sk-xxx
+    model: my-local-model</code></pre>
+
+<h3>故障转移</h3>
+<p>配置 <code>fallback_providers</code> 实现主供应商故障时自动切换：</p>
+<pre><code>fallback_providers:
+  - anthropic
+  - openrouter
+  - deepseek</code></pre>
+
+<!-- ── 工具系统 ── -->
+<h2 id="tools">工具系统</h2>
+
+<p>BookwormPRO 内置 65+ 工具，AI 根据任务自动选择调用。</p>
+
+<div class="card-grid">
+  <div class="card">
+    <h4>文件 & 代码</h4>
+    <p>读写文件、应用补丁、执行 Python/Shell、自动检查点</p>
+  </div>
+  <div class="card">
+    <h4>Web & 浏览器</h4>
+    <p>搜索、抓取、无头浏览器导航、表单填充、截图</p>
+  </div>
+  <div class="card">
+    <h4>AI 生成</h4>
+    <p>DALL-E / Flux 图片生成、TTS 语音合成、OCR 识别</p>
+  </div>
+  <div class="card">
+    <h4>平台集成</h4>
+    <p>飞书文档、Discord、Home Assistant、MCP 协议</p>
+  </div>
+  <div class="card">
+    <h4>系统自动化</h4>
+    <p>Cron 调度、子 Agent 委派、进程管理、会话搜索</p>
+  </div>
+  <div class="card">
+    <h4>安全</h4>
+    <p>命令审批、URL 安全检查、漏洞扫描 (OSV)</p>
+  </div>
+</div>
+
+<p>管理工具：<code>/tools list</code> 查看，<code>/tools disable &lt;name&gt;</code> 禁用。</p>
+
+<!-- ── 技能系统 ── -->
+<h2 id="skills">技能系统</h2>
+
+<p>技能是可复用的工作流程，通过 <strong>agentskills.io</strong> 技能市场安装，或本地创建。</p>
+
+<pre><code class="prompt">bookworm
+<span style="color:var(--text-dim)"># 在对话中：</span>
+/skills search "data analysis"
+/skills install data-science/pandas-expert
+/skills browse</code></pre>
+
+<h3>内置技能分类</h3>
+<div class="card-grid">
+  <div class="card"><h4>software-development</h4><p>代码审查、重构、测试</p></div>
+  <div class="card"><h4>data-science</h4><p>数据分析、可视化、ML</p></div>
+  <div class="card"><h4>devops</h4><p>CI/CD、部署、监控</p></div>
+  <div class="card"><h4>red-teaming</h4><p>安全测试、渗透</p></div>
+  <div class="card"><h4>creative</h4><p>写作、设计、媒体</p></div>
+  <div class="card"><h4>productivity</h4><p>任务管理、笔记</p></div>
+</div>
+
+<div class="tip"><strong>自学习：</strong>技能在使用过程中会自我改进，每次调用都可能优化流程。</div>
+
+<!-- ── 浏览器 ── -->
+<h2 id="browser">浏览器</h2>
+
+<p>通过 Chrome DevTools Protocol 连接真实浏览器，支持导航、截图、表单操作、JS 执行。</p>
+
+<pre><code>/browser connect           <span style="color:var(--text-dim)"># 连接浏览器</span>
+/browser status            <span style="color:var(--text-dim)"># 查看状态</span>
+/browser disconnect        <span style="color:var(--text-dim)"># 断开</span></code></pre>
+
+<h3>配置项</h3>
+<pre><code>browser:
+  inactivity_timeout: 120    <span style="color:var(--text-dim)"># 空闲超时秒数</span>
+  command_timeout: 30        <span style="color:var(--text-dim)"># 命令超时</span>
+  record_sessions: false     <span style="color:var(--text-dim)"># 录制视频</span>
+  allow_private_urls: false  <span style="color:var(--text-dim)"># 允许 localhost</span>
+  cdp_url: ""                <span style="color:var(--text-dim)"># 持久化 CDP 端点</span></code></pre>
+
+<!-- ── 记忆 ── -->
+<h2 id="memory">记忆 & 上下文</h2>
+
+<h3>自动上下文压缩</h3>
+<p>当上下文使用率超过阈值时自动压缩，保留最近 N 条消息：</p>
+<pre><code>compression:
+  enabled: true
+  threshold: 0.50       <span style="color:var(--text-dim)"># 50% 时触发</span>
+  target_ratio: 0.20    <span style="color:var(--text-dim)"># 保留尾部 20%</span>
+  protect_last_n: 20    <span style="color:var(--text-dim)"># 保护最近 20 条</span></code></pre>
+
+<h3>Honcho AI 记忆</h3>
+<p>可选的外部记忆系统，支持辩证式用户建模和持久化知识库。</p>
+<pre><code class="prompt">bookworm honcho setup     <span style="color:var(--text-dim)"># 配置</span>
+bookworm honcho status    <span style="color:var(--text-dim)"># 状态</span>
+bookworm honcho mode hybrid  <span style="color:var(--text-dim)"># 混合模式</span></code></pre>
+
+<h3>会话搜索</h3>
+<p>全文检索历史会话，LLM 辅助摘要：</p>
+<pre><code class="prompt">bookworm sessions browse</code></pre>
+
+<!-- ── 消息网关 ── -->
+<h2 id="gateway">消息网关</h2>
+
+<p>将 BookwormPRO 连接到消息平台，作为 Bot 运行。</p>
+
+<pre><code class="prompt">bookworm gateway start    <span style="color:var(--text-dim)"># 启动服务</span>
+bookworm gateway status   <span style="color:var(--text-dim)"># 查看状态</span>
+bookworm gateway stop     <span style="color:var(--text-dim)"># 停止</span>
+bookworm gateway install  <span style="color:var(--text-dim)"># 安装为系统服务</span></code></pre>
+
+<h3>配置示例（Telegram）</h3>
+<pre><code><span style="color:var(--text-dim)"># ~/.bookwormpro/.env</span>
+TELEGRAM_BOT_TOKEN=123456:ABCxyz...
+
+<span style="color:var(--text-dim)"># ~/.bookwormpro/config.yaml</span>
+gateway:
+  telegram_token: "${TELEGRAM_BOT_TOKEN}"
+  allowed_users: ["@your_username"]</code></pre>
+
+<!-- ── 支持平台 ── -->
+<h2 id="platforms">支持平台</h2>
+
+<table>
+  <tr><th>平台</th><th>协议</th><th>特性</th></tr>
+  <tr><td>Telegram</td><td>Bot API</td><td>完整媒体、内联键盘</td></tr>
+  <tr><td>Discord</td><td>Bot</td><td>语音消息、线程</td></tr>
+  <tr><td>Slack</td><td>Bot</td><td>工作区集成、线程</td></tr>
+  <tr><td>WhatsApp</td><td>Twilio / BlueBubbles</td><td>私信</td></tr>
+  <tr><td>Signal</td><td>Signal CLI</td><td>端到端加密</td></tr>
+  <tr><td>微信</td><td>WeChat Bot</td><td>中国生态</td></tr>
+  <tr><td>企业微信</td><td>WeCom API</td><td>企业集成</td></tr>
+  <tr><td>钉钉</td><td>DingTalk Bot</td><td>群机器人</td></tr>
+  <tr><td>飞书</td><td>Lark Bot</td><td>文档 & 云盘联动</td></tr>
+  <tr><td>QQ</td><td>QQ Bot</td><td>STT / TTS</td></tr>
+  <tr><td>Matrix</td><td>Matrix SDK</td><td>联邦制 + 加密</td></tr>
+  <tr><td>Mattermost</td><td>Bot</td><td>自托管 Slack 替代</td></tr>
+  <tr><td>Email</td><td>IMAP/SMTP</td><td>邮件触发</td></tr>
+  <tr><td>Home Assistant</td><td>HA API</td><td>智能家居</td></tr>
+  <tr><td>SMS</td><td>Twilio</td><td>短信</td></tr>
+</table>
+
+<!-- ── Web 控制台 ── -->
+<h2 id="dashboard">Web 控制台</h2>
+
+<pre><code class="prompt">bookworm dashboard              <span style="color:var(--text-dim)"># 默认 http://127.0.0.1:9119</span>
+bookworm dashboard --port 8080  <span style="color:var(--text-dim)"># 自定义端口</span></code></pre>
+
+<p>功能：配置管理、会话浏览器、日志查看、模型切换、实时状态监控。</p>
+<div class="warn"><strong>安全：</strong>控制台默认只监听 localhost，CORS 限制本地访问。生产环境请配置反向代理 + HTTPS。</div>
+
+<!-- ── 配置详解 ── -->
+<h2 id="config">配置详解</h2>
+
+<p>所有非密钥配置存储在 <code>~/.bookwormpro/config.yaml</code>，密钥存储在 <code>.env</code>。</p>
+
+<h3>核心配置</h3>
+<pre><code><span style="color:var(--text-dim)"># 默认模型</span>
+model: anthropic/claude-sonnet-4-6
+
+<span style="color:var(--text-dim)"># Agent 行为</span>
+max_turns: 90              <span style="color:var(--text-dim)"># 最大对话轮次</span>
+api_max_retries: 3         <span style="color:var(--text-dim)"># API 重试次数</span>
+
+<span style="color:var(--text-dim)"># 提示缓存 (Anthropic)</span>
+prompt_caching:
+  cache_ttl: "5m"          <span style="color:var(--text-dim)"># 5m 或 1h</span>
+
+<span style="color:var(--text-dim)"># 工具输出限制</span>
+tool_output:
+  max_bytes: 50000
+  max_lines: 2000
+  max_line_length: 2000</code></pre>
+
+<h3>修改配置</h3>
+<pre><code class="prompt">bookworm config set model deepseek/deepseek-v4-pro
+bookworm config edit        <span style="color:var(--text-dim)"># 在编辑器中打开</span>
+bookworm config wizard      <span style="color:var(--text-dim)"># 重新向导</span></code></pre>
+
+<!-- ── 终端后端 ── -->
+<h2 id="terminal">终端后端</h2>
+
+<p>BookwormPRO 支持多种沙箱化执行环境：</p>
+
+<table>
+  <tr><th>后端</th><th>说明</th><th>配置</th></tr>
+  <tr><td><span class="badge badge-green">local</span></td><td>本地执行（默认）</td><td><code>backend: local</code></td></tr>
+  <tr><td><span class="badge badge-blue">docker</span></td><td>Docker 容器隔离</td><td><code>backend: docker</code></td></tr>
+  <tr><td><span class="badge badge-blue">ssh</span></td><td>远程 SSH 执行</td><td><code>backend: ssh</code></td></tr>
+  <tr><td><span class="badge badge-amber">modal</span></td><td>无服务器（按需启停）</td><td><code>backend: modal</code></td></tr>
+  <tr><td><span class="badge badge-amber">daytona</span></td><td>无服务器工作区</td><td><code>backend: daytona</code></td></tr>
+  <tr><td><span class="badge badge-red">singularity</span></td><td>HPC 容器</td><td><code>backend: singularity</code></td></tr>
+</table>
+
+<h3>Docker 示例</h3>
+<pre><code>terminal:
+  backend: docker
+  docker_image: nikolaik/python-nodejs:python3.11-nodejs20
+  docker_volumes:
+    - "/home/user/workspace:/workspace"
+  container_cpu: 2
+  container_memory: 8192
+  container_persistent: true</code></pre>
+
+<h3>SSH 示例</h3>
+<pre><code>terminal:
+  backend: ssh
+  ssh_host: my-server.com
+  ssh_user: root
+  ssh_key: ~/.ssh/id_rsa</code></pre>
+
+<!-- ── 定时任务 ── -->
+<h2 id="cron">定时任务</h2>
+
+<p>用自然语言创建定时任务，BookwormPRO 自动执行并通过消息平台推送结果。</p>
+
+<pre><code>/cron add "每天早上 9 点检查服务器状态并汇报"
+/cron add "每周五下午 5 点生成周报"
+/cron list
+/cron pause &lt;id&gt;
+/cron remove &lt;id&gt;</code></pre>
+
+<pre><code class="prompt">bookworm cron list
+bookworm cron status</code></pre>
+
+<!-- ── 检查点 ── -->
+<h2 id="checkpoint">检查点 & 回滚</h2>
+
+<p>每次破坏性文件操作前自动创建检查点，支持一键回滚。</p>
+
+<pre><code>/rollback           <span style="color:var(--text-dim)"># 查看可用检查点</span>
+/rollback 3         <span style="color:var(--text-dim)"># 回滚到检查点 #3</span>
+/snapshot create    <span style="color:var(--text-dim)"># 手动创建快照</span>
+/snapshot prune     <span style="color:var(--text-dim)"># 清理旧快照</span></code></pre>
+
+<pre><code>checkpoints:
+  enabled: true
+  max_snapshots: 50</code></pre>
+
+<!-- ── 语音模式 ── -->
+<h2 id="voice">语音模式</h2>
+
+<p>按 <kbd>Ctrl</kbd>+<kbd>B</kbd> 录音，自动转写为文字输入。回复可朗读。</p>
+
+<pre><code>/voice on     <span style="color:var(--text-dim)"># 开启语音</span>
+/voice off    <span style="color:var(--text-dim)"># 关闭</span>
+/voice tts    <span style="color:var(--text-dim)"># 仅语音输出</span>
+/voice status <span style="color:var(--text-dim)"># 查看状态</span></code></pre>
+
+<p>支持引擎：Edge TTS（免费）、ElevenLabs（高质量）。语音识别：Faster-Whisper（本地）。</p>
+
+<!-- ── 多配置文件 ── -->
+<h2 id="profiles">多配置文件</h2>
+
+<p>为不同项目或身份创建隔离的配置环境：</p>
+
+<pre><code class="prompt">bookworm --profile work     <span style="color:var(--text-dim)"># 使用 "work" 配置</span>
+bookworm --profile personal <span style="color:var(--text-dim)"># 使用 "personal" 配置</span></code></pre>
+
+<p>每个 Profile 有独立的 <code>config.yaml</code>、<code>.env</code>、会话历史和技能目录。</p>
+
+<!-- ── 文件结构 ── -->
+<h2 id="files">文件结构</h2>
+
+<pre><code>~/.bookwormpro/
+├── config.yaml          <span style="color:var(--text-dim)"># 主配置</span>
+├── .env                 <span style="color:var(--text-dim)"># API 密钥</span>
+├── auth.json            <span style="color:var(--text-dim)"># OAuth 令牌状态</span>
+├── agent.log            <span style="color:var(--text-dim)"># 运行日志</span>
+├── errors.log           <span style="color:var(--text-dim)"># 错误日志</span>
+├── sessions/            <span style="color:var(--text-dim)"># 会话存储</span>
+│   └── *.json
+├── skills/              <span style="color:var(--text-dim)"># 已安装技能</span>
+├── memory/              <span style="color:var(--text-dim)"># 持久化记忆</span>
+├── checkpoints/         <span style="color:var(--text-dim)"># 文件系统快照</span>
+└── profiles/            <span style="color:var(--text-dim)"># 多配置文件</span>
+    └── work/
+        ├── config.yaml
+        └── .env</code></pre>
+
+<!-- ── 环境变量速查 ── -->
+<h2 id="env">环境变量速查</h2>
+
+<p>在 <code>~/.bookwormpro/.env</code> 中配置：</p>
+
+<table>
+  <tr><th>变量</th><th>供应商</th></tr>
+  <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Anthropic Claude</td></tr>
+  <tr><td><code>OPENAI_API_KEY</code></td><td>OpenAI</td></tr>
+  <tr><td><code>DEEPSEEK_API_KEY</code></td><td>DeepSeek</td></tr>
+  <tr><td><code>GOOGLE_API_KEY</code></td><td>Google Gemini</td></tr>
+  <tr><td><code>OPENROUTER_API_KEY</code></td><td>OpenRouter</td></tr>
+  <tr><td><code>DASHSCOPE_API_KEY</code></td><td>阿里通义</td></tr>
+  <tr><td><code>KIMI_API_KEY</code></td><td>Kimi / Moonshot</td></tr>
+  <tr><td><code>XAI_API_KEY</code></td><td>xAI Grok</td></tr>
+  <tr><td><code>MINIMAX_API_KEY</code></td><td>MiniMax</td></tr>
+  <tr><td><code>HF_TOKEN</code></td><td>Hugging Face</td></tr>
+  <tr><td><code>TELEGRAM_BOT_TOKEN</code></td><td>Telegram Bot</td></tr>
+  <tr><td><code>DISCORD_BOT_TOKEN</code></td><td>Discord Bot</td></tr>
+  <tr><td><code>SLACK_BOT_TOKEN</code></td><td>Slack Bot</td></tr>
+</table>
+
+<!-- ── 快捷键 ── -->
+<h2 id="shortcuts">快捷键</h2>
+
+<table>
+  <tr><th>快捷键</th><th>功能</th></tr>
+  <tr><td><kbd>Tab</kbd></td><td>自动补全斜杠命令</td></tr>
+  <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>中断当前操作</td></tr>
+  <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>录音（语音模式）</td></tr>
+  <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>退出</td></tr>
+  <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>历史记录导航</td></tr>
+</table>
+
+<!-- ── FAQ ── -->
+<h2 id="faq">常见问题</h2>
+
+<h3>如何切换模型？</h3>
+<p>对话中输入 <code>/model deepseek/deepseek-v4-pro</code>，或命令行运行 <code>bookworm model</code>。</p>
+
+<h3>如何排查连接问题？</h3>
+<pre><code class="prompt">bookworm doctor</code></pre>
+<p>自动诊断 API 连通性、配置完整性、依赖状态。</p>
+
+<h3>如何从 OpenClaw 迁移？</h3>
+<pre><code class="prompt">bookworm claw migrate --dry-run  <span style="color:var(--text-dim)"># 预览</span>
+bookworm claw migrate            <span style="color:var(--text-dim)"># 执行迁移</span></code></pre>
+
+<h3>API Key 放在哪里？</h3>
+<p>统一存放在 <code>~/.bookwormpro/.env</code>，不要写入 <code>config.yaml</code>。</p>
+
+<h3>YOLO 模式安全吗？</h3>
+<p>YOLO 模式跳过所有危险命令审批。仅建议在 Docker 等隔离环境中使用。</p>
+
+<h3>如何限制 Token 消耗？</h3>
+<p>使用 <code>/reasoning none</code> 减少推理 Token，<code>/fast</code> 启用快速模式，或选择更小的模型。</p>
+
+<!-- ── 页脚 ── -->
+<div style="margin-top:64px; padding-top:24px; border-top:1px solid var(--border); color:var(--text-dim); font-size:12px; text-align:center;">
+  BookwormPRO v7.0.0 · 用户手册 · 2026-04-29<br>
+  自托管 · 自进化 · 你的 AI，你做主
+</div>
+
+</main>
+</div>
+
+</body>
+</html>

@@ -37,6 +37,8 @@ def _deserialize_value(value: str) -> Any:
         pass
 
     try:
+        # SECURITY: ast.literal_eval is safe (only literals).
+        # NEVER replace with eval() — LLM output is untrusted input.
         return ast.literal_eval(value)
     except (ValueError, SyntaxError, TypeError):
         pass

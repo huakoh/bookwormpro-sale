@@ -7,6 +7,7 @@
 <p align="center">
   <a href="https://bookwormpro.local/docs/"><img src="https://img.shields.io/badge/Docs-bookworm--agent.bookwormpro.local-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="https://discord.gg/BookwormPRO"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="https://pypi.org/project/bookwormpro/"><img src="https://img.shields.io/pypi/v/bookwormpro?style=for-the-badge&color=blue" alt="PyPI"></a>
   <a href="https://github.com/huakoh/BookwormPRO/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://bookwormpro.local"><img src="https://img.shields.io/badge/Built%20by-BookwormPRO%20Research-blueviolet?style=for-the-badge" alt="Built by BookwormPRO Project"></a>
 </p>
@@ -28,6 +29,23 @@ Use any model you want — [BookwormPRO Portal](), [OpenRouter](https://openrout
 ---
 
 ## Quick Install
+
+### Option 1: pip (recommended)
+
+```bash
+pip install bookwormpro
+```
+
+Install with optional extras as needed:
+
+```bash
+pip install "bookwormpro[all]"        # everything
+pip install "bookwormpro[messaging]"  # Telegram, Discord, Slack, WhatsApp, Signal
+pip install "bookwormpro[voice]"      # local speech-to-text
+pip install "bookwormpro[web]"        # bookworm dashboard (localhost SPA)
+```
+
+### Option 2: install script
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.sh | bash
@@ -196,7 +214,7 @@ uv pip install -e ".[all,dev]"
 scripts/run_tests.sh
 ```
 
-> **RL Training (optional):** The RL/Atropos integration (`environments/`) ships via the `atroposlib` and `tinker` dependencies pulled in by `.[all,dev]` — no submodule setup required.
+> **RL Training (optional):** The RL/Atropos integration (`environments/`) requires `atroposlib` and `tinker`, which must be installed manually from their Git repos (they are not on PyPI). See `rl_cli.py --help` for details.
 
 ---
 

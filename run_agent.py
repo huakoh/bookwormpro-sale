@@ -7675,13 +7675,14 @@ class AIAgent:
             raw_reasoning_content = getattr(assistant_message, "reasoning_content", None)
             if raw_reasoning_content is not None:
                 msg["reasoning_content"] = _sanitize_surrogates(raw_reasoning_content)
-            elif self._needs_deepseek_tool_reasoning() or (
-                assistant_message.tool_calls and self._needs_kimi_tool_reasoning()
+            elif assistant_message.tool_calls and (
+                self._needs_deepseek_tool_reasoning()
+                or self._needs_kimi_tool_reasoning()
             ):
-                # DeepSeek thinking mode requires reasoning_content on EVERY
-                # assistant message (not just tool-call turns). Kimi only
-                # requires it on tool-call turns. Pin "" at creation time so
-                # nothing gets persisted poisoned (refs #15250, #16100).
+                # DeepSeek / Kimi thinking mode require reasoning_content on
+                # every assistant tool-call message. Without it, replaying
+                # the persisted message causes HTTP 400. Pin "" at creation
+                # time so nothing gets persisted poisoned (refs #15250).
                 msg["reasoning_content"] = ""
 
         if hasattr(assistant_message, 'reasoning_details') and assistant_message.reasoning_details:
@@ -7802,11 +7803,13 @@ class AIAgent:
             api_msg["reasoning_content"] = normalized_reasoning
             return
 
-        # DeepSeek thinking mode requires reasoning_content on EVERY
-        # assistant message; Kimi only on tool-call turns. Keep in sync
-        # with _build_assistant_message (#15250, #16100).
-        if self._needs_deepseek_tool_reasoning() or (
-            source_msg.get("tool_calls") and self._needs_kimi_tool_reasoning()
+        # Providers that require an echoed reasoning_content on every
+        # assistant tool-call turn. Detection logic lives in the per-provider
+        # helpers so both the creation path (_build_assistant_message) and
+        # this replay path stay in sync.
+        if source_msg.get("tool_calls") and (
+            self._needs_kimi_tool_reasoning()
+            or self._needs_deepseek_tool_reasoning()
         ):
             api_msg["reasoning_content"] = ""
 

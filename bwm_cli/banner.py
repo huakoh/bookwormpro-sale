@@ -286,7 +286,7 @@ def get_latest_release_tag(repo_dir: Optional[Path] = None) -> Optional[tuple]:
 
 def format_banner_version_label() -> str:
     """Return the version label shown in the startup banner title."""
-    return f"BookwormPRO v{VERSION} ({RELEASE_DATE})"
+    return f"BookwormPRO v{VERSION}"
 
 
 # =========================================================================
@@ -528,10 +528,10 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
         pass
 
 
-    # Box 2: Xinlin Tech (bottom-left)
-    b2_t1 = "  [bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/]  "
-    b2_t2 = "  [dim italic]智能驱动 · 科技赋能[/]  "
-    b2_w = 30
+    # Box 2: Xinlin Tech — 紧凑右对齐 (贴文字 · 左栏右下角)
+    b2_t1 = " [bold bright_cyan]鑫霖科技[/]  [dim white]XINLIN TECH[/] [dim]│[/] "
+    b2_t2 = "   [dim italic]智能驱动 · 科技赋能[/]   "
+    b2_w = 25
     b2_p = LEFT_W - b2_w - 2  # right-aligned
     _bl = [
         f"{' ' * b2_p}[dim {dim}]╭{'─' * b2_w}╮[/]",
@@ -539,11 +539,8 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
         f"{' ' * b2_p}[dim {dim}]│[/]{b2_t2}[dim {dim}]│[/]",
         f"{' ' * b2_p}[dim {dim}]╰{'─' * b2_w}╯[/]",
     ]
-    _pad = max(3, len(right_lines) - len(left_lines) - len(_bl) + 4)
-    for _i in range(_pad):
-        left_lines.append("")
-    left_lines.extend(_bl)
     left_lines.append("")
+    left_lines.extend(_bl)
     left_content = "\n".join(left_lines)
 
     right_content = "\n".join(right_lines)

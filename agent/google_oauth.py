@@ -81,6 +81,11 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 ENV_CLIENT_ID = "BOOKWORMPRO_GEMINI_CLIENT_ID"
+# SECURITY: Desktop OAuth with PKCE does NOT treat the client_secret as
+# confidential — the secret is shipped in the source and verified on the
+# client side only for the code_verifier exchange.  The real security
+# guarantee comes from the PKCE code_challenge/code_verifier flow, not
+# from keeping this value secret.  See RFC 7636 and the comment block above.
 ENV_CLIENT_SECRET = "BOOKWORMPRO_GEMINI_CLIENT_SECRET"
 
 # Public gemini-cli desktop OAuth client (shipped in Google's open-source

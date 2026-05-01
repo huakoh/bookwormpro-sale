@@ -48,6 +48,8 @@ def _try_convert_value(value: str) -> Any:
 
     # Try Python literal eval (handles tuples, etc.)
     try:
+        # SECURITY: ast.literal_eval is safe (only literals).
+        # NEVER replace with eval() — LLM output is untrusted input.
         return ast.literal_eval(stripped)
     except (ValueError, SyntaxError, TypeError):
         pass

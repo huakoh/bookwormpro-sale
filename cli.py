@@ -708,7 +708,6 @@ from cron import get_job
 from tools.terminal_tool import cleanup_all_environments as _cleanup_all_terminals
 from tools.terminal_tool import set_sudo_password_callback, set_approval_callback
 from tools.skills_tool import set_secret_capture_callback
-from bwm_cli.i18n import _
 from bwm_cli.callbacks import prompt_for_secret
 from tools.browser_tool import _emergency_cleanup_all_sessions as _cleanup_all_browsers
 
@@ -885,7 +884,7 @@ def _setup_worktree(repo_root: str = None) -> Optional[Dict[str, str]]:
         "repo_root": repo_root,
     }
 
-    print(_("\033[32m[成功] Worktree created:\033[0m {path}").format(path=wt_path))
+    print(f"\033[32m[成功] Worktree created:\033[0m {wt_path}")
     print(f"  Branch: {branch_name}")
 
     return info
@@ -927,7 +926,7 @@ def _cleanup_worktree(info: Dict[str, str] = None) -> None:
         has_unpushed = True  # Assume unpushed on error — don't delete
 
     if has_unpushed:
-        print(_("\n\033[33m[警告] Worktree has unpushed commits, keeping: {path}\033[0m").format(path=wt_path))
+        print(f"\n\033[33m[警告] Worktree has unpushed commits, keeping: {wt_path}\033[0m")
         print(f"  To clean up manually: git worktree remove --force {wt_path}")
         _active_worktree = None
         return
@@ -952,7 +951,7 @@ def _cleanup_worktree(info: Dict[str, str] = None) -> None:
         logger.debug("Failed to delete branch %s: %s", branch, e)
 
     _active_worktree = None
-    print(_("\033[32m[成功] Worktree cleaned up: {path}\033[0m").format(path=wt_path))
+    print(f"\033[32m[成功] Worktree cleaned up: {wt_path}\033[0m")
 
 
 def _run_state_db_auto_maintenance(session_db) -> None:
@@ -3123,7 +3122,7 @@ class HermesCLI:
                             "Primary provider auth failed (%s). Falling through to fallback: %s/%s",
                             _primary_exc, _fb_provider, _fb_model,
                         )
-                        _cprint(_("[警告]  Primary auth failed — switching to fallback: {provider} / {model}").format(provider=_fb_provider, model=_fb_model))
+                        _cprint(f"[警告]  Primary auth failed — switching to fallback: {_fb_provider} / {_fb_model}")
                         self.requested_provider = _fb_provider
                         self.model = _fb_model
                         _primary_exc = None
@@ -3970,7 +3969,7 @@ class HermesCLI:
 
         print(f"  Stopping {len(running)} background process(es)...")
         killed = process_registry.kill_all()
-        print(_("  [成功] Stopped {count} process(es).").format(count=killed))
+        print(f"  [成功] Stopped {killed} process(es).")
 
     def _handle_agents_command(self):
         """Handle /agents — show background processes and agent status."""
@@ -4137,7 +4136,7 @@ class HermesCLI:
                         f"image_url: {img_path}]"
                     )
                     if announce:
-                        _cprint(_("{prefix}[成功] image analyzed{suffix}").format(prefix=_DIM, suffix=_RST))
+                        _cprint(f"  {_DIM}[成功] image analyzed{_RST}")
                 else:
                     enriched_parts.append(
                         f"[The user attached an image but it couldn't be analyzed. "
@@ -4145,7 +4144,7 @@ class HermesCLI:
                         f"image_url: {img_path}]"
                     )
                     if announce:
-                        _cprint(_("{prefix}[警告] vision analysis failed — path included for retry{suffix}").format(prefix=_DIM, suffix=_RST))
+                        _cprint(f"  {_DIM}[警告] vision analysis failed — path included for retry{_RST}")
             except Exception as e:
                 enriched_parts.append(
                     f"[The user attached an image but analysis failed ({e}). "
@@ -4153,7 +4152,7 @@ class HermesCLI:
                     f"image_url: {img_path}]"
                 )
                 if announce:
-                    _cprint(_("{prefix}[警告] vision analysis error — path included for retry{suffix}").format(prefix=_DIM, suffix=_RST))
+                    _cprint(f"  {_DIM}[警告] vision analysis error — path included for retry{_RST}")
 
         # Combine: vision descriptions first, then the user's original text
         user_text = text if isinstance(text, str) and text else ""
@@ -5159,7 +5158,7 @@ class HermesCLI:
         )
 
         provider_label = result.provider_label or result.target_provider
-        _cprint(_("  [成功] Model switched: {model}").format(model=result.new_model))
+        _cprint(f"  [成功] Model switched: {result.new_model}")
         _cprint(f"    Provider: {provider_label}")
 
         mi = result.model_info
@@ -5384,7 +5383,7 @@ class HermesCLI:
 
         # Display confirmation with full metadata
         provider_label = result.provider_label or result.target_provider
-        _cprint(_("  [成功] Model switched: {model}").format(model=result.new_model))
+        _cprint(f"  [成功] Model switched: {result.new_model}")
         _cprint(f"    Provider: {provider_label}")
 
         # Context: always resolve via the provider-aware chain so Codex OAuth,
@@ -5660,8 +5659,8 @@ class HermesCLI:
             print()
             print("  Commands:")
             print("    /cron list")
-            print(_('    /cron add "every 2h" "Check server status" [--skill blogwatcher]'))
-            print(_('    /cron edit <job_id> --schedule "every 4h" --prompt "New task"'))
+            print('    /cron add "every 2h" "Check server status" [--skill blogwatcher]')
+            print('    /cron edit <job_id> --schedule "every 4h" --prompt "New task"')
             print("    /cron edit <job_id> --skill blogwatcher --skill maps")
             print("    /cron edit <job_id> --remove-skill blogwatcher")
             print("    /cron edit <job_id> --clear-skills")
@@ -5702,7 +5701,7 @@ class HermesCLI:
                 return
 
             print()
-            print(_("Scheduled Jobs:"))
+            print("Scheduled Jobs:")
             print("-" * 80)
             for job in jobs:
                 print(f"  ID: {job['job_id']}")
@@ -6109,10 +6108,10 @@ class HermesCLI:
                 mgr = get_plugin_manager()
                 plugins = mgr.list_plugins()
                 if not plugins:
-                    print(_("No plugins installed."))
-                    print(_("Drop plugin directories into {home}/plugins/ to get started.").format(home=display_hermes_home()))
+                    print("No plugins installed.")
+                    print(f"Drop plugin directories into {display_hermes_home()}/plugins/ to get started.")
                 else:
-                    print(_("Plugins ({count}):").format(count=len(plugins)))
+                    print(f"Plugins ({len(plugins)}):")
                     for p in plugins:
                         status = "[成功]" if p["enabled"] else "[失败]"
                         version = f" v{p['version']}" if p["version"] else ""
@@ -6124,7 +6123,7 @@ class HermesCLI:
                         error = f" — {p['error']}" if p["error"] else ""
                         print(f"  {status} {p['name']}{version}{detail}{error}")
             except Exception as e:
-                print(_("Plugin system error: {error}").format(error=e))
+                print(f"Plugin system error: {e}")
         elif canonical == "rollback":
             self._handle_rollback_command(cmd_original)
         elif canonical == "snapshot":
@@ -6179,8 +6178,6 @@ class HermesCLI:
             self._handle_voice_command(cmd_original)
         elif canonical == "busy":
             self._handle_busy_command(cmd_original)
-        elif canonical == "soul":
-            self._handle_soul_command(cmd_original)
         else:
             # Check for user-defined quick commands (bypass agent loop, no LLM call)
             base_cmd = cmd_lower.split()[0]
@@ -6380,7 +6377,7 @@ class HermesCLI:
                     time.sleep(0.05)  # brief pause for refresh
                 print()
                 ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
-                _cprint(_("  [成功] Background task #{num} complete").format(num=task_num))
+                _cprint(f"  [成功] Background task #{task_num} complete")
                 _cprint(f"  Prompt: \"{prompt[:60]}{'...' if len(prompt) > 60 else ''}\"")
                 ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
                 if response:
@@ -6630,7 +6627,7 @@ class HermesCLI:
                 pass
 
             if _already_open:
-                print(_("   [成功] Chrome is already listening on port {port}").format(port=_port))
+                print(f"   [成功] Chrome is already listening on port {_port}")
             elif cdp_url == _DEFAULT_CDP:
                 # Try to auto-launch Chrome with remote debugging
                 print("   Chrome isn't running with remote debugging — attempting to launch...")
@@ -6648,12 +6645,12 @@ class HermesCLI:
                         except (OSError, socket.timeout):
                             time.sleep(0.5)
                     if _already_open:
-                        print(_("   [成功] Chrome launched and listening on port {port}").format(port=_port))
+                        print(f"   [成功] Chrome launched and listening on port {_port}")
                     else:
-                        print(_("   [警告] Chrome launched but port {port} is not responding yet").format(port=_port))
+                        print(f"   [警告] Chrome launched but port {_port} isn't responding yet")
                         print("     Try again in a few seconds — the debug instance may still be starting")
                 else:
-                    print(_("   [警告] Could not auto-launch Chrome"))
+                    print("   [警告] Could not auto-launch Chrome")
                     # Show manual instructions as fallback
                     _data_dir = str(_hermes_home / "chrome-debug")
                     sys_name = _plat.system()
@@ -6679,7 +6676,7 @@ class HermesCLI:
                     print(f"     Launch Chrome manually:")
                     print(f"     {chrome_cmd}")
             else:
-                print(_("   [警告] Port {port} is not reachable at {url}").format(port=_port, url=cdp_url))
+                print(f"   [警告] Port {_port} is not reachable at {cdp_url}")
 
             os.environ["BROWSER_CDP_URL"] = cdp_url
             # Eagerly start the CDP supervisor so pending_dialogs + frame_tree
@@ -6727,7 +6724,7 @@ class HermesCLI:
                     )
             else:
                 print()
-                print(_("Browser is not connected to live Chrome (already using default mode)"))
+                print("Browser is not connected to live Chrome (already using default mode)")
                 print()
 
         elif sub == "status":
@@ -6747,9 +6744,9 @@ class HermesCLI:
                     s.settimeout(1)
                     s.connect(("127.0.0.1", _port))
                     s.close()
-                    print(_("   Status: [成功] reachable"))
+                    print("   Status: [成功] reachable")
                 except (OSError, Exception):
-                    print(_("   Status: [警告] not reachable (Chrome may not be running)"))
+                    print("   Status: [警告] not reachable (Chrome may not be running)")
             else:
                 try:
                     from tools.browser_tool import _get_cloud_provider
@@ -6768,7 +6765,7 @@ class HermesCLI:
 
         else:
             print()
-            print(_("Usage: /browser connect|disconnect|status"))
+            print("Usage: /browser connect|disconnect|status")
             print()
             print("   connect      Connect browser tools to your live Chrome session")
             print("   disconnect   Revert to default browser backend")
@@ -6780,7 +6777,7 @@ class HermesCLI:
         try:
             from bwm_cli.skin_engine import list_skins, set_active_skin, get_active_skin_name
         except ImportError:
-            print(_("Skin engine not available."))
+            print("Skin engine not available.")
             return
 
         parts = cmd.strip().split(maxsplit=1)
@@ -6897,7 +6894,7 @@ class HermesCLI:
             if self.agent:
                 self.agent.reasoning_callback = self._current_reasoning_callback()
             save_config_value("display.show_reasoning", True)
-            _cprint(_("{prefix}[成功] Reasoning display: ON (saved){suffix}").format(prefix=_ACCENT, suffix=_RST))
+            _cprint(f"  {_ACCENT}[成功] Reasoning display: ON (saved){_RST}")
             _cprint(f"  {_DIM}  Model thinking will be shown during and after each response.{_RST}")
             return
         if arg in ("hide", "off"):
@@ -6905,7 +6902,7 @@ class HermesCLI:
             if self.agent:
                 self.agent.reasoning_callback = self._current_reasoning_callback()
             save_config_value("display.show_reasoning", False)
-            _cprint(_("{prefix}[成功] Reasoning display: OFF (saved){suffix}").format(prefix=_ACCENT, suffix=_RST))
+            _cprint(f"  {_ACCENT}[成功] Reasoning display: OFF (saved){_RST}")
             return
 
         # Effort level change
@@ -7078,24 +7075,6 @@ class HermesCLI:
 
             except Exception as e:
                 print(f"  [失败] Compression failed: {e}")
-
-    def _handle_soul_command(self, cmd: str):
-        """Handle /soul [audit|drift] command."""
-        import subprocess, sys
-        parts = cmd.strip().split()
-        sub = parts[1] if len(parts) > 1 else 'audit'
-        script = os.path.expanduser('~/.claude/scripts/soul-drift.py')
-        if sub == 'drift':
-            result = subprocess.run([sys.executable, script], capture_output=True, text=True)
-            self._console_print(result.stdout)
-        else:
-            result = subprocess.run([sys.executable, script, '--cron'], capture_output=True, text=True)
-            self._console_print(f'[bold]soul.md Self-Audit[/]')
-            self._console_print(result.stdout)
-            # Also show full report
-            result2 = subprocess.run([sys.executable, script], capture_output=True, text=True)
-            for line in result2.stdout.strip().split(chr(10)):
-                self._console_print(line)
 
     def _handle_debug_command(self):
         """Handle /debug — upload debug report + logs and print paste URLs."""
@@ -7878,8 +7857,8 @@ class HermesCLI:
             else:
                 self._enable_voice_mode()
         else:
-            _cprint(_("Unknown voice subcommand: {cmd}").format(cmd=subcommand))
-            _cprint(_("Usage: /voice [on|off|tts|status]"))
+            _cprint(f"Unknown voice subcommand: {subcommand}")
+            _cprint("Usage: /voice [on|off|tts|status]")
 
     def _voice_beeps_enabled(self) -> bool:
         """Return whether CLI voice mode should play record start/stop beeps."""
@@ -8977,16 +8956,16 @@ class HermesCLI:
                 except Exception:
                     pass
 
-            print(_("Resume this session with:"))
+            print("Resume this session with:")
             print(f"  bookworm --resume {self.session_id}")
             if session_title:
                 print(f"  bookworm -c \"{session_title}\"")
             print()
-            print(_("Session:        {sid}").format(sid=self.session_id))
+            print(f"Session:        {self.session_id}")
             if session_title:
                 print(f"Title:          {session_title}")
-            print(_("Duration:       {d}").format(d=duration_str))
-            print(_("Messages:       {total} ({user} user, {tools} tool calls)").format(total=msg_count, user=user_msgs, tools=tool_calls))
+            print(f"Duration:       {duration_str}")
+            print(f"Messages:       {msg_count} ({user_msgs} user, {tool_calls} tool calls)")
         else:
             try:
                 from bwm_cli.skin_engine import get_active_goodbye
@@ -11011,7 +10990,7 @@ def main(
     if gateway:
         import asyncio
         from gateway.run import start_gateway
-        print(_("Starting BookwormPRO Gateway (messaging platforms)..."))
+        print("Starting BookwormPRO Gateway (messaging platforms)...")
         asyncio.run(start_gateway())
         return
 

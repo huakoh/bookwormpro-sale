@@ -18,7 +18,6 @@ import platform
 import subprocess
 from pathlib import Path
 
-from bwm_cli.i18n import _
 from bwm_constants import get_hermes_home
 from typing import Any, Dict, List, Optional, Tuple
 from utils import normalize_proxy_env_vars
@@ -900,7 +899,7 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
     auth_url = f"https://claude.ai/oauth/authorize?{urlencode(params)}"
 
     print()
-    print(_("Authorize BookwormPRO with your Claude Pro/Max subscription."))
+    print("Authorize BookwormPRO with your Claude Pro/Max subscription.")
     print()
     print("╭─ Claude Pro/Max Authorization ────────────────────╮")
     print("│                                                   │")
@@ -917,7 +916,7 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
         pass
 
     print()
-    print(_("After authorizing, you'll see a code. Paste it below."))
+    print("After authorizing, you'll see a code. Paste it below.")
     print()
     try:
         auth_code = input("Authorization code: ").strip()
@@ -925,7 +924,7 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
         return None
 
     if not auth_code:
-        print(_("No code entered."))
+        print("No code entered.")
         return None
 
     splits = auth_code.split("#")
@@ -965,7 +964,7 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
     expires_in = result.get("expires_in", 3600)
 
     if not access_token:
-        print(_("No access token in response."))
+        print("No access token in response.")
         return None
 
     expires_at_ms = int(time.time() * 1000) + (expires_in * 1000)

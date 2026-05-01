@@ -1,5 +1,4 @@
 """
-from bwm_cli.i18n import _
 BookwormPRO Uninstaller.
 
 Provides options for:
@@ -12,7 +11,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from bwm_cli.i18n import _
 from bwm_constants import get_hermes_home
 
 from bwm_cli.colors import Colors, color
@@ -209,7 +207,7 @@ def uninstall_gateway_service():
 def _is_default_hermes_home(hermes_home: Path) -> bool:
     """Return True when ``hermes_home`` points at the default (non-profile) root."""
     try:
-        from bwm_cli.i18n import _
+        from bwm_constants import get_default_hermes_root
         return hermes_home.resolve() == get_default_hermes_root().resolve()
     except Exception:
         return False
@@ -304,7 +302,7 @@ def run_uninstall(args):
     print()
     
     # Show what will be affected
-    print(color(_("Current Installation:"), Colors.CYAN, Colors.BOLD))
+    print(color("Current Installation:", Colors.CYAN, Colors.BOLD))
     print(f"  Code:    {project_root}")
     print(f"  Config:  {hermes_home / 'config.yaml'}")
     print(f"  Secrets: {hermes_home / '.env'}")
@@ -312,34 +310,34 @@ def run_uninstall(args):
     print()
 
     if named_profiles:
-        print(color(_("Other profiles detected:"), Colors.CYAN, Colors.BOLD))
+        print(color("Other profiles detected:", Colors.CYAN, Colors.BOLD))
         for p in named_profiles:
             running = " (gateway running)" if getattr(p, "gateway_running", False) else ""
             print(f"  • {p.name}{running}: {p.path}")
         print()
     
     # Ask for confirmation
-    print(color(_("Uninstall Options:"), Colors.YELLOW, Colors.BOLD))
+    print(color("Uninstall Options:", Colors.YELLOW, Colors.BOLD))
     print()
-    print(_("  1) ") + color(_("Keep data"), Colors.GREEN) + _(" - Remove code only, keep configs/sessions/logs"))
+    print("  1) " + color("Keep data", Colors.GREEN) + " - Remove code only, keep configs/sessions/logs")
     print("     (Recommended - you can reinstall later with your settings intact)")
     print()
-    print(_("  2) ") + color(_("Full uninstall"), Colors.RED) + _(" - Remove everything including all data"))
+    print("  2) " + color("Full uninstall", Colors.RED) + " - Remove everything including all data")
     print("     (Warning: This deletes all configs, sessions, and logs permanently)")
     print()
-    print(_("  3) ") + color(_("Cancel"), Colors.CYAN) + _(" - Don't uninstall"))
+    print("  3) " + color("Cancel", Colors.CYAN) + " - Don't uninstall")
     print()
     
     try:
         choice = input(color("Select option [1/2/3]: ", Colors.BOLD)).strip()
     except (KeyboardInterrupt, EOFError):
         print()
-        print(_("Cancelled."))
+        print("Cancelled.")
         return
     
     if choice == "3" or choice.lower() in ("c", "cancel", "q", "quit", "n", "no"):
         print()
-        print(_("Uninstall cancelled."))
+        print("Uninstall cancelled.")
         return
     
     full_uninstall = (choice == "2")
@@ -362,7 +360,7 @@ def run_uninstall(args):
             )).strip().lower()
         except (KeyboardInterrupt, EOFError):
             print()
-            print(_("Cancelled."))
+            print("Cancelled.")
             return
         remove_profiles = resp in ("y", "yes")
 
@@ -378,23 +376,23 @@ def run_uninstall(args):
                 Colors.RED
             ))
     else:
-        print(_("This will remove the BookwormPRO code but keep your configuration and data."))
+        print("This will remove the BookwormPRO code but keep your configuration and data.")
     
     print()
     try:
         confirm = input(f"Type '{color('yes', Colors.YELLOW)}' to confirm: ").strip().lower()
     except (KeyboardInterrupt, EOFError):
         print()
-        print(_("Cancelled."))
+        print("Cancelled.")
         return
     
     if confirm != "yes":
         print()
-        print(_("Uninstall cancelled."))
+        print("Uninstall cancelled.")
         return
     
     print()
-    print(color(_("Uninstalling..."), Colors.CYAN, Colors.BOLD))
+    print(color("Uninstalling...", Colors.CYAN, Colors.BOLD))
     print()
     
     # 1. Stop and uninstall gateway service + kill standalone processes
@@ -469,15 +467,15 @@ def run_uninstall(args):
     print()
     
     if not full_uninstall:
-        print(color(_("Your configuration and data have been preserved:"), Colors.CYAN))
+        print(color("Your configuration and data have been preserved:", Colors.CYAN))
         print(f"  {hermes_home}/")
         print()
-        print(_("To reinstall later with your existing settings:"))
+        print("To reinstall later with your existing settings:")
         print(color("  curl -fsSL https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.sh | bash", Colors.DIM))
         print()
     
-    print(color(_("Reload your shell to complete the process:"), Colors.YELLOW))
+    print(color("Reload your shell to complete the process:", Colors.YELLOW))
     print("  source ~/.bashrc  # or ~/.zshrc")
     print()
-    print(_("Thank you for using BookwormPRO! [BWM]"))
+    print("Thank you for using BookwormPRO! [BWM]")
     print()

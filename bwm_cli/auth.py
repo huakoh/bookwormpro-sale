@@ -77,6 +77,16 @@ DEFAULT_COPILOT_ACP_BASE_URL = "acp://copilot"
 DEFAULT_OLLAMA_CLOUD_BASE_URL = "https://ollama.com/v1"
 STEPFUN_STEP_PLAN_INTL_BASE_URL = "https://api.stepfun.ai/step_plan/v1"
 STEPFUN_STEP_PLAN_CN_BASE_URL = "https://api.stepfun.com/step_plan/v1"
+
+# NOTE: The OAuth client IDs below are PUBLIC values — they are embedded in
+# every copy of the BookwormPRO source. They identify the app to the
+# authorization server but do NOT authenticate the app by themselves. For
+# production deployments where you want to use your own OAuth application,
+# set these via environment variables instead:
+#   CODEX_OAUTH_CLIENT_ID  /  CODEX_OAUTH_TOKEN_URL
+#   QWEN_OAUTH_CLIENT_ID   /  QWEN_OAUTH_TOKEN_URL
+# These constants serve as reasonable defaults for open-source BookwormPRO users.
+
 CODEX_OAUTH_CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
 CODEX_OAUTH_TOKEN_URL = "https://auth.openai.com/oauth/token"
 CODEX_ACCESS_TOKEN_REFRESH_SKEW_SECONDS = 120
