@@ -473,6 +473,18 @@ def create_job(
     normalized_provider = str(provider).strip() if isinstance(provider, str) else None
     normalized_base_url = str(base_url).strip().rstrip("/") if isinstance(base_url, str) else None
     normalized_model = normalized_model or None
+    # Auto-resolve default model from config to prevent empty model errors
+    if not normalized_model:
+        try:
+            from bwm_cli.config import load_config
+            cfg = load_config()
+            mc = cfg.get('model', {})
+            if isinstance(mc, dict):
+                normalized_model = mc.get('default') or None
+            elif isinstance(mc, str):
+                normalized_model = mc
+        except Exception:
+            pass
     normalized_provider = normalized_provider or None
     normalized_base_url = normalized_base_url or None
     normalized_script = str(script).strip() if isinstance(script, str) else None

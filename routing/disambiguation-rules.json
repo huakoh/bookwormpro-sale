@@ -1,9 +1,9 @@
 {
   "_meta": {
-    "version": "v1.7",
+    "version": "v1.9",
     "description": "消歧规则外部化 — v6.5.1 扩展至 93 条，R81-R83 新增路由精准度修复 (bookworm自检→self-auditor, 自动修复→self-healer, 裸字自动 BAE penalty) | v1.5 (2026-04-24): R84-R88 Bookworm 元词路由修复 | L1d (2026-04-25): R84/R86 追加无 bookworm 短词分支 (路由分析/钩子管线/系统自检 等) | L1d (2026-04-25): R84/R86 追加无 bookworm 短词分支 (路由分析/钩子管线/系统自检 等) | v1.5.1 (2026-04-25): R89 路由自愈场景修复 (D1 Q7) | v1.5.2 (2026-04-25): R87 penalty 清理 + R84 L1d 业务前缀扩展",
     "generatedFrom": "route-analyzer.js DISAMBIGUATION_RULES (v6.5.1 消歧 83 条)",
-    "ruleCount": 118,
+    "ruleCount": 125,
     "changelog": [
       "v1.6 (16 new rules): R94-R109 — golden-set accuracy fixes (api-designer, golang-pro, nextjs, python-pro, typescript-pro, legal, data-analyst, planning, ultimate-code, devops-vpn, flutter, vue, k8s, terraform, regex, mcp-probe)",
       "R01: 添加 mutual_exclusion 注解，memory leak 场景排除 performance-expert 误触",
@@ -1444,6 +1444,78 @@
         "mobile-expert"
       ],
       "weight": 0.5
+    },
+    {
+      "id": "R119",
+      "note": "Google服务 → google-workspace",
+      "trigger": "Google\\s+Calendar|Google\\s+Drive|Google\\s+Workspace|Gmail",
+      "boost": "google-workspace",
+      "penalty": [
+        "developer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R120",
+      "note": "Notion → notion",
+      "trigger": "\\bNotion\\b.*页面|\\bNotion\\b.*数据库|\\bNotion\\b.*管理",
+      "boost": "notion",
+      "penalty": [
+        "database-tuning-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R121",
+      "note": "SVG架构图 → architecture-diagram",
+      "trigger": "SVG.*架构图|暗色.*主题.*架构|dark.*theme.*diagram",
+      "boost": "architecture-diagram",
+      "penalty": [
+        "architect-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R122",
+      "note": "ASCII art → ascii-art",
+      "trigger": "ASCII\\s+art|文字.*艺术.*生成|ascii.*文字",
+      "boost": "ascii-art",
+      "penalty": [
+        "ui-ux-pro-max"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R123",
+      "note": "AI伦理→ ai-philosophy-expert",
+      "trigger": "AI.*伦理|AI.*偏见|AI.*对齐|AI.*哲学",
+      "boost": "ai-philosophy-expert",
+      "penalty": [
+        "reviewer-expert",
+        "security-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R124",
+      "note": "代码审计漏洞→ devsecops-expert",
+      "trigger": "代码.*审计.*漏洞|安全.*扫描.*代码|SAST|SCA.*扫描",
+      "boost": "devsecops-expert",
+      "penalty": [
+        "reviewer-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R125",
+      "note": "screenpipe清理→ browser-automation",
+      "trigger": "清理.*screenpipe|screenpipe.*清理",
+      "boost": "browser-automation-expert",
+      "penalty": [
+        "devops-expert",
+        "project-audit-expert"
+      ],
+      "weight": 0.4
     }
   ]
 }
