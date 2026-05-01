@@ -9387,6 +9387,16 @@ class AIAgent:
         # conversation and being visible to the user or the model as user text.
         if isinstance(user_message, str):
             user_message = sanitize_context(user_message)
+
+        # === BWR 路由注入 (v7.0.0) ===
+        # 非侵入式: 导入失败时静默降级
+        try:
+            from routing.bwr_hook import BWRHook
+            _bwr = BWRHook()
+            user_message = _bwr.inject_directive(user_message)
+        except Exception:
+            pass  # BWR 不可用时降级，不影响主流程
+
         if isinstance(persist_user_message, str):
             persist_user_message = sanitize_context(persist_user_message)
 
