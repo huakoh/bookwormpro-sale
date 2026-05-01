@@ -2863,6 +2863,12 @@ def cmd_model(args):
     select_provider_and_model(args=args)
 
 
+def cmd_fallback_handler(args):
+    """Manage fallback provider chain."""
+    from bwm_cli.fallback_cmd import cmd_fallback
+    cmd_fallback(args)
+
+
 
 
 

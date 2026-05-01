@@ -104,6 +104,8 @@ COMMAND_REGISTRY: list[CommandDef] = [
     CommandDef("config", "Show current configuration", "Configuration",
                cli_only=True),
     CommandDef("model", "Switch model for this session", "Configuration", args_hint="[model] [--provider name] [--global]"),
+    CommandDef("fallback", "Manage fallback provider chain (list/add/remove/clear)", "Configuration", args_hint="[list|add|remove|clear]"),
+
     CommandDef("gquota", "Show Google Gemini Code Assist quota usage", "Info",
                cli_only=True),
 

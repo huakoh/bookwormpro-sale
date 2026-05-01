@@ -52,6 +52,12 @@ def _load_skill_payload(skill_identifier: str, task_id: str | None = None) -> tu
         return None
 
     skill_name = str(loaded_skill.get("name") or normalized)
+    # Track skill usage for curator lifecycle management
+    try:
+        from tools.skill_usage import bump_use
+        bump_use(skill_name)
+    except Exception:
+        pass
     skill_path = str(loaded_skill.get("path") or "")
     skill_dir = None
     # Prefer the absolute skill_dir returned by skill_view() — this is
