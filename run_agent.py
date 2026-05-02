@@ -82,6 +82,11 @@ from tools.browser_tool import cleanup_browser
 from agent.memory_manager import build_memory_context_block, sanitize_context
 from agent.retry_utils import jittered_backoff
 from agent.error_classifier import classify_api_error, FailoverReason
+from agent.circuit_breaker import allow as _cb_allow, report_success as _cb_success, report_failure as _cb_failure
+from agent.response_validator import validate_response as _validate_response_schema
+from agent.provider_health import check_before_call as _check_provider_health, HealthStatus
+from agent.dns_resolver import resolve_provider as _dns_resolve, invalidate_provider as _dns_invalidate
+from agent.metrics_store import record_api_success as _metrics_ok, record_api_failure as _metrics_fail, record_circuit_trip as _metrics_trip
 from agent.prompt_builder import (
     DEFAULT_AGENT_IDENTITY, PLATFORM_HINTS,
     MEMORY_GUIDANCE, SESSION_SEARCH_GUIDANCE, SKILLS_GUIDANCE,
@@ -833,6 +838,18 @@ def _qwen_portal_headers() -> dict:
     }
 
 
+# Per-provider connection pool limits (max_connections, max_keepalive).
+_POOL_LIMITS = {
+    'anthropic':     {'max_connections': 5,  'max_keepalive': 3},
+    'deepseek':      {'max_connections': 20, 'max_keepalive': 10},
+    'openrouter':    {'max_connections': 15, 'max_keepalive': 8},
+    'bookwormpro':   {'max_connections': 10, 'max_keepalive': 5},
+    'qwen':          {'max_connections': 10, 'max_keepalive': 5},
+    'xai':           {'max_connections': 10, 'max_keepalive': 5},
+    'kimi':          {'max_connections': 10, 'max_keepalive': 5},
+    'default':       {'max_connections': 10, 'max_keepalive': 5},
+}
+
 class AIAgent:
     """
     AI Agent with tool calling capabilities.
@@ -1113,6 +1130,12 @@ class AIAgent:
         self._execution_thread_id: int | None = None  # Set at run_conversation() start
         self._interrupt_thread_signal_pending = False
         self._client_lock = threading.RLock()
+        self._draining = False
+        self._drain_deadline: float = 0.0
+        self._drain_active_requests: int = 0
+        self._http_client_pool = {}
+        self._http_pool_last_use = {}
+        self._http_pool_lock = threading.Lock()
 
         # /steer mechanism — inject a user note into the next tool result
         # without interrupting the agent. Unlike interrupt(), steer() does
@@ -4279,20 +4302,27 @@ class AIAgent:
         except Exception:
             pass
 
+    def drain(self, max_wait: float | None = None) -> bool:
+        """Begin graceful shutdown: stop new calls, wait for active ones."""
+        import time as _t
+        if max_wait is None:
+            _env = os.getenv("BOOKWORMPRO_DRAIN_MAX_WAIT", ""); max_wait = float(_env) if _env else 25.0
+        self._draining = True
+        self._drain_deadline = _t.time() + max_wait
+        logger.info("Graceful drain - max %.0fs, %d active %s", max_wait, self._drain_active_requests, self._client_log_context())
+        while self._drain_active_requests > 0:
+            if _t.time() >= self._drain_deadline:
+                logger.warning("Drain timeout with %d active %s", self._drain_active_requests, self._client_log_context())
+                return False
+            _t.sleep(0.1)
+        logger.info("Drain complete %s", self._client_log_context())
+        return True
+
     def close(self) -> None:
-        """Release all resources held by this agent instance.
-
-        Cleans up subprocess resources that would otherwise become orphans:
-        - Background processes tracked in ProcessRegistry
-        - Terminal sandbox environments
-        - Browser daemon sessions
-        - Active child agents (subagent delegation)
-        - OpenAI/httpx client connections
-
-        Safe to call multiple times (idempotent).  Each cleanup step is
-        independently guarded so a failure in one does not prevent the rest.
-        """
+        """Release all resources held by this agent instance."""
         task_id = getattr(self, "session_id", None) or ""
+        if not getattr(self, '_draining', False):
+            self.drain(max_wait=5.0)
 
         # 1. Kill background processes for this task
         try:
@@ -4332,6 +4362,21 @@ class AIAgent:
             if client is not None:
                 self._close_openai_client(client, reason="agent_close", shared=True)
                 self.client = None
+        except Exception:
+            pass
+
+        # 6. Close pooled HTTP connection pool
+        try:
+            with self._http_pool_lock:
+                _pooled = list(self._http_client_pool.items())
+                self._http_client_pool.clear()
+                self._http_pool_last_use.clear()
+            for _key, _hc in _pooled:
+                try:
+                    if not getattr(_hc, 'is_closed', False):
+                        _hc.close()
+                except Exception:
+                    pass
         except Exception:
             pass
 
@@ -4854,12 +4899,62 @@ class AIAgent:
             # Explicitly read proxy settings while still honoring NO_PROXY for
             # loopback / local endpoints such as a locally hosted sub2api.
             _proxy = _get_proxy_for_base_url(base_url)
-            return _httpx.Client(
-                transport=_httpx.HTTPTransport(socket_options=_sock_opts),
-                proxy=_proxy,
-            )
+            _limits = _httpx.Limits(
+                max_connections=getattr(self, '_pool_max_conn', 20),
+                max_keepalive_connections=getattr(self, '_pool_max_keepalive', 10),
+                keepalive_expiry=30.0,
+            ) if hasattr(_httpx, 'Limits') else None
+            _kwargs = dict(transport=_httpx.HTTPTransport(socket_options=_sock_opts), proxy=_proxy)
+            if _limits is not None:
+                _kwargs['limits'] = _limits
+            return _httpx.Client(**_kwargs)
         except Exception:
             return None
+
+    def _get_or_create_pooled_http_client(self, provider: str, base_url: str = "") -> Any:
+        """Get or create a per-provider pooled httpx.Client."""
+        import hashlib
+        _pool_key = provider
+        if base_url:
+            try:
+                from urllib.parse import urlparse
+                _parsed = urlparse(base_url)
+                _host = (_parsed.hostname or '').lower()
+                _pool_key = f'{provider}:{_host}:{_parsed.port or ""}'
+            except Exception:
+                _pool_key = hashlib.md5(f'{provider}:{base_url}'.encode()).hexdigest()[:8]
+        with self._http_pool_lock:
+            _pooled = self._http_client_pool.get(_pool_key)
+            if _pooled is not None and not getattr(_pooled, 'is_closed', False):
+                self._http_pool_last_use[_pool_key] = __import__('time').time()
+                return _pooled
+            self._http_pool_last_use[_pool_key] = __import__('time').time()
+            _limits = _POOL_LIMITS.get(provider, _POOL_LIMITS['default'])
+            self._pool_max_conn = _limits['max_connections']
+            self._pool_max_keepalive = _limits['max_keepalive']
+            _client = self._build_keepalive_http_client(base_url)
+            if _client is not None:
+                self._http_client_pool[_pool_key] = _client
+            return _client
+
+    def _sweep_idle_pool_connections(self, max_idle_age: float = 60.0) -> int:
+        """Close idle pooled connections older than max_idle_age seconds."""
+        import time as _t
+        now = _t.time(); closed = 0
+        try:
+            with self._http_pool_lock:
+                stale = [k for k, v in self._http_client_pool.items()
+                         if now - self._http_pool_last_use.get(k, 0) > max_idle_age]
+                for k in stale:
+                    hc = self._http_client_pool.pop(k, None)
+                    self._http_pool_last_use.pop(k, None)
+                    if hc and not getattr(hc, 'is_closed', False):
+                        try: self._force_close_tcp_sockets(hc); hc.close()
+                        except: pass
+                        closed += 1
+        except Exception:
+            pass
+        return closed
 
     def _create_openai_client(self, client_kwargs: dict, *, reason: str, shared: bool) -> Any:
         from agent.auxiliary_client import _validate_base_url, _validate_proxy_env_urls
@@ -4940,9 +5035,15 @@ class AIAgent:
         # Tests in ``tests/run_agent/test_create_openai_client_reuse.py`` and
         # ``tests/run_agent/test_sequential_chats_live.py`` pin this invariant.
         if "http_client" not in client_kwargs:
-            keepalive_http = self._build_keepalive_http_client(client_kwargs.get("base_url", ""))
-            if keepalive_http is not None:
-                client_kwargs["http_client"] = keepalive_http
+            _disabled = os.getenv("BOOKWORMPRO_HTTP_POOL_DISABLED","").strip() in ("1","true","yes") or os.getenv("BOOKWORMPRO_HARDENING_DISABLED","").strip() in ("1","true","yes")
+            if _disabled:
+                keepalive_http = self._build_keepalive_http_client(client_kwargs.get("base_url", ""))
+                if keepalive_http is not None:
+                    client_kwargs["http_client"] = keepalive_http
+            else:
+                _pooled = self._get_or_create_pooled_http_client(self.provider, client_kwargs.get("base_url", ""))
+                if _pooled is not None:
+                    client_kwargs["http_client"] = _pooled
         client = OpenAI(**client_kwargs)
         logger.info(
             "OpenAI client created (%s, shared=%s) %s",
@@ -5014,26 +5115,23 @@ class AIAgent:
     def _close_openai_client(self, client: Any, *, reason: str, shared: bool) -> None:
         if client is None:
             return
-        # Force-close TCP sockets first to prevent CLOSE-WAIT accumulation,
-        # then do the graceful SDK-level close.
         force_closed = self._force_close_tcp_sockets(client)
+        _http_client = getattr(client, '_client', None)
+        _is_pooled = False
+        if _http_client is not None:
+            try:
+                with self._http_pool_lock:
+                    _is_pooled = any(_http_client is p for p in self._http_client_pool.values())
+            except Exception:
+                pass
+        if _is_pooled:
+            logger.debug("OpenAI client released (pooled, %s, shared=%s, tcp_force_closed=%d) %s", reason, shared, force_closed, self._client_log_context())
+            return
         try:
             client.close()
-            logger.info(
-                "OpenAI client closed (%s, shared=%s, tcp_force_closed=%d) %s",
-                reason,
-                shared,
-                force_closed,
-                self._client_log_context(),
-            )
+            logger.info("OpenAI client closed (%s, shared=%s, tcp_force_closed=%d) %s", reason, shared, force_closed, self._client_log_context())
         except Exception as exc:
-            logger.debug(
-                "OpenAI client close failed (%s, shared=%s) %s error=%s",
-                reason,
-                shared,
-                self._client_log_context(),
-                exc,
-            )
+            logger.debug("OpenAI client close failed (%s, shared=%s) %s error=%s", reason, shared, self._client_log_context(), exc)
 
     def _replace_primary_openai_client(self, *, reason: str) -> bool:
         with self._openai_client_lock():
@@ -6071,6 +6169,9 @@ class AIAgent:
 
             content_parts: list = []
             tool_calls_acc: dict = {}
+            _env_max = os.getenv("BOOKWORMPRO_MAX_RESPONSE_BYTES", "")
+            _MAX_RESPONSE_BYTES = int(_env_max) if _env_max.strip().isdigit() else 524288
+            _accumulated_bytes = 0
             tool_gen_notified: set = set()
             # Ollama-compatible endpoints reuse index 0 for every tool call
             # in a parallel batch, distinguishing them only by id.  Track
@@ -6111,6 +6212,9 @@ class AIAgent:
 
                 # Accumulate text content — fire callback only when no tool calls
                 if delta and delta.content:
+                    _accumulated_bytes += len(delta.content.encode('utf-8', errors='replace'))
+                    if _accumulated_bytes > _MAX_RESPONSE_BYTES:
+                        finish_reason = 'length'; break
                     content_parts.append(delta.content)
                     if not tool_calls_acc:
                         _fire_first_delta()
@@ -6625,6 +6729,11 @@ class AIAgent:
             _stale_elapsed = time.time() - last_chunk_time["t"]
             if _stale_elapsed > _stream_stale_timeout:
                 _est_ctx = sum(len(str(v)) for v in api_kwargs.get("messages", [])) // 4
+                try:
+                    from agent.metrics_store import record_sse_leak
+                    record_sse_leak()
+                except Exception:
+                    pass
                 logger.warning(
                     "Stream stale for %.0fs (threshold %.0fs) — no chunks received. "
                     "model=%s context=~%s tokens. Killing connection.",
@@ -10012,6 +10121,45 @@ class AIAgent:
             api_kwargs = None  # Guard against UnboundLocalError in except handler
 
             while retry_count < max_retries:
+                if getattr(self, '_draining', False):
+                    self._vprint(f'{self.log_prefix}[关闭] Server shutting down.', force=True)
+                    self._persist_session(messages, conversation_history)
+                    return {'final_response': '[关闭] Server is shutting down.', 'messages': messages, 'api_calls': api_call_count, 'completed': False, 'failed': True, 'error': 'server_shutting_down'}
+
+                _dns_disabled = os.getenv("BOOKWORMPRO_DNS_CACHE_DISABLED","").strip() in ("1","true","yes") or os.getenv("BOOKWORMPRO_HARDENING_DISABLED","").strip() in ("1","true","yes")
+                if not _dns_disabled:
+                    try:
+                        _bu = getattr(self, 'base_url', '') or ''
+                        if _bu:
+                            from urllib.parse import urlparse as _up
+                            _p = _up(_bu)
+                            if _p.hostname:
+                                _dns_resolve(_p.hostname, _p.port or 443, force=False)
+                    except Exception:
+                        pass
+
+                _health_disabled = os.getenv("BOOKWORMPRO_HEALTH_PROBE_DISABLED","").strip() in ("1","true","yes") or os.getenv("BOOKWORMPRO_HARDENING_DISABLED","").strip() in ("1","true","yes")
+                if not _health_disabled:
+                    try:
+                        if not getattr(self, '_health_probe_checked', False):
+                            _dead = _check_provider_health(self.provider, getattr(self, 'base_url', '') or '')
+                            if _dead is not None:
+                                self._vprint(f'{self.log_prefix}[断开] Provider {self.provider} DEAD. Trying fallback...', force=True)
+                                if self._try_activate_fallback():
+                                    retry_count = 0; compression_attempts = 0; primary_recovery_attempted = False; continue
+                                self._persist_session(messages, conversation_history)
+                                return {'final_response': f'[断开] Provider {self.provider} is DEAD.', 'messages': messages, 'api_calls': api_call_count, 'completed': False, 'failed': True, 'error': 'provider_dead'}
+                    except Exception:
+                        pass
+
+                _cb_disabled = os.getenv("BOOKWORMPRO_CIRCUIT_BREAKER_DISABLED","").strip() in ("1","true","yes") or os.getenv("BOOKWORMPRO_HARDENING_DISABLED","").strip() in ("1","true","yes")
+                if not _cb_disabled and not _cb_allow(self.provider):
+                    self._vprint(f'{self.log_prefix}[断开] Circuit OPEN for {self.provider}. Trying fallback...', force=True)
+                    if self._try_activate_fallback():
+                        retry_count = 0; compression_attempts = 0; primary_recovery_attempted = False; continue
+                    self._persist_session(messages, conversation_history)
+                    return {'final_response': f'[断开] Circuit OPEN for {self.provider}.', 'messages': messages, 'api_calls': api_call_count, 'completed': False, 'failed': True, 'error': 'circuit_open'}
+
                 # ── BookwormPRO Portal rate limit guard ──────────────────────
                 # If another session already recorded that BookwormPRO is rate-
                 # limited, skip the API call entirely.  Each attempt
@@ -10125,14 +10273,23 @@ class AIAgent:
                             _use_streaming = False
 
                     if _use_streaming:
-                        response = self._interruptible_streaming_api_call(
-                            api_kwargs, on_first_delta=_stop_spinner
-                        )
+                        self._drain_active_requests += 1
+                        try:
+                            response = self._interruptible_streaming_api_call(api_kwargs, on_first_delta=_stop_spinner)
+                        finally:
+                            self._drain_active_requests -= 1
                     else:
-                        response = self._interruptible_api_call(api_kwargs)
+                        self._drain_active_requests += 1
+                        try:
+                            response = self._interruptible_api_call(api_kwargs)
+                        finally:
+                            self._drain_active_requests -= 1
                     
                     api_duration = time.time() - api_start_time
-                    
+                    try: _cb_success(self.provider)
+                    except: pass
+                    try: _metrics_ok(self.provider, api_duration)
+                    except: pass
                     # Stop thinking spinner silently -- the response box or tool
                     # execution messages that follow are more informative.
                     if thinking_spinner:
@@ -10896,6 +11053,18 @@ class AIAgent:
                             continue
 
                     status_code = getattr(api_error, "status_code", None)
+                    if not _dns_disabled:
+                        try:
+                            import httpx as _hx
+                            if isinstance(api_error, (_hx.ConnectError, _hx.ConnectTimeout, ConnectionError, TimeoutError)):
+                                _bu2 = getattr(self, 'base_url', '')
+                                if _bu2:
+                                    from urllib.parse import urlparse as _up2
+                                    _p2 = _up2(_bu2)
+                                    if _p2.hostname:
+                                        _dns_invalidate(_p2.hostname, _p2.port or 443)
+                        except Exception:
+                            pass
                     error_context = self._extract_api_error_context(api_error)
 
                     # ── Classify the error for structured recovery decisions ──
@@ -10909,6 +11078,10 @@ class AIAgent:
                         context_length=_ctx_len,
                         num_messages=len(api_messages) if api_messages else 0,
                     )
+                    try: _cb_failure(self.provider, error=api_error, reason=classified.reason.value, status_code=status_code)
+                    except: pass
+                    try: _metrics_fail(self.provider, time.time() - api_start_time, str(api_error)[:200])
+                    except: pass
                     logger.debug(
                         "Error classified: reason=%s status=%s retryable=%s compress=%s rotate=%s fallback=%s",
                         classified.reason.value, classified.status_code,
