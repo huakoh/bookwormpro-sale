@@ -126,24 +126,24 @@ def format_managed_message(action: str = "modify this BookwormPRO installation")
     if managed_system == "NixOS":
         env_hint = "true" if raw in _MANAGED_TRUE_VALUES else raw or "true"
         return (
-            f"Cannot {action}: this BookwormPRO installation is managed by NixOS "
-            f"(BOOKWORMPRO_MANAGED={env_hint}).\n"
-            "Edit services.bookwormpro.settings in your configuration.nix and run:\n"
+            _("Cannot {action}: this BookwormPRO installation is managed by NixOS "
+              "(BOOKWORMPRO_MANAGED={env_hint}).").format(action=action, env_hint=env_hint) + "\n"
+            + _("Edit services.bookwormpro.settings in your configuration.nix and run:") + "\n"
             "  sudo nixos-rebuild switch"
         )
 
     if managed_system == "Homebrew":
         env_hint = raw or "homebrew"
         return (
-            f"Cannot {action}: this BookwormPRO installation is managed by Homebrew "
-            f"(BOOKWORMPRO_MANAGED={env_hint}).\n"
-            "Use:\n"
+            _("Cannot {action}: this BookwormPRO installation is managed by Homebrew "
+              "(BOOKWORMPRO_MANAGED={env_hint}).").format(action=action, env_hint=env_hint) + "\n"
+            + _("Use:") + "\n"
             "  brew upgrade bookwormpro"
         )
 
     return (
-        f"Cannot {action}: this BookwormPRO installation is managed by {managed_system}.\n"
-        "Use your package manager to upgrade or reinstall BookwormPRO."
+        _("Cannot {action}: this BookwormPRO installation is managed by {managed_system}.").format(action=action, managed_system=managed_system) + "\n"
+        + _("Use your package manager to upgrade or reinstall BookwormPRO.")
     )
 
 def managed_error(action: str = "modify configuration"):
@@ -206,6 +206,7 @@ def get_container_exec_info() -> Optional[dict]:
 
 # Re-export from bwm_constants — canonical definition lives there.
 from bwm_constants import get_hermes_home  # noqa: F811,E402
+from bwm_cli.i18n import _
 
 def get_config_path() -> Path:
     """Get the main config file path."""
@@ -2455,7 +2456,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
     try:
         fixes = sanitize_env_file()
         if fixes and not quiet:
-            print(f"  [成功] Repaired .env file ({fixes} corrupted entries fixed)")
+            print(_("  [成功] Repaired .env file ({fixes} corrupted entries fixed)").format(fixes=fixes))
     except Exception:
         pass  # best-effort; don't block migration on sanitize failure
 
@@ -2483,7 +2484,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             config["display"] = display
             save_config(config)
             if not quiet:
-                print(f"  [成功] Migrated tool progress to config.yaml: {display['tool_progress']}")
+                print(_("  [成功] Migrated tool progress to config.yaml: {tool_progress}").format(tool_progress=display['tool_progress']))
     
     # ── Version 4 → 5: add timezone field ──
     if current_ver < 5:
@@ -2499,7 +2500,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             save_config(config)
             if not quiet:
                 tz_display = config["timezone"] or "(server-local)"
-                print(f"  [成功] Added timezone to config.yaml: {tz_display}")
+                print(_("  [成功] Added timezone to config.yaml: {tz_display}").format(tz_display=tz_display))
 
     # ── Version 8 → 9: clear ANTHROPIC_TOKEN from .env ──
     # The new Anthropic auth flow no longer uses this env var.
@@ -2509,7 +2510,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             if old_token:
                 save_env_value("ANTHROPIC_TOKEN", "")
                 if not quiet:
-                    print("  [成功] Cleared ANTHROPIC_TOKEN from .env (no longer used)")
+                    print(_("  [成功] Cleared ANTHROPIC_TOKEN from .env (no longer used)"))
         except Exception:
             pass
 
@@ -2571,7 +2572,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
                 config.pop("custom_providers", None)
                 save_config(config)
                 if not quiet:
-                    print(f"  [成功] Migrated {migrated_count} custom provider(s) to providers: section")
+                    print(_("  [成功] Migrated {migrated_count} custom provider(s) to providers: section").format(migrated_count=migrated_count))
                     for key in list(providers_dict.keys())[-migrated_count:]:
                         ep = providers_dict[key]
                         print(f"    → {key}: {ep.get('api', '')}")
@@ -2587,7 +2588,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
                 if old_val:
                     save_env_value(dead_var, "")
                     if not quiet:
-                        print(f"  [成功] Cleared {dead_var} from .env (no longer used — config.yaml is source of truth)")
+                        print(_("  [成功] Cleared {dead_var} from .env (no longer used — config.yaml is source of truth)").format(dead_var=dead_var))
             except Exception:
                 pass
 
@@ -2639,7 +2640,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             config["stt"] = stt
             save_config(config)
             if not quiet:
-                print(f"  [成功] Migrated legacy stt.model to provider-specific config")
+                print(_("  [成功] Migrated legacy stt.model to provider-specific config"))
 
     # ── Version 14 → 15: add explicit gateway interim-message gate ──
     if current_ver < 15:
@@ -2653,7 +2654,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             results["config_added"].append("display.interim_assistant_messages=true (default)")
             save_config(config)
             if not quiet:
-                print("  [成功] Added display.interim_assistant_messages=true")
+                print(_("  [成功] Added display.interim_assistant_messages=true"))
 
     # ── Version 15 → 16: migrate tool_progress_overrides into display.platforms ──
     if current_ver < 16:
@@ -2676,7 +2677,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             save_config(config)
             if not quiet:
                 migrated = ", ".join(f"{p}={m}" for p, m in old_overrides.items())
-                print(f"  [成功] Migrated tool_progress_overrides → display.platforms: {migrated}")
+                print(_("  [成功] Migrated tool_progress_overrides → display.platforms: {migrated}").format(migrated=migrated))
             results["config_added"].append("display.platforms (migrated from tool_progress_overrides)")
 
     # ── Version 16 → 17: remove legacy compression.summary_* keys ──
@@ -2712,9 +2713,9 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
                 save_config(config)
                 if not quiet:
                     if migrated_keys:
-                        print(f"  [成功] Migrated compression.summary_* → auxiliary.compression: {', '.join(migrated_keys)}")
+                        print(_("  [成功] Migrated compression.summary_* → auxiliary.compression: {keys}").format(keys=', '.join(migrated_keys)))
                     else:
-                        print("  [成功] Removed unused compression.summary_* keys")
+                        print(_("  [成功] Removed unused compression.summary_* keys"))
 
     # ── Version 20 → 21: plugins are now opt-in; grandfather existing user plugins ──
     # The loader now requires plugins to appear in ``plugins.enabled`` before
@@ -2772,44 +2773,44 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             if not quiet:
                 if grandfathered:
                     print(
-                        f"  [成功] Plugins now opt-in: grandfathered "
-                        f"{len(grandfathered)} existing plugin(s) into plugins.enabled"
+                        _("  [成功] Plugins now opt-in: grandfathered "
+                          "{count} existing plugin(s) into plugins.enabled").format(count=len(grandfathered))
                     )
                 else:
                     print(
-                        "  [成功] Plugins now opt-in: no existing plugins to grandfather. "
-                        "Use `bookworm plugins enable <name>` to activate."
+                        _("  [成功] Plugins now opt-in: no existing plugins to grandfather. "
+                          "Use `bookworm plugins enable <name>` to activate.")
                     )
 
     if current_ver < latest_ver and not quiet:
-        print(f"Config version: {current_ver} → {latest_ver}")
+        print(_("Config version: {current_ver} → {latest_ver}").format(current_ver=current_ver, latest_ver=latest_ver))
     
     # Check for missing required env vars
     missing_env = get_missing_env_vars(required_only=True)
     
     if missing_env and not quiet:
-        print("\n[警告]  Missing required environment variables:")
+        print("\n" + _("[警告]  Missing required environment variables:"))
         for var in missing_env:
             print(f"   • {var['name']}: {var['description']}")
     
     if interactive and missing_env:
-        print("\nLet's configure them now:\n")
+        print("\n" + _("Let's configure them now:") + "\n")
         for var in missing_env:
             if var.get("url"):
-                print(f"  Get your key at: {var['url']}")
-            
+                print(_("  Get your key at: {url}").format(url=var['url']))
+
             if var.get("password"):
                 import getpass
-                value = getpass.getpass(f"  {var['prompt']}: ")
+                value = getpass.getpass(_("  {prompt}: ").format(prompt=var['prompt']))
             else:
-                value = input(f"  {var['prompt']}: ").strip()
-            
+                value = input(_("  {prompt}: ").format(prompt=var['prompt'])).strip()
+
             if value:
                 save_env_value(var["name"], value)
                 results["env_added"].append(var["name"])
-                print(f"  [成功] Saved {var['name']}")
+                print(_("  [成功] Saved {name}").format(name=var['name']))
             else:
-                results["warnings"].append(f"Skipped {var['name']} - some features may not work")
+                results["warnings"].append(_("Skipped {name} - some features may not work").format(name=var['name']))
             print()
     
     # Check for missing optional env vars and offer to configure interactively
@@ -2833,12 +2834,12 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             if not get_env_value(name) and name in OPTIONAL_ENV_VARS
         ]
         if new_and_unset:
-            print(f"\n  {len(new_and_unset)} new optional key(s) in this update:")
+            print("\n  " + _("{count} new optional key(s) in this update:").format(count=len(new_and_unset)))
             for name, info in new_and_unset:
                 print(f"    • {name} — {info.get('description', '')}")
             print()
             try:
-                answer = input("  Configure new keys? [y/N]: ").strip().lower()
+                answer = input(_("  Configure new keys? [y/N]: ")).strip().lower()
             except (EOFError, KeyboardInterrupt):
                 answer = "n"
 
@@ -2847,21 +2848,21 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
                 for name, info in new_and_unset:
                     if info.get("url"):
                         print(f"  {info.get('description', name)}")
-                        print(f"  Get your key at: {info['url']}")
+                        print(_("  Get your key at: {url}").format(url=info['url']))
                     else:
                         print(f"  {info.get('description', name)}")
                     if info.get("password"):
                         import getpass
-                        value = getpass.getpass(f"  {info.get('prompt', name)} (Enter to skip): ")
+                        value = getpass.getpass(_("  {prompt} (Enter to skip): ").format(prompt=info.get('prompt', name)))
                     else:
-                        value = input(f"  {info.get('prompt', name)} (Enter to skip): ").strip()
+                        value = input(_("  {prompt} (Enter to skip): ").format(prompt=info.get('prompt', name))).strip()
                     if value:
                         save_env_value(name, value)
                         results["env_added"].append(name)
-                        print(f"  [成功] Saved {name}")
+                        print(_("  [成功] Saved {name}").format(name=name))
                     print()
             else:
-                print("  Set later with: bookworm config set <key> <value>")
+                print(_("  Set later with: bookworm config set <key> <value>"))
     
     # Check for missing config fields
     missing_config = get_missing_config_fields()
@@ -2876,7 +2877,7 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
             _set_nested(config, key, default)
             results["config_added"].append(key)
             if not quiet:
-                print(f"  [成功] Added {key} = {default}")
+                print(_("  [成功] Added {key} = {default}").format(key=key, default=default))
         
         # Update version and save
         config["_config_version"] = latest_ver
@@ -2893,13 +2894,13 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
     # Prompt for any that are missing/empty.
     missing_skill_config = get_missing_skill_config_vars()
     if missing_skill_config and interactive and not quiet:
-        print(f"\n  {len(missing_skill_config)} skill setting(s) not configured:")
+        print("\n  " + _("{count} skill setting(s) not configured:").format(count=len(missing_skill_config)))
         for var in missing_skill_config:
             skill_name = var.get("skill", "unknown")
-            print(f"    • {var['key']} — {var['description']} (from skill: {skill_name})")
+            print(_("    • {var} — {var_1} (from skill: {skill_name})").format(var=var['key'], var_1=var['description'], skill_name=skill_name))
         print()
         try:
-            answer = input("  Configure skill settings? [y/N]: ").strip().lower()
+            answer = input(_("  Configure skill settings? [y/N]: ")).strip().lower()
         except (EOFError, KeyboardInterrupt):
             answer = "n"
 
@@ -2920,15 +2921,15 @@ def migrate_config(interactive: bool = True, quiet: bool = False) -> Dict[str, A
                     storage_key = f"{SKILL_CONFIG_PREFIX}.{var['key']}"
                     _set_nested(config, storage_key, value)
                     results["config_added"].append(var["key"])
-                    print(f"  [成功] Saved {var['key']} = {value}")
+                    print(_("  [成功] Saved {key} = {value}").format(key=var['key'], value=value))
                 else:
                     results["warnings"].append(
-                        f"Skipped {var['key']} — skill '{var.get('skill', '?')}' may ask for it later"
+                        _("Skipped {key} — skill '{skill}' may ask for it later").format(key=var['key'], skill=var.get('skill', '?'))
                     )
                 print()
             save_config(config)
         else:
-            print("  Set later with: bookworm config set <key> <value>")
+            print(_("  Set later with: bookworm config set <key> <value>"))
 
     return results
 
@@ -3138,7 +3139,7 @@ def load_config() -> Dict[str, Any]:
 
             config = _deep_merge(config, user_config)
         except Exception as e:
-            print(f"Warning: Failed to load config: {e}")
+            print(_("Warning: Failed to load config: {error}").format(error=e))
 
     normalized = _normalize_root_model_keys(_normalize_max_turns_config(config))
     expanded = _expand_env_vars(normalized)
@@ -3407,14 +3408,14 @@ def _check_non_ascii_credential(key: str, value: str) -> str:
     sanitized = value.encode("ascii", errors="ignore").decode("ascii")
 
     print(
-        f"\n  Warning: {key} contains non-ASCII characters that will break API requests.\n"
-        f"  This usually happens when copy-pasting from a PDF, rich-text editor,\n"
-        f"  or web page that substitutes lookalike Unicode glyphs for ASCII letters.\n"
-        f"\n"
+        "\n  " + _("Warning: {key} contains non-ASCII characters that will break API requests.").format(key=key) + "\n"
+        "  " + _("This usually happens when copy-pasting from a PDF, rich-text editor,") + "\n"
+        "  " + _("or web page that substitutes lookalike Unicode glyphs for ASCII letters.") + "\n"
+        "\n"
         + "\n".join(f"  {line}" for line in bad_chars[:5])
-        + ("\n  ... and more" if len(bad_chars) > 5 else "")
-        + f"\n\n  The non-ASCII characters have been stripped automatically.\n"
-        f"  If authentication fails, re-copy the key from the provider's dashboard.\n",
+        + ("\n  " + _("... and more") if len(bad_chars) > 5 else "")
+        + "\n\n  " + _("The non-ASCII characters have been stripped automatically.") + "\n"
+        "  " + _("If authentication fails, re-copy the key from the provider's dashboard.") + "\n",
         file=sys.stderr,
     )
     return sanitized
@@ -3629,19 +3630,19 @@ def show_config():
     
     print()
     print(color("┌─────────────────────────────────────────────────────────┐", Colors.CYAN))
-    print(color("│              [BWM] BookwormPRO Configuration                    │", Colors.CYAN))
+    print(color(_("│              [BWM] BookwormPRO Configuration                    │"), Colors.CYAN))
     print(color("└─────────────────────────────────────────────────────────┘", Colors.CYAN))
     
     # Paths
     print()
-    print(color("◆ Paths", Colors.CYAN, Colors.BOLD))
-    print(f"  Config:       {get_config_path()}")
-    print(f"  Secrets:      {get_env_path()}")
-    print(f"  Install:      {get_project_root()}")
+    print(color(_("◆ Paths"), Colors.CYAN, Colors.BOLD))
+    print(_("  Config:       {path}").format(path=get_config_path()))
+    print(_("  Secrets:      {path}").format(path=get_env_path()))
+    print(_("  Install:      {path}").format(path=get_project_root()))
     
     # API Keys
     print()
-    print(color("◆ API Keys", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ API Keys"), Colors.CYAN, Colors.BOLD))
     
     keys = [
         ("OPENROUTER_API_KEY", "OpenRouter"),
@@ -3664,73 +3665,73 @@ def show_config():
     
     # Model settings
     print()
-    print(color("◆ Model", Colors.CYAN, Colors.BOLD))
-    print(f"  Model:        {config.get('model', 'not set')}")
-    print(f"  Max turns:    {config.get('agent', {}).get('max_turns', DEFAULT_CONFIG['agent']['max_turns'])}")
+    print(color(_("◆ Model"), Colors.CYAN, Colors.BOLD))
+    print(_("  Model:        {model}").format(model=config.get('model', _('not set'))))
+    print(_("  Max turns:    {max_turns}").format(max_turns=config.get('agent', {}).get('max_turns', DEFAULT_CONFIG['agent']['max_turns'])))
     
     # Display
     print()
-    print(color("◆ Display", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Display"), Colors.CYAN, Colors.BOLD))
     display = config.get('display', {})
-    print(f"  Personality:  {display.get('personality', 'kawaii')}")
-    print(f"  Reasoning:    {'on' if display.get('show_reasoning', False) else 'off'}")
-    print(f"  Bell:         {'on' if display.get('bell_on_complete', False) else 'off'}")
+    print(_("  Personality:  {personality}").format(personality=display.get('personality', 'kawaii')))
+    print(_("  Reasoning:    {state}").format(state=_('on') if display.get('show_reasoning', False) else _('off')))
+    print(_("  Bell:         {state}").format(state=_('on') if display.get('bell_on_complete', False) else _('off')))
     ump = display.get('user_message_preview', {}) if isinstance(display.get('user_message_preview', {}), dict) else {}
     ump_first = ump.get('first_lines', 2)
     ump_last = ump.get('last_lines', 2)
-    print(f"  User preview: first {ump_first} line(s), last {ump_last} line(s)")
+    print(_("  User preview: first {first} line(s), last {last} line(s)").format(first=ump_first, last=ump_last))
 
     # Terminal
     print()
-    print(color("◆ Terminal", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Terminal"), Colors.CYAN, Colors.BOLD))
     terminal = config.get('terminal', {})
-    print(f"  Backend:      {terminal.get('backend', 'local')}")
-    print(f"  Working dir:  {terminal.get('cwd', '.')}")
-    print(f"  Timeout:      {terminal.get('timeout', 60)}s")
+    print(_("  Backend:      {backend}").format(backend=terminal.get('backend', 'local')))
+    print(_("  Working dir:  {cwd}").format(cwd=terminal.get('cwd', '.')))
+    print(_("  Timeout:      {timeout}s").format(timeout=terminal.get('timeout', 60)))
     
     if terminal.get('backend') == 'docker':
-        print(f"  Docker image: {terminal.get('docker_image', 'nikolaik/python-nodejs:python3.11-nodejs20')}")
+        print(_("  Docker image: {image}").format(image=terminal.get('docker_image', 'nikolaik/python-nodejs:python3.11-nodejs20')))
     elif terminal.get('backend') == 'singularity':
-        print(f"  Image:        {terminal.get('singularity_image', 'docker://nikolaik/python-nodejs:python3.11-nodejs20')}")
+        print(_("  Image:        {image}").format(image=terminal.get('singularity_image', 'docker://nikolaik/python-nodejs:python3.11-nodejs20')))
     elif terminal.get('backend') == 'modal':
-        print(f"  Modal image:  {terminal.get('modal_image', 'nikolaik/python-nodejs:python3.11-nodejs20')}")
+        print(_("  Modal image:  {image}").format(image=terminal.get('modal_image', 'nikolaik/python-nodejs:python3.11-nodejs20')))
         modal_token = get_env_value('MODAL_TOKEN_ID')
-        print(f"  Modal token:  {'configured' if modal_token else '(not set)'}")
+        print(_("  Modal token:  {status}").format(status=_('configured') if modal_token else _('(not set)')))
     elif terminal.get('backend') == 'daytona':
-        print(f"  Daytona image: {terminal.get('daytona_image', 'nikolaik/python-nodejs:python3.11-nodejs20')}")
+        print(_("  Daytona image: {image}").format(image=terminal.get('daytona_image', 'nikolaik/python-nodejs:python3.11-nodejs20')))
         daytona_key = get_env_value('DAYTONA_API_KEY')
-        print(f"  API key:      {'configured' if daytona_key else '(not set)'}")
+        print(_("  API key:      {status}").format(status=_('configured') if daytona_key else _('(not set)')))
     elif terminal.get('backend') == 'ssh':
         ssh_host = get_env_value('TERMINAL_SSH_HOST')
         ssh_user = get_env_value('TERMINAL_SSH_USER')
-        print(f"  SSH host:     {ssh_host or '(not set)'}")
-        print(f"  SSH user:     {ssh_user or '(not set)'}")
+        print(_("  SSH host:     {host}").format(host=ssh_host or _('(not set)')))
+        print(_("  SSH user:     {user}").format(user=ssh_user or _('(not set)')))
     
     # Timezone
     print()
-    print(color("◆ Timezone", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Timezone"), Colors.CYAN, Colors.BOLD))
     tz = config.get('timezone', '')
     if tz:
-        print(f"  Timezone:     {tz}")
+        print(_("  Timezone:     {tz}").format(tz=tz))
     else:
-        print(f"  Timezone:     {color('(server-local)', Colors.DIM)}")
+        print(_("  Timezone:     {tz}").format(tz=color(_('(server-local)'), Colors.DIM)))
 
     # Compression
     print()
-    print(color("◆ Context Compression", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Context Compression"), Colors.CYAN, Colors.BOLD))
     compression = config.get('compression', {})
     enabled = compression.get('enabled', True)
-    print(f"  Enabled:      {'yes' if enabled else 'no'}")
+    print(_("  Enabled:      {enabled}").format(enabled=_('yes') if enabled else _('no')))
     if enabled:
-        print(f"  Threshold:    {compression.get('threshold', 0.50) * 100:.0f}%")
-        print(f"  Target ratio: {compression.get('target_ratio', 0.20) * 100:.0f}% of threshold preserved")
-        print(f"  Protect last: {compression.get('protect_last_n', 20)} messages")
+        print(_("  Threshold:    {threshold}%").format(threshold=f"{compression.get('threshold', 0.50) * 100:.0f}"))
+        print(_("  Target ratio: {ratio}% of threshold preserved").format(ratio=f"{compression.get('target_ratio', 0.20) * 100:.0f}"))
+        print(_("  Protect last: {count} messages").format(count=compression.get('protect_last_n', 20)))
         _aux_comp = config.get('auxiliary', {}).get('compression', {})
-        _sm = _aux_comp.get('model', '') or '(auto)'
-        print(f"  Model:        {_sm}")
+        _sm = _aux_comp.get('model', '') or _('(auto)')
+        print(_("  Model:        {model}").format(model=_sm))
         comp_provider = _aux_comp.get('provider', 'auto')
         if comp_provider and comp_provider != 'auto':
-            print(f"  Provider:     {comp_provider}")
+            print(_("  Provider:     {provider}").format(provider=comp_provider))
     
     # Auxiliary models
     auxiliary = config.get('auxiliary', {})
@@ -3744,7 +3745,7 @@ def show_config():
     )
     if has_overrides:
         print()
-        print(color("◆ Auxiliary Models (overrides)", Colors.CYAN, Colors.BOLD))
+        print(color(_("◆ Auxiliary Models (overrides)"), Colors.CYAN, Colors.BOLD))
         for label, task_cfg in aux_tasks.items():
             prov = task_cfg.get('provider', 'auto')
             mdl = task_cfg.get('model', '')
@@ -3756,13 +3757,13 @@ def show_config():
     
     # Messaging
     print()
-    print(color("◆ Messaging Platforms", Colors.CYAN, Colors.BOLD))
-    
+    print(color(_("◆ Messaging Platforms"), Colors.CYAN, Colors.BOLD))
+
     telegram_token = get_env_value('TELEGRAM_BOT_TOKEN')
     discord_token = get_env_value('DISCORD_BOT_TOKEN')
-    
-    print(f"  Telegram:     {'configured' if telegram_token else color('not configured', Colors.DIM)}")
-    print(f"  Discord:      {'configured' if discord_token else color('not configured', Colors.DIM)}")
+
+    print(_("  Telegram:     {status}").format(status=_('configured') if telegram_token else color(_('not configured'), Colors.DIM)))
+    print(_("  Discord:      {status}").format(status=_('configured') if discord_token else color(_('not configured'), Colors.DIM)))
     
     # Skill config
     try:
@@ -3771,21 +3772,21 @@ def show_config():
         if skill_vars:
             resolved = resolve_skill_config_values(skill_vars)
             print()
-            print(color("◆ Skill Settings", Colors.CYAN, Colors.BOLD))
+            print(color(_("◆ Skill Settings"), Colors.CYAN, Colors.BOLD))
             for var in skill_vars:
                 key = var["key"]
                 value = resolved.get(key, "")
                 skill_name = var.get("skill", "")
                 display_val = str(value) if value else color("(not set)", Colors.DIM)
-                print(f"  {key:<20s} {display_val}  {color(f'[{skill_name}]', Colors.DIM)}")
+                print(_("  {key:<20s} {display_val}  {color(f'[{skill_name}]', Colors.DIM)}").format(key=key, display_val=display_val, skill_name=skill_name))
     except Exception:
         pass
 
     print()
     print(color("─" * 60, Colors.DIM))
-    print(color("  bookworm config edit     # Edit config file", Colors.DIM))
-    print(color("  bookworm config set <key> <value>", Colors.DIM))
-    print(color("  bookworm setup           # Run setup wizard", Colors.DIM))
+    print(color(_("  bookworm config edit     # Edit config file"), Colors.DIM))
+    print(color(_("  bookworm config set <key> <value>"), Colors.DIM))
+    print(color(_("  bookworm setup           # Run setup wizard"), Colors.DIM))
     print()
 
 
@@ -3799,7 +3800,7 @@ def edit_config():
     # Ensure config exists
     if not config_path.exists():
         save_config(DEFAULT_CONFIG)
-        print(f"Created {config_path}")
+        print(_("Created {path}").format(path=config_path))
     
     # Find editor
     editor = os.getenv('EDITOR') or os.getenv('VISUAL')
@@ -3813,11 +3814,11 @@ def edit_config():
                 break
     
     if not editor:
-        print("No editor found. Config file is at:")
+        print(_("No editor found. Config file is at:"))
         print(f"  {config_path}")
         return
-    
-    print(f"Opening {config_path} in {editor}...")
+
+    print(_("Opening {path} in {editor}...").format(path=config_path, editor=editor))
     subprocess.run([editor, str(config_path)])
 
 
@@ -3842,7 +3843,7 @@ def set_config_value(key: str, value: str):
     
     if key.upper() in api_keys or key.upper().endswith(('_API_KEY', '_TOKEN')) or key.upper().startswith('TERMINAL_SSH'):
         save_env_value(key.upper(), value)
-        print(f"[成功] Set {key} in {get_env_path()}")
+        print(_("[成功] Set {key} in {path}").format(key=key, path=get_env_path()))
         return
     
     # Otherwise it goes to config.yaml
@@ -3905,7 +3906,7 @@ def set_config_value(key: str, value: str):
     if key in _config_to_env_sync:
         save_env_value(_config_to_env_sync[key], str(value))
 
-    print(f"[成功] Set {key} = {value} in {config_path}")
+    print(_("[成功] Set {key} = {value} in {path}").format(key=key, value=value, path=config_path))
 
 
 # =============================================================================
@@ -3926,12 +3927,12 @@ def config_command(args):
         key = getattr(args, 'key', None)
         value = getattr(args, 'value', None)
         if not key or value is None:
-            print("Usage: bookworm config set <key> <value>")
+            print(_("Usage: bookworm config set <key> <value>"))
             print()
-            print("Examples:")
-            print("  bookworm config set model anthropic/claude-sonnet-4")
-            print("  bookworm config set terminal.backend docker")
-            print("  bookworm config set OPENROUTER_API_KEY sk-or-...")
+            print(_("Examples:"))
+            print(_("  bookworm config set model anthropic/claude-sonnet-4"))
+            print(_("  bookworm config set terminal.backend docker"))
+            print(_("  bookworm config set OPENROUTER_API_KEY sk-or-..."))
             sys.exit(1)
         set_config_value(key, value)
     
@@ -3943,42 +3944,42 @@ def config_command(args):
     
     elif subcmd == "migrate":
         print()
-        print(color("[调用] Checking configuration for updates...", Colors.CYAN, Colors.BOLD))
+        print(color(_("[调用] Checking configuration for updates..."), Colors.CYAN, Colors.BOLD))
         print()
-        
+
         # Check what's missing
         missing_env = get_missing_env_vars(required_only=False)
         missing_config = get_missing_config_fields()
         current_ver, latest_ver = check_config_version()
-        
+
         if not missing_env and not missing_config and current_ver >= latest_ver:
-            print(color("[成功] Configuration is up to date!", Colors.GREEN))
+            print(color(_("[成功] Configuration is up to date!"), Colors.GREEN))
             print()
             return
-        
+
         # Show what needs to be updated
         if current_ver < latest_ver:
-            print(f"  Config version: {current_ver} → {latest_ver}")
-        
+            print(_("  Config version: {current_ver} → {latest_ver}").format(current_ver=current_ver, latest_ver=latest_ver))
+
         if missing_config:
-            print(f"\n  {len(missing_config)} new config option(s) will be added with defaults")
-        
+            print("\n  " + _("{count} new config option(s) will be added with defaults").format(count=len(missing_config)))
+
         required_missing = [v for v in missing_env if v.get("is_required")]
         optional_missing = [
             v for v in missing_env
             if not v.get("is_required") and not v.get("advanced")
         ]
-        
+
         if required_missing:
-            print(f"\n  [警告]  {len(required_missing)} required API key(s) missing:")
+            print("\n  " + _("[警告]  {count} required API key(s) missing:").format(count=len(required_missing)))
             for var in required_missing:
                 print(f"     • {var['name']}")
-        
+
         if optional_missing:
-            print(f"\n  ℹ️  {len(optional_missing)} optional API key(s) not configured:")
+            print("\n  " + _("{count} optional API key(s) not configured:").format(count=len(optional_missing)))
             for var in optional_missing:
                 tools = var.get("tools", [])
-                tools_str = f" (enables: {', '.join(tools[:2])})" if tools else ""
+                tools_str = _(" (enables: {tools})").format(tools=', '.join(tools[:2])) if tools else ""
                 print(f"     • {var['name']}{tools_str}")
         
         print()
@@ -3988,62 +3989,62 @@ def config_command(args):
         
         print()
         if results["env_added"] or results["config_added"]:
-            print(color("[成功] Configuration updated!", Colors.GREEN))
+            print(color(_("[成功] Configuration updated!"), Colors.GREEN))
         
         if results["warnings"]:
             print()
             for warning in results["warnings"]:
-                print(color(f"  [警告]  {warning}", Colors.YELLOW))
+                print(color(_("  [警告]  {warning}").format(warning=warning), Colors.YELLOW))
         
         print()
     
     elif subcmd == "check":
         # Non-interactive check for what's missing
         print()
-        print(color("[汇总] Configuration Status", Colors.CYAN, Colors.BOLD))
+        print(color(_("[汇总] Configuration Status"), Colors.CYAN, Colors.BOLD))
         print()
-        
+
         current_ver, latest_ver = check_config_version()
         if current_ver >= latest_ver:
-            print(f"  Config version: {current_ver} [成功]")
+            print(_("  Config version: {ver} [成功]").format(ver=current_ver))
         else:
-            print(color(f"  Config version: {current_ver} → {latest_ver} (update available)", Colors.YELLOW))
-        
+            print(color(_("  Config version: {current_ver} → {latest_ver} (update available)").format(current_ver=current_ver, latest_ver=latest_ver), Colors.YELLOW))
+
         print()
-        print(color("  Required:", Colors.BOLD))
+        print(color(_("  Required:"), Colors.BOLD))
         for var_name in REQUIRED_ENV_VARS:
             if get_env_value(var_name):
-                print(f"    [成功] {var_name}")
+                print(_("    [成功] {var_name}").format(var_name=var_name))
             else:
-                print(color(f"    [失败] {var_name} (missing)", Colors.RED))
-        
+                print(color(_("    [失败] {var_name} (missing)").format(var_name=var_name), Colors.RED))
+
         print()
-        print(color("  Optional:", Colors.BOLD))
+        print(color(_("  Optional:"), Colors.BOLD))
         for var_name, info in OPTIONAL_ENV_VARS.items():
             if get_env_value(var_name):
-                print(f"    [成功] {var_name}")
+                print(_("    [成功] {var_name}").format(var_name=var_name))
             else:
                 tools = info.get("tools", [])
                 tools_str = f" → {', '.join(tools[:2])}" if tools else ""
                 print(color(f"    ○ {var_name}{tools_str}", Colors.DIM))
-        
+
         missing_config = get_missing_config_fields()
         if missing_config:
             print()
-            print(color(f"  {len(missing_config)} new config option(s) available", Colors.YELLOW))
-            print("    Run 'bookworm config migrate' to add them")
+            print(color(_("  {count} new config option(s) available").format(count=len(missing_config)), Colors.YELLOW))
+            print(_("    Run 'bookworm config migrate' to add them"))
         
         print()
     
     else:
-        print(f"Unknown config command: {subcmd}")
+        print(_("Unknown config command: {subcmd}").format(subcmd=subcmd))
         print()
-        print("Available commands:")
-        print("  bookworm config           Show current configuration")
-        print("  bookworm config edit      Open config in editor")
-        print("  bookworm config set <key> <value>   Set a config value")
-        print("  bookworm config check     Check for missing/outdated config")
-        print("  bookworm config migrate   Update config with new options")
-        print("  bookworm config path      Show config file path")
-        print("  bookworm config env-path  Show .env file path")
+        print(_("Available commands:"))
+        print(_("  bookworm config           Show current configuration"))
+        print(_("  bookworm config edit      Open config in editor"))
+        print(_("  bookworm config set <key> <value>   Set a config value"))
+        print(_("  bookworm config check     Check for missing/outdated config"))
+        print(_("  bookworm config migrate   Update config with new options"))
+        print(_("  bookworm config path      Show config file path"))
+        print(_("  bookworm config env-path  Show .env file path"))
         sys.exit(1)

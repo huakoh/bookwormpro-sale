@@ -29,6 +29,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import List, Optional
+from bwm_cli.i18n import _
 
 _PROFILE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 
@@ -233,7 +234,7 @@ def create_wrapper_script(name: str) -> Optional[Path]:
     try:
         wrapper_dir.mkdir(parents=True, exist_ok=True)
     except OSError as e:
-        print(f"[警告] Could not create {wrapper_dir}: {e}")
+        print(_("[警告] Could not create {wrapper_dir}: {e}").format(wrapper_dir=wrapper_dir, e=e))
         return None
 
     wrapper_path = wrapper_dir / name
@@ -242,7 +243,7 @@ def create_wrapper_script(name: str) -> Optional[Path]:
         wrapper_path.chmod(wrapper_path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
         return wrapper_path
     except OSError as e:
-        print(f"[警告] Could not create wrapper at {wrapper_path}: {e}")
+        print(_("[警告] Could not create wrapper at {wrapper_path}: {e}").format(wrapper_path=wrapper_path, e=e))
         return None
 
 
@@ -482,17 +483,17 @@ def seed_profile_skills(profile_dir: Path, quiet: bool = False) -> Optional[dict
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout.strip())
         if not quiet:
-            print(f"[警告] Skill seeding returned exit code {result.returncode}")
+            print(_("[警告] Skill seeding returned exit code {result_returncode}").format(result_returncode=result.returncode))
             if result.stderr.strip():
                 print(f"  {result.stderr.strip()[:200]}")
         return None
     except subprocess.TimeoutExpired:
         if not quiet:
-            print("[警告] Skill seeding timed out (60s)")
+            print(_("[警告] Skill seeding timed out (60s)"))
         return None
     except Exception as e:
         if not quiet:
-            print(f"[警告] Skill seeding failed: {e}")
+            print(_("[警告] Skill seeding failed: {e}").format(e=e))
         return None
 
 
@@ -521,12 +522,12 @@ def delete_profile(name: str, yes: bool = False) -> Path:
     gw_running = _check_gateway_running(profile_dir)
     skill_count = _count_skills(profile_dir)
 
-    print(f"\nProfile: {name}")
-    print(f"Path:    {profile_dir}")
+    print(_("\nProfile: {name}").format(name=name))
+    print(_("Path:    {profile_dir}").format(profile_dir=profile_dir))
     if model:
-        print(f"Model:   {model}" + (f" ({provider})" if provider else ""))
+        print(_("Model:   {model}").format(model=model) + (f" ({provider})" if provider else ""))
     if skill_count:
-        print(f"Skills:  {skill_count}")
+        print(_("Skills:  {skill_count}").format(skill_count=skill_count))
 
     items = [
         "All config, API keys, memories, sessions, skills, cron jobs",
@@ -538,22 +539,22 @@ def delete_profile(name: str, yes: bool = False) -> Path:
     if has_wrapper:
         items.append(f"Command alias ({wrapper_path})")
 
-    print(f"\nThis will permanently delete:")
+    print(_("\nThis will permanently delete:"))
     for item in items:
         print(f"  • {item}")
     if gw_running:
-        print(f"  [警告] Gateway is running — it will be stopped.")
+        print(_("  [警告] Gateway is running — it will be stopped."))
 
     # Confirmation
     if not yes:
         print()
         try:
-            confirm = input(f"Type '{name}' to confirm: ").strip()
+            confirm = input(_("Type '{name}' to confirm: ").format(name=name)).strip()
         except (KeyboardInterrupt, EOFError):
-            print("\nCancelled.")
+            print(_("\nCancelled."))
             return profile_dir
         if confirm != name:
-            print("Cancelled.")
+            print(_("Cancelled."))
             return profile_dir
 
     # 1. Disable service (prevents auto-restart)
@@ -566,25 +567,25 @@ def delete_profile(name: str, yes: bool = False) -> Path:
     # 3. Remove wrapper script
     if has_wrapper:
         if remove_wrapper_script(name):
-            print(f"[成功] Removed {wrapper_path}")
+            print(_("[成功] Removed {wrapper_path}").format(wrapper_path=wrapper_path))
 
     # 4. Remove profile directory
     try:
         shutil.rmtree(profile_dir)
-        print(f"[成功] Removed {profile_dir}")
+        print(_("[成功] Removed {profile_dir}").format(profile_dir=profile_dir))
     except Exception as e:
-        print(f"[警告] Could not remove {profile_dir}: {e}")
+        print(_("[警告] Could not remove {profile_dir}: {e}").format(profile_dir=profile_dir, e=e))
 
     # 5. Clear active_profile if it pointed to this profile
     try:
         active = get_active_profile()
         if active == name:
             set_active_profile("default")
-            print("[成功] Active profile reset to default")
+            print(_("[成功] Active profile reset to default"))
     except Exception:
         pass
 
-    print(f"\nProfile '{name}' deleted.")
+    print(_("\nProfile '{name}' deleted.").format(name=name))
     return profile_dir
 
 
@@ -616,7 +617,7 @@ def _cleanup_gateway_service(name: str, profile_dir: Path) -> None:
                     ["systemctl", "--user", "daemon-reload"],
                     capture_output=True, check=False, timeout=10,
                 )
-                print(f"[成功] Service {svc_name} removed")
+                print(_("[成功] Service {svc_name} removed").format(svc_name=svc_name))
 
         elif _platform.system() == "Darwin":
             plist_path = get_launchd_plist_path()
@@ -626,9 +627,9 @@ def _cleanup_gateway_service(name: str, profile_dir: Path) -> None:
                     capture_output=True, check=False, timeout=10,
                 )
                 plist_path.unlink(missing_ok=True)
-                print(f"[成功] Launchd service removed")
+                print(_("[成功] Launchd service removed"))
     except Exception as e:
-        print(f"[警告] Service cleanup: {e}")
+        print(_("[警告] Service cleanup: {e}").format(e=e))
     finally:
         if old_home is not None:
             os.environ["BOOKWORMPRO_HOME"] = old_home
@@ -651,23 +652,23 @@ def _stop_gateway_process(profile_dir: Path) -> None:
         pid = int(data["pid"])
         os.kill(pid, _signal.SIGTERM)
         # Wait up to 10s for graceful shutdown
-        for _ in range(20):
+        for _i in range(20):
             _time.sleep(0.5)
             try:
                 os.kill(pid, 0)
             except ProcessLookupError:
-                print(f"[成功] Gateway stopped (PID {pid})")
+                print(_("[成功] Gateway stopped (PID {pid})").format(pid=pid))
                 return
         # Force kill
         try:
             os.kill(pid, _signal.SIGKILL)
         except ProcessLookupError:
             pass
-        print(f"[成功] Gateway force-stopped (PID {pid})")
+        print(_("[成功] Gateway force-stopped (PID {pid})").format(pid=pid))
     except (ProcessLookupError, PermissionError):
-        print("[成功] Gateway already stopped")
+        print(_("[成功] Gateway already stopped"))
     except Exception as e:
-        print(f"[警告] Could not stop gateway: {e}")
+        print(_("[警告] Could not stop gateway: {e}").format(e=e))
 
 
 # ---------------------------------------------------------------------------
@@ -982,22 +983,22 @@ def rename_profile(old_name: str, new_name: str) -> Path:
 
     # 2. Rename directory
     old_dir.rename(new_dir)
-    print(f"[成功] Renamed {old_dir.name} → {new_dir.name}")
+    print(_("[成功] Renamed {old_dir_name} → {new_dir_name}").format(old_dir_name=old_dir.name, new_dir_name=new_dir.name))
 
     # 3. Update wrapper script
     remove_wrapper_script(old_name)
     collision = check_alias_collision(new_name)
     if not collision:
         create_wrapper_script(new_name)
-        print(f"[成功] Alias updated: {new_name}")
+        print(_("[成功] Alias updated: {new_name}").format(new_name=new_name))
     else:
-        print(f"[警告] Cannot create alias '{new_name}' — {collision}")
+        print(_("[警告] Cannot create alias '{new_name}' — {collision}").format(new_name=new_name, collision=collision))
 
     # 4. Update active_profile if it pointed to old name
     try:
         if get_active_profile() == old_name:
             set_active_profile(new_name)
-            print(f"[成功] Active profile updated: {new_name}")
+            print(_("[成功] Active profile updated: {new_name}").format(new_name=new_name))
     except Exception:
         pass
 

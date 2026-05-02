@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 from bwm_constants import get_hermes_home, display_hermes_home
+from bwm_cli.i18n import _
+
 
 # Known log files (name → filename)
 LOG_FILES = {
@@ -171,8 +173,8 @@ def tail_log(
 
     log_path = get_hermes_home() / "logs" / filename
     if not log_path.exists():
-        print(f"Log file not found: {log_path}")
-        print(f"(Logs are created when BookwormPRO runs — try 'bookworm chat' first)")
+        print(_("Log file not found: {log_path}").format(log_path=log_path))
+        print(_("(Logs are created when BookwormPRO runs — try 'bookworm chat' first)"))
         sys.exit(1)
 
     # Parse --since into a datetime cutoff
@@ -212,7 +214,7 @@ def tail_log(
                            min_level=min_level, session_filter=session,
                            since=since_dt, component_prefixes=component_prefixes)
     except PermissionError:
-        print(f"Permission denied: {log_path}")
+        print(_("Permission denied: {log_path}").format(log_path=log_path))
         sys.exit(1)
 
     # Print header
@@ -228,9 +230,9 @@ def tail_log(
     filter_desc = f" [{', '.join(filter_parts)}]" if filter_parts else ""
 
     if follow:
-        print(f"--- {display_hermes_home()}/logs/{filename}{filter_desc} (Ctrl+C to stop) ---")
+        print(_("--- {display_hermes_home}/logs/{filename}{filter_desc} (Ctrl+C to stop) ---").format(display_hermes_home=display_hermes_home(), filename=filename, filter_desc=filter_desc))
     else:
-        print(f"--- {display_hermes_home()}/logs/{filename}{filter_desc} (last {num_lines}) ---")
+        print(_("--- {display_hermes_home}/logs/{filename}{filter_desc} (last {num_lines}) ---").format(display_hermes_home=display_hermes_home(), filename=filename, filter_desc=filter_desc, num_lines=num_lines))
 
     for line in lines:
         print(line, end="")
@@ -243,7 +245,7 @@ def tail_log(
         _follow_log(log_path, min_level=min_level, session_filter=session,
                      since=since_dt, component_prefixes=component_prefixes)
     except KeyboardInterrupt:
-        print("\n--- stopped ---")
+        print(_("\n--- stopped ---"))
 
 
 def _read_tail(
@@ -359,10 +361,10 @@ def list_logs() -> None:
     """Print available log files with sizes."""
     log_dir = get_hermes_home() / "logs"
     if not log_dir.exists():
-        print(f"No logs directory at {display_hermes_home()}/logs/")
+        print(_("No logs directory at {display_hermes_home}/logs/").format(display_hermes_home=display_hermes_home()))
         return
 
-    print(f"Log files in {display_hermes_home()}/logs/:\n")
+    print(_("Log files in {display_hermes_home}/logs/:\n").format(display_hermes_home=display_hermes_home()))
     found = False
     for entry in sorted(log_dir.iterdir()):
         if entry.is_file() and entry.suffix == ".log":
@@ -387,4 +389,4 @@ def list_logs() -> None:
             found = True
 
     if not found:
-        print("  (no log files yet — run 'bookworm chat' to generate logs)")
+        print(_("  (no log files yet — run 'bookworm chat' to generate logs)"))

@@ -454,10 +454,10 @@ def _wait_for_systemd_service_restart(
 
         if active_state == "active":
             if new_pid and (previous_pid is None or new_pid != previous_pid):
-                print(f"[成功] {scope_label} service restarted (PID {new_pid})")
+                print(_("[成功] {scope_label} service restarted (PID {new_pid})").format(scope_label=scope_label, new_pid=new_pid))
                 return True
             if previous_pid is None:
-                print(f"[成功] {scope_label} service restarted")
+                print(_("[成功] {scope_label} service restarted").format(scope_label=scope_label))
                 return True
 
         if active_state == "activating" and sub_state == "auto-restart":
@@ -495,7 +495,7 @@ def _recover_pending_systemd_restart(system: bool = False, previous_pid: int | N
     result = props.get("Result", "")
 
     if active_state == "activating" and sub_state == "auto-restart":
-        print("[等待] Service restart already pending — waiting for systemd relaunch...")
+        print(_("[等待] Service restart already pending — waiting for systemd relaunch..."))
         return _wait_for_systemd_service_restart(
             system=system,
             previous_pid=previous_pid,
@@ -507,7 +507,7 @@ def _recover_pending_systemd_restart(system: bool = False, previous_pid: int | N
     ):
         svc = get_service_name()
         scope_label = _service_scope_label(system).capitalize()
-        print(f"↻ Clearing failed state for pending {scope_label.lower()} service restart...")
+        print(_("↻ Clearing failed state for pending {scope_label} service restart...").format(scope_label=scope_label.lower()))
         _run_systemctl(
             ["reset-failed", svc],
             system=system,
@@ -597,10 +597,10 @@ def _print_gateway_process_mismatch(snapshot: GatewayRuntimeSnapshot) -> None:
     if not snapshot.has_process_service_mismatch:
         return
     print()
-    print("[警告] Gateway process is running for this profile, but the service is not active")
-    print(f"  PID(s): {_format_gateway_pids(snapshot.gateway_pids, limit=None)}")
-    print("  This is usually a manual foreground/tmux/nohup run, so `bookworm gateway`")
-    print("  can refuse to start another copy until this process stops.")
+    print(_("[警告] Gateway process is running for this profile, but the service is not active"))
+    print(_("  PID(s): {_format_gateway_pids}").format(_format_gateway_pids=_format_gateway_pids(snapshot.gateway_pids, limit=None)))
+    print(_("  This is usually a manual foreground/tmux/nohup run, so `bookworm gateway`"))
+    print(_("  can refuse to start another copy until this process stops."))
 
 
 def kill_gateway_processes(force: bool = False, exclude_pids: set | None = None,
@@ -625,10 +625,10 @@ def kill_gateway_processes(force: bool = False, exclude_pids: set | None = None,
             # Process already gone
             pass
         except PermissionError:
-            print(f"[警告] Permission denied to kill PID {pid}")
+            print(_("[警告] Permission denied to kill PID {pid}").format(pid=pid))
     
         except OSError as exc:
-            print(f"Failed to kill PID {pid}: {exc}")
+            print(_("Failed to kill PID {pid}: {exc}").format(pid=pid, exc=exc))
     return killed
 
 
@@ -653,7 +653,7 @@ def stop_profile_gateway() -> bool:
     except ProcessLookupError:
         pass  # Already gone
     except PermissionError:
-        print(f"[警告] Permission denied to kill PID {pid}")
+        print(_("[警告] Permission denied to kill PID {pid}").format(pid=pid))
         return False
 
     # Wait briefly for it to exit
@@ -675,6 +675,7 @@ def is_linux() -> bool:
 
 
 from bwm_constants import is_container, is_termux, is_wsl
+from bwm_cli.i18n import _
 
 
 def _wsl_systemd_operational() -> bool:
@@ -928,7 +929,7 @@ def _preflight_user_systemd(*, auto_enable_linger: bool = True) -> None:
         else:
             if result.returncode == 0:
                 if _wait_for_user_dbus_socket(timeout=5.0):
-                    print(f"[成功] Enabled linger for {username} — user D-Bus now available")
+                    print(_("[成功] Enabled linger for {username} — user D-Bus now available").format(username=username))
                     return
                 # enable-linger succeeded but the socket never appeared.
                 _raise_user_systemd_unavailable(
@@ -1131,25 +1132,25 @@ def remove_legacy_hermes_units(
     """
     legacy = _find_legacy_hermes_units()
     if not legacy:
-        print("No legacy BookwormPRO gateway units found.")
+        print(_("No legacy BookwormPRO gateway units found."))
         return 0, []
 
     user_units = [(n, p) for n, p, is_sys in legacy if not is_sys]
     system_units = [(n, p) for n, p, is_sys in legacy if is_sys]
 
     print()
-    print("Legacy BookwormPRO gateway unit(s) found:")
+    print(_("Legacy BookwormPRO gateway unit(s) found:"))
     for name, path, is_system in legacy:
         scope = "system" if is_system else "user"
-        print(f"  {path}  ({scope} scope)")
+        print(_("  {path}  ({scope} scope)").format(path=path, scope=scope))
     print()
 
     if dry_run:
-        print("(dry-run — nothing removed)")
+        print(_("(dry-run — nothing removed)"))
         return 0, [p for _, p, _ in legacy]
 
     if interactive and not prompt_yes_no("Remove these legacy units?", True):
-        print("Skipped. Run again with: bookworm gateway migrate-legacy")
+        print(_("Skipped. Run again with: bookworm gateway migrate-legacy"))
         return 0, [p for _, p, _ in legacy]
 
     removed = 0
@@ -1161,10 +1162,10 @@ def remove_legacy_hermes_units(
             _run_systemctl(["stop", name], system=False, check=False, timeout=90)
             _run_systemctl(["disable", name], system=False, check=False, timeout=30)
             path.unlink(missing_ok=True)
-            print(f"  [成功] Removed {path}")
+            print(_("  [成功] Removed {path}").format(path=path))
             removed += 1
         except (OSError, RuntimeError) as e:
-            print(f"  [警告] Could not remove {path}: {e}")
+            print(_("  [警告] Could not remove {path}: {e}").format(path=path, e=e))
             remaining.append(path)
 
     if user_units:
@@ -1187,10 +1188,10 @@ def remove_legacy_hermes_units(
                     _run_systemctl(["stop", name], system=True, check=False, timeout=90)
                     _run_systemctl(["disable", name], system=True, check=False, timeout=30)
                     path.unlink(missing_ok=True)
-                    print(f"  [成功] Removed {path}")
+                    print(_("  [成功] Removed {path}").format(path=path))
                     removed += 1
                 except (OSError, RuntimeError) as e:
-                    print(f"  [警告] Could not remove {path}: {e}")
+                    print(_("  [警告] Could not remove {path}: {e}").format(path=path, e=e))
                     remaining.append(path)
 
             try:
@@ -1223,7 +1224,7 @@ def print_systemd_scope_conflict_warning() -> None:
 
 def _require_root_for_system_service(action: str) -> None:
     if os.geteuid() != 0:
-        print(f"System gateway {action} requires root. Re-run with sudo.")
+        print(_("System gateway {action} requires root. Re-run with sudo.").format(action=action))
         sys.exit(1)
 
 
@@ -1365,14 +1366,14 @@ def print_systemd_linger_guidance() -> None:
     """Print the current linger status and the fix when it is disabled."""
     linger_enabled, linger_detail = get_systemd_linger_status()
     if linger_enabled is True:
-        print("[成功] Systemd linger is enabled (service survives logout)")
+        print(_("[成功] Systemd linger is enabled (service survives logout)"))
     elif linger_enabled is False:
-        print("[警告] Systemd linger is disabled (gateway may stop when you log out)")
-        print("  Run: sudo loginctl enable-linger $USER")
+        print(_("[警告] Systemd linger is disabled (gateway may stop when you log out)"))
+        print(_("  Run: sudo loginctl enable-linger $USER"))
     else:
-        print(f"[警告] Could not verify systemd linger ({linger_detail})")
-        print("  If you want the gateway user service to survive logout, run:")
-        print("  sudo loginctl enable-linger $USER")
+        print(_("[警告] Could not verify systemd linger ({linger_detail})").format(linger_detail=linger_detail))
+        print(_("  If you want the gateway user service to survive logout, run:"))
+        print(_("  sudo loginctl enable-linger $USER"))
 
 def _launchd_user_home() -> Path:
     """Return the real macOS user home for launchd artifacts.
@@ -1657,22 +1658,22 @@ def refresh_systemd_unit_if_needed(system: bool = False) -> bool:
     expected_user = _read_systemd_user_from_unit(unit_path) if system else None
     unit_path.write_text(generate_systemd_unit(system=system, run_as_user=expected_user), encoding="utf-8")
     _run_systemctl(["daemon-reload"], system=system, check=True, timeout=30)
-    print(f"↻ Updated gateway {_service_scope_label(system)} service definition to match the current BookwormPRO install")
+    print(_("↻ Updated gateway {_service_scope_label} service definition to match the current BookwormPRO install").format(_service_scope_label=_service_scope_label(system)))
     return True
 
 
 
 def _print_linger_enable_warning(username: str, detail: str | None = None) -> None:
     print()
-    print("[警告] Linger not enabled — gateway may stop when you close this terminal.")
+    print(_("[警告] Linger not enabled — gateway may stop when you close this terminal."))
     if detail:
-        print(f"  Auto-enable failed: {detail}")
+        print(_("  Auto-enable failed: {detail}").format(detail=detail))
     print()
-    print("  On headless servers (VPS, cloud instances) run:")
-    print(f"    sudo loginctl enable-linger {username}")
+    print(_("  On headless servers (VPS, cloud instances) run:"))
+    print(_("    sudo loginctl enable-linger {username}").format(username=username))
     print()
-    print("  Then restart the gateway:")
-    print(f"    systemctl --user restart {get_service_name()}.service")
+    print(_("  Then restart the gateway:"))
+    print(_("    systemctl --user restart {get_service_name}.service").format(get_service_name=get_service_name()))
     print()
 
 
@@ -1687,19 +1688,19 @@ def _ensure_linger_enabled() -> None:
     username = getpass.getuser()
     linger_file = Path(f"/var/lib/systemd/linger/{username}")
     if linger_file.exists():
-        print("[成功] Systemd linger is enabled (service survives logout)")
+        print(_("[成功] Systemd linger is enabled (service survives logout)"))
         return
 
     linger_enabled, linger_detail = get_systemd_linger_status()
     if linger_enabled is True:
-        print("[成功] Systemd linger is enabled (service survives logout)")
+        print(_("[成功] Systemd linger is enabled (service survives logout)"))
         return
 
     if not shutil.which("loginctl"):
         _print_linger_enable_warning(username, linger_detail or "loginctl not found")
         return
 
-    print("Enabling linger so the gateway survives SSH logout...")
+    print(_("Enabling linger so the gateway survives SSH logout..."))
     try:
         result = subprocess.run(
             ["loginctl", "enable-linger", username],
@@ -1713,7 +1714,7 @@ def _ensure_linger_enabled() -> None:
         return
 
     if result.returncode == 0:
-        print("[成功] Linger enabled — gateway will persist after logout")
+        print(_("[成功] Linger enabled — gateway will persist after logout"))
         return
 
     detail = (result.stderr or result.stdout or f"exit {result.returncode}").strip()
@@ -1762,35 +1763,38 @@ def systemd_install(force: bool = False, system: bool = False, run_as_user: str 
 
     if unit_path.exists() and not force:
         if not systemd_unit_is_current(system=system):
-            print(f"↻ Repairing outdated {_service_scope_label(system)} systemd service at: {unit_path}")
+            print(_("↻ Repairing outdated {_service_scope_label} systemd service at: {unit_path}").format(_service_scope_label=_service_scope_label(system), unit_path=unit_path))
             refresh_systemd_unit_if_needed(system=system)
             _run_systemctl(["enable", get_service_name()], system=system, check=True, timeout=30)
-            print(f"[成功] {_service_scope_label(system).capitalize()} service definition updated")
+            print(_("[成功] {_service_scope_label} service definition updated").format(_service_scope_label=_service_scope_label(system).capitalize()))
             return
-        print(f"Service already installed at: {unit_path}")
-        print("Use --force to reinstall")
+        print(_("Service already installed at: {unit_path}").format(unit_path=unit_path))
+        print(_("Use --force to reinstall"))
         return
 
     unit_path.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Installing {_service_scope_label(system)} systemd service to: {unit_path}")
+    print(_("Installing {_service_scope_label} systemd service to: {unit_path}").format(_service_scope_label=_service_scope_label(system), unit_path=unit_path))
     unit_path.write_text(generate_systemd_unit(system=system, run_as_user=run_as_user), encoding="utf-8")
 
     _run_systemctl(["daemon-reload"], system=system, check=True, timeout=30)
     _run_systemctl(["enable", get_service_name()], system=system, check=True, timeout=30)
 
     print()
-    print(f"[成功] {_service_scope_label(system).capitalize()} service installed and enabled!")
+    print(_("[成功] {_service_scope_label} service installed and enabled!").format(_service_scope_label=_service_scope_label(system).capitalize()))
     print()
-    print("Next steps:")
-    print(f"  {'sudo ' if system else ''}bookworm gateway start{scope_flag}              # Start the service")
-    print(f"  {'sudo ' if system else ''}bookworm gateway status{scope_flag}             # Check status")
-    print(f"  {'journalctl' if system else 'journalctl --user'} -u {get_service_name()} -f  # View logs")
+    print(_("Next steps:"))
+    _sudo = 'sudo ' if system else ''
+    _jctl = 'journalctl' if system else 'journalctl --user'
+    _svc = get_service_name()
+    print(f"  {_sudo}bookworm gateway start{scope_flag}              # Start the service")
+    print(f"  {_sudo}bookworm gateway status{scope_flag}             # Check status")
+    print(f"  {_jctl} -u {_svc} -f  # View logs")
     print()
 
     if system:
         configured_user = _read_systemd_user_from_unit(unit_path)
         if configured_user:
-            print(f"Configured to run as: {configured_user}")
+            print(_("Configured to run as: {configured_user}").format(configured_user=configured_user))
     else:
         _ensure_linger_enabled()
 
@@ -1809,10 +1813,10 @@ def systemd_uninstall(system: bool = False):
     unit_path = get_systemd_unit_path(system=system)
     if unit_path.exists():
         unit_path.unlink()
-        print(f"[成功] Removed {unit_path}")
+        print(_("[成功] Removed {unit_path}").format(unit_path=unit_path))
 
     _run_systemctl(["daemon-reload"], system=system, check=True, timeout=30)
-    print(f"[成功] {_service_scope_label(system).capitalize()} service uninstalled")
+    print(_("[成功] {_service_scope_label} service uninstalled").format(_service_scope_label=_service_scope_label(system).capitalize()))
 
 
 def systemd_start(system: bool = False):
@@ -1826,7 +1830,7 @@ def systemd_start(system: bool = False):
         _preflight_user_systemd()
     refresh_systemd_unit_if_needed(system=system)
     _run_systemctl(["start", get_service_name()], system=system, check=True, timeout=30)
-    print(f"[成功] {_service_scope_label(system).capitalize()} service started")
+    print(_("[成功] {_service_scope_label} service started").format(_service_scope_label=_service_scope_label(system).capitalize()))
 
 
 
@@ -1835,7 +1839,7 @@ def systemd_stop(system: bool = False):
     if system:
         _require_root_for_system_service("stop")
     _run_systemctl(["stop", get_service_name()], system=system, check=True, timeout=90)
-    print(f"[成功] {_service_scope_label(system).capitalize()} service stopped")
+    print(_("[成功] {_service_scope_label} service stopped").format(_service_scope_label=_service_scope_label(system).capitalize()))
 
 
 
@@ -1855,7 +1859,7 @@ def systemd_restart(system: bool = False):
         svc = get_service_name()
 
         # Phase 1: wait for old process to exit (drain + shutdown)
-        print(f"[等待] {scope_label} service draining active work...")
+        print(_("[等待] {scope_label} service draining active work...").format(scope_label=scope_label))
         deadline = time.time() + 90
         while time.time() < deadline:
             try:
@@ -1864,7 +1868,7 @@ def systemd_restart(system: bool = False):
             except (ProcessLookupError, PermissionError):
                 break  # old process is gone
         else:
-            print(f"[警告] Old process (PID {pid}) still alive after 90s")
+            print(_("[警告] Old process (PID {pid}) still alive after 90s").format(pid=pid))
 
         # The gateway exits with code 75 for a planned service restart.
         # systemd can sit in the RestartSec window or even wedge itself into a
@@ -1896,7 +1900,7 @@ def systemd_restart(system: bool = False):
         timeout=30,
     )
     _run_systemctl(["reload-or-restart", get_service_name()], system=system, check=True, timeout=90)
-    print(f"[成功] {_service_scope_label(system).capitalize()} service restarted")
+    print(_("[成功] {_service_scope_label} service restarted").format(_service_scope_label=_service_scope_label(system).capitalize()))
 
 
 
@@ -1906,8 +1910,9 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
     scope_flag = " --system" if system else ""
 
     if not unit_path.exists():
-        print("[失败] Gateway service is not installed")
-        print(f"  Run: {'sudo ' if system else ''}bookworm gateway install{scope_flag}")
+        print(_("[失败] Gateway service is not installed"))
+        _sudo = 'sudo ' if system else ''
+        print(f"  Run: {_sudo}bookworm gateway install{scope_flag}")
         return
 
     if has_conflicting_systemd_units():
@@ -1919,8 +1924,9 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
         print()
 
     if not systemd_unit_is_current(system=system):
-        print("[警告] Installed gateway service definition is outdated")
-        print(f"  Run: {'sudo ' if system else ''}bookworm gateway restart{scope_flag}  # auto-refreshes the unit")
+        print(_("[警告] Installed gateway service definition is outdated"))
+        _sudo = 'sudo ' if system else ''
+        print(f"  Run: {_sudo}bookworm gateway restart{scope_flag}  # auto-refreshes the unit")
         print()
 
     status_cmd = ["status", get_service_name(), "--no-pager"]
@@ -1945,19 +1951,20 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
     status = result.stdout.strip()
 
     if status == "active":
-        print(f"[成功] {_service_scope_label(system).capitalize()} gateway service is running")
+        print(_("[成功] {_service_scope_label} gateway service is running").format(_service_scope_label=_service_scope_label(system).capitalize()))
     else:
-        print(f"[失败] {_service_scope_label(system).capitalize()} gateway service is stopped")
-        print(f"  Run: {'sudo ' if system else ''}bookworm gateway start{scope_flag}")
+        print(_("[失败] {_service_scope_label} gateway service is stopped").format(_service_scope_label=_service_scope_label(system).capitalize()))
+        _sudo = 'sudo ' if system else ''
+        print(f"  Run: {_sudo}bookworm gateway start{scope_flag}")
 
     configured_user = _read_systemd_user_from_unit(unit_path) if system else None
     if configured_user:
-        print(f"Configured to run as: {configured_user}")
+        print(_("Configured to run as: {configured_user}").format(configured_user=configured_user))
 
     runtime_lines = _runtime_health_lines()
     if runtime_lines:
         print()
-        print("Recent gateway health:")
+        print(_("Recent gateway health:"))
         for line in runtime_lines:
             print(f"  {line}")
 
@@ -1967,28 +1974,31 @@ def systemd_status(deep: bool = False, system: bool = False, full: bool = False)
     exec_main_status = unit_props.get("ExecMainStatus", "")
     result_code = unit_props.get("Result", "")
     if active_state == "activating" and sub_state == "auto-restart":
-        print("  [等待] Restart pending: systemd is waiting to relaunch the gateway")
+        print(_("  [等待] Restart pending: systemd is waiting to relaunch the gateway"))
     elif active_state == "failed" and exec_main_status == str(GATEWAY_SERVICE_RESTART_EXIT_CODE):
-        print("  [警告] Planned restart is stuck in systemd failed state (exit 75)")
-        print(f"  Run: systemctl {'--user ' if not system else ''}reset-failed {get_service_name()} && {'sudo ' if system else ''}bookworm gateway start{scope_flag}")
+        print(_("  [警告] Planned restart is stuck in systemd failed state (exit 75)"))
+        _sudo = 'sudo ' if system else ''
+        _user_flag = '' if system else '--user '
+        _svc = get_service_name()
+        print(f"  Run: systemctl {_user_flag}reset-failed {_svc} && {_sudo}bookworm gateway start{scope_flag}")
     elif active_state == "failed" and result_code:
-        print(f"  [警告] Systemd unit result: {result_code}")
+        print(_("  [警告] Systemd unit result: {result_code}").format(result_code=result_code))
 
     if system:
-        print("[成功] System service starts at boot without requiring systemd linger")
+        print(_("[成功] System service starts at boot without requiring systemd linger"))
     elif deep:
         print_systemd_linger_guidance()
     else:
         linger_enabled, _ = get_systemd_linger_status()
         if linger_enabled is True:
-            print("[成功] Systemd linger is enabled (service survives logout)")
+            print(_("[成功] Systemd linger is enabled (service survives logout)"))
         elif linger_enabled is False:
-            print("[警告] Systemd linger is disabled (gateway may stop when you log out)")
-            print("  Run: sudo loginctl enable-linger $USER")
+            print(_("[警告] Systemd linger is disabled (gateway may stop when you log out)"))
+            print(_("  Run: sudo loginctl enable-linger $USER"))
 
     if deep:
         print()
-        print("Recent logs:")
+        print(_("Recent logs:"))
         log_cmd = _journalctl_cmd(system) + ["-u", get_service_name(), "-n", "20", "--no-pager"]
         if full:
             log_cmd.append("-l")
@@ -2124,7 +2134,7 @@ def refresh_launchd_plist_if_needed() -> bool:
     # Bootout/bootstrap so launchd picks up the new definition
     subprocess.run(["launchctl", "bootout", f"{_launchd_domain()}/{label}"], check=False, timeout=90)
     subprocess.run(["launchctl", "bootstrap", _launchd_domain(), str(plist_path)], check=False, timeout=30)
-    print("↻ Updated gateway launchd service definition to match the current BookwormPRO install")
+    print(_("↻ Updated gateway launchd service definition to match the current BookwormPRO install"))
     return True
 
 
@@ -2133,27 +2143,27 @@ def launchd_install(force: bool = False):
     
     if plist_path.exists() and not force:
         if not launchd_plist_is_current():
-            print(f"↻ Repairing outdated launchd service at: {plist_path}")
+            print(_("↻ Repairing outdated launchd service at: {plist_path}").format(plist_path=plist_path))
             refresh_launchd_plist_if_needed()
-            print("[成功] Service definition updated")
+            print(_("[成功] Service definition updated"))
             return
-        print(f"Service already installed at: {plist_path}")
-        print("Use --force to reinstall")
+        print(_("Service already installed at: {plist_path}").format(plist_path=plist_path))
+        print(_("Use --force to reinstall"))
         return
     
     plist_path.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Installing launchd service to: {plist_path}")
+    print(_("Installing launchd service to: {plist_path}").format(plist_path=plist_path))
     plist_path.write_text(generate_launchd_plist())
     
     subprocess.run(["launchctl", "bootstrap", _launchd_domain(), str(plist_path)], check=True, timeout=30)
     
     print()
-    print("[成功] Service installed and loaded!")
+    print(_("[成功] Service installed and loaded!"))
     print()
-    print("Next steps:")
-    print("  bookworm gateway status             # Check status")
+    print(_("Next steps:"))
+    print(_("  bookworm gateway status             # Check status"))
     from bwm_constants import display_hermes_home as _dhh
-    print(f"  tail -f {_dhh()}/logs/gateway.log  # View logs")
+    print(_("  tail -f {_dhh}/logs/gateway.log  # View logs").format(_dhh=_dhh()))
 
 def launchd_uninstall():
     plist_path = get_launchd_plist_path()
@@ -2162,9 +2172,9 @@ def launchd_uninstall():
     
     if plist_path.exists():
         plist_path.unlink()
-        print(f"[成功] Removed {plist_path}")
+        print(_("[成功] Removed {plist_path}").format(plist_path=plist_path))
     
-    print("[成功] Service uninstalled")
+    print(_("[成功] Service uninstalled"))
 
 def launchd_start():
     plist_path = get_launchd_plist_path()
@@ -2172,12 +2182,12 @@ def launchd_start():
 
     # Self-heal if the plist is missing entirely (e.g., manual cleanup, failed upgrade)
     if not plist_path.exists():
-        print("↻ launchd plist missing; regenerating service definition")
+        print(_("↻ launchd plist missing; regenerating service definition"))
         plist_path.parent.mkdir(parents=True, exist_ok=True)
         plist_path.write_text(generate_launchd_plist(), encoding="utf-8")
         subprocess.run(["launchctl", "bootstrap", _launchd_domain(), str(plist_path)], check=True, timeout=30)
         subprocess.run(["launchctl", "kickstart", f"{_launchd_domain()}/{label}"], check=True, timeout=30)
-        print("[成功] Service started")
+        print(_("[成功] Service started"))
         return
 
     refresh_launchd_plist_if_needed()
@@ -2186,10 +2196,10 @@ def launchd_start():
     except subprocess.CalledProcessError as e:
         if e.returncode not in (3, 113):
             raise
-        print("↻ launchd job was unloaded; reloading service definition")
+        print(_("↻ launchd job was unloaded; reloading service definition"))
         subprocess.run(["launchctl", "bootstrap", _launchd_domain(), str(plist_path)], check=True, timeout=30)
         subprocess.run(["launchctl", "kickstart", f"{_launchd_domain()}/{label}"], check=True, timeout=30)
-    print("[成功] Service started")
+    print(_("[成功] Service started"))
 
 def launchd_stop():
     label = get_launchd_label()
@@ -2206,7 +2216,7 @@ def launchd_stop():
         else:
             raise
     _wait_for_gateway_exit(timeout=10.0, force_after=5.0)
-    print("[成功] Service stopped")
+    print(_("[成功] Service stopped"))
 
 def _wait_for_gateway_exit(timeout: float = 10.0, force_after: float | None = 5.0) -> bool:
     """Wait for the gateway process (by saved PID) to exit.
@@ -2235,7 +2245,7 @@ def _wait_for_gateway_exit(timeout: float = 10.0, force_after: float | None = 5.
             # Grace period expired — force-kill the specific PID.
             try:
                 terminate_pid(pid, force=True)
-                print(f"[警告] Gateway PID {pid} did not exit gracefully; sent SIGKILL")
+                print(_("[警告] Gateway PID {pid} did not exit gracefully; sent SIGKILL").format(pid=pid))
             except (ProcessLookupError, PermissionError, OSError):
                 return True  # Already gone or we can't touch it.
             force_sent = True
@@ -2245,7 +2255,7 @@ def _wait_for_gateway_exit(timeout: float = 10.0, force_after: float | None = 5.
     # Timed out even after force-kill.
     remaining_pid = get_running_pid()
     if remaining_pid is not None:
-        print(f"[警告] Gateway PID {remaining_pid} still running after {timeout}s — restart may fail")
+        print(_("[警告] Gateway PID {remaining_pid} still running after {timeout}s — restart may fail").format(remaining_pid=remaining_pid, timeout=timeout))
         return False
     return True
 
@@ -2259,7 +2269,7 @@ def launchd_restart():
     try:
         pid = get_running_pid()
         if pid is not None and _request_gateway_self_restart(pid):
-            print("[成功] Service restart requested")
+            print(_("[成功] Service restart requested"))
             return
         if pid is not None:
             try:
@@ -2269,18 +2279,18 @@ def launchd_restart():
             if pid is not None:
                 exited = _wait_for_gateway_exit(timeout=drain_timeout, force_after=None)
                 if not exited:
-                    print(f"[警告] Gateway drain timed out after {drain_timeout:.0f}s — forcing launchd restart")
+                    print(_("[警告] Gateway drain timed out after {drain_timeout:.0f}s — forcing launchd restart").format(drain_timeout=drain_timeout))
         subprocess.run(["launchctl", "kickstart", "-k", target], check=True, timeout=90)
-        print("[成功] Service restarted")
+        print(_("[成功] Service restarted"))
     except subprocess.CalledProcessError as e:
         if e.returncode not in (3, 113):
             raise
         # Job not loaded — bootstrap and start fresh
-        print("↻ launchd job was unloaded; reloading")
+        print(_("↻ launchd job was unloaded; reloading"))
         plist_path = get_launchd_plist_path()
         subprocess.run(["launchctl", "bootstrap", _launchd_domain(), str(plist_path)], check=True, timeout=30)
         subprocess.run(["launchctl", "kickstart", target], check=True, timeout=30)
-        print("[成功] Service restarted")
+        print(_("[成功] Service restarted"))
 
 def launchd_status(deep: bool = False):
     plist_path = get_launchd_plist_path()
@@ -2298,26 +2308,26 @@ def launchd_status(deep: bool = False):
         loaded = False
         loaded_output = ""
 
-    print(f"Launchd plist: {plist_path}")
+    print(_("Launchd plist: {plist_path}").format(plist_path=plist_path))
     if launchd_plist_is_current():
-        print("[成功] Service definition matches the current BookwormPRO install")
+        print(_("[成功] Service definition matches the current BookwormPRO install"))
     else:
-        print("[警告] Service definition is stale relative to the current BookwormPRO install")
-        print("  Run: bookworm gateway start")
+        print(_("[警告] Service definition is stale relative to the current BookwormPRO install"))
+        print(_("  Run: bookworm gateway start"))
 
     if loaded:
-        print("[成功] Gateway service is loaded")
+        print(_("[成功] Gateway service is loaded"))
         print(loaded_output)
     else:
-        print("[失败] Gateway service is not loaded")
-        print("  Service definition exists locally but launchd has not loaded it.")
-        print("  Run: bookworm gateway start")
+        print(_("[失败] Gateway service is not loaded"))
+        print(_("  Service definition exists locally but launchd has not loaded it."))
+        print(_("  Run: bookworm gateway start"))
     
     if deep:
         log_file = get_hermes_home() / "logs" / "gateway.log"
         if log_file.exists():
             print()
-            print("Recent logs:")
+            print(_("Recent logs:"))
             subprocess.run(["tail", "-20", str(log_file)], timeout=10)
 
 
@@ -2340,10 +2350,10 @@ def run_gateway(verbose: int = 0, quiet: bool = False, replace: bool = False):
     from gateway.run import start_gateway
     
     print("┌─────────────────────────────────────────────────────────┐")
-    print("│           [BWM] BookwormPRO Gateway Starting...                 │")
+    print(_("│           [BWM] BookwormPRO Gateway Starting...                 │"))
     print("├─────────────────────────────────────────────────────────┤")
-    print("│  Messaging platforms + cron scheduler                    │")
-    print("│  Press Ctrl+C to stop                                   │")
+    print(_("│  Messaging platforms + cron scheduler                    │"))
+    print(_("│  Press Ctrl+C to stop                                   │"))
     print("└─────────────────────────────────────────────────────────┘")
     print()
     
@@ -2822,7 +2832,7 @@ def _setup_standard_platform(platform: dict):
     token_var = platform["token_var"]
 
     print()
-    print(color(f"  ─── {emoji} {label} Setup ───", Colors.CYAN))
+    print(color(_("  ─── {emoji} {label} Setup ───").format(emoji=emoji, label=label), Colors.CYAN))
 
     # Show step-by-step setup instructions if this platform has them
     instructions = platform.get("setup_instructions")
@@ -2943,7 +2953,7 @@ def _setup_dingtalk():
     label = dingtalk_platform["label"]
 
     print()
-    print(color(f"  ─── {emoji} {label} Setup ───", Colors.CYAN))
+    print(color(_("  ─── {emoji} {label} Setup ───").format(emoji=emoji, label=label), Colors.CYAN))
 
     existing = get_env_value("DINGTALK_CLIENT_ID")
     if existing:
@@ -2994,7 +3004,7 @@ def _setup_dingtalk():
 def _setup_wecom():
     """Interactive setup for WeCom — scan QR code or manual credential input."""
     print()
-    print(color("  ─── [对话] WeCom (Enterprise WeChat) Setup ───", Colors.CYAN))
+    print(color(_("  ─── [对话] WeCom (Enterprise WeChat) Setup ───"), Colors.CYAN))
 
     existing_bot_id = get_env_value("WECOM_BOT_ID")
     existing_secret = get_env_value("WECOM_SECRET")
@@ -3162,7 +3172,7 @@ def _is_service_running() -> bool:
 def _setup_weixin():
     """Interactive setup for Weixin / WeChat personal accounts."""
     print()
-    print(color("  ─── [对话] Weixin / WeChat Setup ───", Colors.CYAN))
+    print(color(_("  ─── [对话] Weixin / WeChat Setup ───"), Colors.CYAN))
     print()
     print_info("  1. BookwormPRO will open Tencent iLink QR login in this terminal.")
     print_info("  2. Use WeChat to scan and confirm the QR code.")
@@ -3289,7 +3299,7 @@ def _setup_weixin():
 def _setup_feishu():
     """Interactive setup for Feishu / Lark — scan-to-create or manual credentials."""
     print()
-    print(color("  ─── 🪽 Feishu / Lark Setup ───", Colors.CYAN))
+    print(color(_("  ─── 🪽 Feishu / Lark Setup ───"), Colors.CYAN))
 
     existing_app_id = get_env_value("FEISHU_APP_ID")
     existing_secret = get_env_value("FEISHU_APP_SECRET")
@@ -3461,7 +3471,7 @@ def _setup_feishu():
 def _setup_qqbot():
     """Interactive setup for QQ Bot — scan-to-configure or manual credentials."""
     print()
-    print(color("  ─── 🐧 QQ Bot Setup ───", Colors.CYAN))
+    print(color(_("  ─── 🐧 QQ Bot Setup ───"), Colors.CYAN))
 
     existing_app_id = get_env_value("QQ_APP_ID")
     existing_secret = get_env_value("QQ_CLIENT_SECRET")
@@ -3573,7 +3583,7 @@ def _setup_signal():
     import shutil
 
     print()
-    print(color("  ─── 📡 Signal Setup ───", Colors.CYAN))
+    print(color(_("  ─── 📡 Signal Setup ───"), Colors.CYAN))
 
     existing_url = get_env_value("SIGNAL_HTTP_URL")
     existing_account = get_env_value("SIGNAL_ACCOUNT")
@@ -3605,9 +3615,9 @@ def _setup_signal():
     print_info("  Enter the URL where signal-cli HTTP daemon is running.")
     default_url = existing_url or "http://127.0.0.1:8080"
     try:
-        url = input(f"  HTTP URL [{default_url}]: ").strip() or default_url
+        url = input(_("  HTTP URL [{default_url}]: ").format(default_url=default_url)).strip() or default_url
     except (EOFError, KeyboardInterrupt):
-        print("\n  Setup cancelled.")
+        print(_("\n  Setup cancelled."))
         return
 
     # Test connectivity
@@ -3634,11 +3644,12 @@ def _setup_signal():
     print_info("  Example: +15551234567")
     default_account = existing_account or ""
     try:
-        account = input(f"  Account number{f' [{default_account}]' if default_account else ''}: ").strip()
+        _acct_hint = f' [{default_account}]' if default_account else ''
+        account = input(f"  Account number{_acct_hint}: ").strip()
         if not account:
             account = default_account
     except (EOFError, KeyboardInterrupt):
-        print("\n  Setup cancelled.")
+        print(_("\n  Setup cancelled."))
         return
 
     if not account:
@@ -3654,9 +3665,9 @@ def _setup_signal():
     existing_allowed = get_env_value("SIGNAL_ALLOWED_USERS") or ""
     default_allowed = existing_allowed or account
     try:
-        allowed = input(f"  Allowed users [{default_allowed}]: ").strip() or default_allowed
+        allowed = input(_("  Allowed users [{default_allowed}]: ").format(default_allowed=default_allowed)).strip() or default_allowed
     except (EOFError, KeyboardInterrupt):
-        print("\n  Setup cancelled.")
+        print(_("\n  Setup cancelled."))
         return
 
     save_env_value("SIGNAL_ALLOWED_USERS", allowed)
@@ -3668,9 +3679,9 @@ def _setup_signal():
         print_info("  Enter group IDs to allow, or * for all groups.")
         existing_groups = get_env_value("SIGNAL_GROUP_ALLOWED_USERS") or ""
         try:
-            groups = input(f"  Group IDs [{existing_groups or '*'}]: ").strip() or existing_groups or "*"
+            groups = input(_("  Group IDs [{groups}]: ").format(groups=existing_groups or "*")).strip() or existing_groups or "*"
         except (EOFError, KeyboardInterrupt):
-            print("\n  Setup cancelled.")
+            print(_("\n  Setup cancelled."))
             return
         save_env_value("SIGNAL_GROUP_ALLOWED_USERS", groups)
 
@@ -3690,10 +3701,10 @@ def gateway_setup():
 
     print()
     print(color("┌─────────────────────────────────────────────────────────┐", Colors.MAGENTA))
-    print(color("│             [BWM] Gateway Setup                            │", Colors.MAGENTA))
+    print(color(_("│             [BWM] Gateway Setup                            │"), Colors.MAGENTA))
     print(color("├─────────────────────────────────────────────────────────┤", Colors.MAGENTA))
-    print(color("│  Configure messaging platforms and the gateway service. │", Colors.MAGENTA))
-    print(color("│  Press Ctrl+C at any time to exit.                     │", Colors.MAGENTA))
+    print(color(_("│  Configure messaging platforms and the gateway service. │"), Colors.MAGENTA))
+    print(color(_("│  Press Ctrl+C at any time to exit.                     │"), Colors.MAGENTA))
     print(color("└─────────────────────────────────────────────────────────┘", Colors.MAGENTA))
 
     # ── Gateway service status ──
@@ -3903,8 +3914,8 @@ def _gateway_command_inner(args):
         system = getattr(args, 'system', False)
         run_as_user = getattr(args, 'run_as_user', None)
         if is_termux():
-            print("Gateway service installation is not supported on Termux.")
-            print("Run manually: bookworm gateway")
+            print(_("Gateway service installation is not supported on Termux."))
+            print(_("Run manually: bookworm gateway"))
             sys.exit(1)
         if supports_systemd_services():
             if is_wsl():
@@ -3916,26 +3927,26 @@ def _gateway_command_inner(args):
         elif is_macos():
             launchd_install(force)
         elif is_wsl():
-            print("WSL detected but systemd is not running.")
-            print("Either enable systemd (add systemd=true to /etc/wsl.conf and restart WSL)")
-            print("or run the gateway in foreground mode:")
+            print(_("WSL detected but systemd is not running."))
+            print(_("Either enable systemd (add systemd=true to /etc/wsl.conf and restart WSL)"))
+            print(_("or run the gateway in foreground mode:"))
             print()
-            print("  bookworm gateway run                              # direct foreground")
-            print("  tmux new -s bookworm 'bookworm gateway run'         # persistent via tmux")
-            print("  nohup bookworm gateway run > ~/.bookwormpro/logs/gateway.log 2>&1 &  # background")
+            print(_("  bookworm gateway run                              # direct foreground"))
+            print(_("  tmux new -s bookworm 'bookworm gateway run'         # persistent via tmux"))
+            print(_("  nohup bookworm gateway run > ~/.bookwormpro/logs/gateway.log 2>&1 &  # background"))
             sys.exit(1)
         elif is_container():
-            print("Service installation is not needed inside a Docker container.")
-            print("The container runtime is your service manager — use Docker restart policies instead:")
+            print(_("Service installation is not needed inside a Docker container."))
+            print(_("The container runtime is your service manager — use Docker restart policies instead:"))
             print()
-            print("  docker run --restart unless-stopped ...   # auto-restart on crash/reboot")
-            print("  docker restart <container>                # manual restart")
+            print(_("  docker run --restart unless-stopped ...   # auto-restart on crash/reboot"))
+            print(_("  docker restart <container>                # manual restart"))
             print()
-            print("To run the gateway: bookworm gateway run")
+            print(_("To run the gateway: bookworm gateway run"))
             sys.exit(0)
         else:
-            print("Service installation not supported on this platform.")
-            print("Run manually: bookworm gateway run")
+            print(_("Service installation not supported on this platform."))
+            print(_("Run manually: bookworm gateway run"))
             sys.exit(1)
     
     elif subcmd == "uninstall":
@@ -3944,22 +3955,22 @@ def _gateway_command_inner(args):
             return
         system = getattr(args, 'system', False)
         if is_termux():
-            print("Gateway service uninstall is not supported on Termux because there is no managed service to remove.")
-            print("Stop manual runs with: bookworm gateway stop")
+            print(_("Gateway service uninstall is not supported on Termux because there is no managed service to remove."))
+            print(_("Stop manual runs with: bookworm gateway stop"))
             sys.exit(1)
         if supports_systemd_services():
             systemd_uninstall(system=system)
         elif is_macos():
             launchd_uninstall()
         elif is_container():
-            print("Service uninstall is not applicable inside a Docker container.")
-            print("To stop the gateway, stop or remove the container:")
+            print(_("Service uninstall is not applicable inside a Docker container."))
+            print(_("To stop the gateway, stop or remove the container:"))
             print()
-            print("  docker stop <container>")
-            print("  docker rm <container>")
+            print(_("  docker stop <container>"))
+            print(_("  docker rm <container>"))
             sys.exit(0)
         else:
-            print("Not supported on this platform.")
+            print(_("Not supported on this platform."))
             sys.exit(1)
 
     elif subcmd == "start":
@@ -3970,38 +3981,38 @@ def _gateway_command_inner(args):
             # Kill all stale gateway processes across all profiles before starting
             killed = kill_gateway_processes(all_profiles=True)
             if killed:
-                print(f"[成功] Killed {killed} stale gateway process(es) across all profiles")
+                print(_("[成功] Killed {killed} stale gateway process(es) across all profiles").format(killed=killed))
                 _wait_for_gateway_exit(timeout=10.0, force_after=5.0)
 
         if is_termux():
-            print("Gateway service start is not supported on Termux because there is no system service manager.")
-            print("Run manually: bookworm gateway")
+            print(_("Gateway service start is not supported on Termux because there is no system service manager."))
+            print(_("Run manually: bookworm gateway"))
             sys.exit(1)
         if supports_systemd_services():
             systemd_start(system=system)
         elif is_macos():
             launchd_start()
         elif is_wsl():
-            print("WSL detected but systemd is not available.")
-            print("Run the gateway in foreground mode instead:")
+            print(_("WSL detected but systemd is not available."))
+            print(_("Run the gateway in foreground mode instead:"))
             print()
-            print("  bookworm gateway run                              # direct foreground")
-            print("  tmux new -s bookworm 'bookworm gateway run'         # persistent via tmux")
-            print("  nohup bookworm gateway run > ~/.bookwormpro/logs/gateway.log 2>&1 &  # background")
+            print(_("  bookworm gateway run                              # direct foreground"))
+            print(_("  tmux new -s bookworm 'bookworm gateway run'         # persistent via tmux"))
+            print(_("  nohup bookworm gateway run > ~/.bookwormpro/logs/gateway.log 2>&1 &  # background"))
             print()
-            print("To enable systemd: add systemd=true to /etc/wsl.conf and run 'wsl --shutdown' from PowerShell.")
+            print(_("To enable systemd: add systemd=true to /etc/wsl.conf and run 'wsl --shutdown' from PowerShell."))
             sys.exit(1)
         elif is_container():
-            print("Service start is not applicable inside a Docker container.")
-            print("The gateway runs as the container's main process.")
+            print(_("Service start is not applicable inside a Docker container."))
+            print(_("The gateway runs as the container's main process."))
             print()
-            print("  docker start <container>     # start a stopped container")
-            print("  docker restart <container>   # restart a running container")
+            print(_("  docker start <container>     # start a stopped container"))
+            print(_("  docker restart <container>   # restart a running container"))
             print()
-            print("Or run the gateway directly: bookworm gateway run")
+            print(_("Or run the gateway directly: bookworm gateway run"))
             sys.exit(0)
         else:
-            print("Not supported on this platform.")
+            print(_("Not supported on this platform."))
             sys.exit(1)
 
     elif subcmd == "stop":
@@ -4026,9 +4037,9 @@ def _gateway_command_inner(args):
             killed = kill_gateway_processes(all_profiles=True)
             total = killed + (1 if service_available else 0)
             if total:
-                print(f"[成功] Stopped {total} gateway process(es) across all profiles")
+                print(_("[成功] Stopped {total} gateway process(es) across all profiles").format(total=total))
             else:
-                print("[失败] No gateway processes found")
+                print(_("[失败] No gateway processes found"))
         else:
             # Default: stop only the current profile's gateway
             service_available = False
@@ -4048,11 +4059,11 @@ def _gateway_command_inner(args):
             if not service_available:
                 # No systemd/launchd — use profile-scoped PID file
                 if stop_profile_gateway():
-                    print("[成功] Stopped gateway for this profile")
+                    print(_("[成功] Stopped gateway for this profile"))
                 else:
-                    print("[失败] No gateway running for this profile")
+                    print(_("[失败] No gateway running for this profile"))
             else:
-                print(f"[成功] Stopped {get_service_name()} service")
+                print(_("[成功] Stopped {get_service_name} service").format(get_service_name=get_service_name()))
     
     elif subcmd == "restart":
         # Try service first, fall back to killing and restarting
@@ -4079,11 +4090,11 @@ def _gateway_command_inner(args):
             killed = kill_gateway_processes(all_profiles=True)
             total = killed + (1 if service_stopped else 0)
             if total:
-                print(f"[成功] Stopped {total} gateway process(es) across all profiles")
+                print(_("[成功] Stopped {total} gateway process(es) across all profiles").format(total=total))
             _wait_for_gateway_exit(timeout=10.0, force_after=5.0)
 
             # Start the current profile's service fresh
-            print("Starting gateway...")
+            print(_("Starting gateway..."))
             if supports_systemd_services() and (get_systemd_unit_path(system=False).exists() or get_systemd_unit_path(system=True).exists()):
                 systemd_start(system=system)
             elif is_macos() and get_launchd_plist_path().exists():
@@ -4115,30 +4126,30 @@ def _gateway_command_inner(args):
                     import getpass
                     _username = getpass.getuser()
                     print()
-                    print("[警告] Cannot restart gateway as a service — linger is not enabled.")
-                    print("  The gateway user service requires linger to function on headless servers.")
+                    print(_("[警告] Cannot restart gateway as a service — linger is not enabled."))
+                    print(_("  The gateway user service requires linger to function on headless servers."))
                     print()
-                    print(f"  Run:  sudo loginctl enable-linger {_username}")
+                    print(_("  Run:  sudo loginctl enable-linger {_username}").format(_username=_username))
                     print()
-                    print("  Then restart the gateway:")
-                    print("    bookworm gateway restart")
+                    print(_("  Then restart the gateway:"))
+                    print(_("    bookworm gateway restart"))
                     return
 
             if service_configured:
                 print()
-                print("[失败] Gateway service restart failed.")
-                print("  The service definition exists, but the service manager did not recover it.")
-                print("  Fix the service, then retry: bookworm gateway start")
+                print(_("[失败] Gateway service restart failed."))
+                print(_("  The service definition exists, but the service manager did not recover it."))
+                print(_("  Fix the service, then retry: bookworm gateway start"))
                 sys.exit(1)
 
             # Manual restart: stop only this profile's gateway
             if stop_profile_gateway():
-                print("[成功] Stopped gateway for this profile")
+                print(_("[成功] Stopped gateway for this profile"))
 
             _wait_for_gateway_exit(timeout=10.0, force_after=5.0)
 
             # Start fresh
-            print("Starting gateway...")
+            print(_("Starting gateway..."))
             run_gateway(verbose=0)
     
     elif subcmd == "status":
@@ -4158,45 +4169,45 @@ def _gateway_command_inner(args):
             # Check for manually running processes
             pids = list(snapshot.gateway_pids)
             if pids:
-                print(f"[成功] Gateway is running (PID: {', '.join(map(str, pids))})")
-                print("  (Running manually, not as a system service)")
+                print(_("[成功] Gateway is running (PID: {join_pids})").format(join_pids=', '.join(map(str, pids))))
+                print(_("  (Running manually, not as a system service)"))
                 runtime_lines = _runtime_health_lines()
                 if runtime_lines:
                     print()
-                    print("Recent gateway health:")
+                    print(_("Recent gateway health:"))
                     for line in runtime_lines:
                         print(f"  {line}")
                 print()
                 if is_termux():
-                    print("Termux note:")
-                    print("  Android may stop background jobs when Termux is suspended")
+                    print(_("Termux note:"))
+                    print(_("  Android may stop background jobs when Termux is suspended"))
                 elif is_wsl():
-                    print("WSL note:")
-                    print("  The gateway is running in foreground/manual mode (recommended for WSL).")
-                    print("  Use tmux or screen for persistence across terminal closes.")
+                    print(_("WSL note:"))
+                    print(_("  The gateway is running in foreground/manual mode (recommended for WSL)."))
+                    print(_("  Use tmux or screen for persistence across terminal closes."))
                 else:
-                    print("To install as a service:")
-                    print("  bookworm gateway install")
-                    print("  sudo bookworm gateway install --system")
+                    print(_("To install as a service:"))
+                    print(_("  bookworm gateway install"))
+                    print(_("  sudo bookworm gateway install --system"))
             else:
-                print("[失败] Gateway is not running")
+                print(_("[失败] Gateway is not running"))
                 runtime_lines = _runtime_health_lines()
                 if runtime_lines:
                     print()
-                    print("Recent gateway health:")
+                    print(_("Recent gateway health:"))
                     for line in runtime_lines:
                         print(f"  {line}")
                 print()
-                print("To start:")
-                print("  bookworm gateway run      # Run in foreground")
+                print(_("To start:"))
+                print(_("  bookworm gateway run      # Run in foreground"))
                 if is_termux():
-                    print("  nohup bookworm gateway run > ~/.bookwormpro/logs/gateway.log 2>&1 &  # Best-effort background start")
+                    print(_("  nohup bookworm gateway run > ~/.bookwormpro/logs/gateway.log 2>&1 &  # Best-effort background start"))
                 elif is_wsl():
-                    print("  tmux new -s bookworm 'bookworm gateway run'         # persistent via tmux")
-                    print("  nohup bookworm gateway run > ~/.bookwormpro/logs/gateway.log 2>&1 &  # background")
+                    print(_("  tmux new -s bookworm 'bookworm gateway run'         # persistent via tmux"))
+                    print(_("  nohup bookworm gateway run > ~/.bookwormpro/logs/gateway.log 2>&1 &  # background"))
                 else:
-                    print("  bookworm gateway install  # Install as user service")
-                    print("  sudo bookworm gateway install --system  # Install as boot-time system service")
+                    print(_("  bookworm gateway install  # Install as user service"))
+                    print(_("  sudo bookworm gateway install --system  # Install as boot-time system service"))
 
     elif subcmd == "migrate-legacy":
         # Stop, disable, and remove legacy BookwormPRO gateway unit files from
@@ -4205,6 +4216,6 @@ def _gateway_command_inner(args):
         dry_run = getattr(args, 'dry_run', False)
         yes = getattr(args, 'yes', False)
         if not supports_systemd_services() and not is_macos():
-            print("Legacy unit migration only applies to systemd-based Linux hosts.")
+            print(_("Legacy unit migration only applies to systemd-based Linux hosts."))
             return
         remove_legacy_hermes_units(interactive=not yes, dry_run=dry_run)

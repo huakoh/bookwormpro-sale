@@ -158,6 +158,7 @@ from bwm_cli.cli_output import (  # noqa: E402
     print_success,
     print_warning,
 )
+from bwm_cli.i18n import _
 
 
 def is_interactive_stdin() -> bool:
@@ -174,7 +175,7 @@ def is_interactive_stdin() -> bool:
 def print_noninteractive_setup_guidance(reason: str | None = None) -> None:
     """Print guidance for headless/non-interactive setup flows."""
     print()
-    print(color("[BWM] BookwormPRO Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
+    print(color(_("[BWM] BookwormPRO Setup — Non-interactive mode"), Colors.CYAN, Colors.BOLD))
     print()
     if reason:
         print_info(reason)
@@ -571,10 +572,10 @@ def _print_setup_summary(config: dict, hermes_home):
 
     # Show file locations prominently
     from bwm_constants import display_hermes_home as _dhh
-    print(color(f"📁 All your files are in {_dhh()}/:", Colors.CYAN, Colors.BOLD))
+    print(color(_("📁 All your files are in {_dhh}/:").format(_dhh=_dhh()), Colors.CYAN, Colors.BOLD))
     print()
-    print(f"   {color('Settings:', Colors.YELLOW)}  {get_config_path()}")
-    print(f"   {color('API Keys:', Colors.YELLOW)}  {get_env_path()}")
+    print(f"   {color(_('Settings:'), Colors.YELLOW)}  {get_config_path()}")
+    print(f"   {color(_('API Keys:'), Colors.YELLOW)}  {get_env_path()}")
     print(
         f"   {color('Data:', Colors.YELLOW)}      {hermes_home}/cron/, sessions/, logs/"
     )
@@ -582,33 +583,33 @@ def _print_setup_summary(config: dict, hermes_home):
 
     print(color("─" * 60, Colors.DIM))
     print()
-    print(color("[查询] To edit your configuration:", Colors.CYAN, Colors.BOLD))
+    print(color(_("[查询] To edit your configuration:"), Colors.CYAN, Colors.BOLD))
     print()
-    print(f"   {color('bookworm setup', Colors.GREEN)}          Re-run the full wizard")
-    print(f"   {color('bookworm setup model', Colors.GREEN)}    Change model/provider")
-    print(f"   {color('bookworm setup terminal', Colors.GREEN)} Change terminal backend")
-    print(f"   {color('bookworm setup gateway', Colors.GREEN)}  Configure messaging")
-    print(f"   {color('bookworm setup tools', Colors.GREEN)}    Configure tool providers")
+    print(_("   {color}          Re-run the full wizard").format(color=color('bookworm setup', Colors.GREEN)))
+    print(_("   {color}    Change model/provider").format(color=color('bookworm setup model', Colors.GREEN)))
+    print(_("   {color} Change terminal backend").format(color=color('bookworm setup terminal', Colors.GREEN)))
+    print(_("   {color}  Configure messaging").format(color=color('bookworm setup gateway', Colors.GREEN)))
+    print(_("   {color}    Configure tool providers").format(color=color('bookworm setup tools', Colors.GREEN)))
     print()
-    print(f"   {color('bookworm config', Colors.GREEN)}         View current settings")
+    print(_("   {color}         View current settings").format(color=color('bookworm config', Colors.GREEN)))
     print(
         f"   {color('bookworm config edit', Colors.GREEN)}    Open config in your editor"
     )
     print(f"   {color('bookworm config set <key> <value>', Colors.GREEN)}")
-    print("                          Set a specific value")
+    print(_("                          Set a specific value"))
     print()
-    print("   Or edit the files directly:")
-    print(f"   {color(f'nano {get_config_path()}', Colors.DIM)}")
-    print(f"   {color(f'nano {get_env_path()}', Colors.DIM)}")
+    print(_("   Or edit the files directly:"))
+    print(_("   {color(f'nano {get_config_path}', Colors.DIM)}").format(get_config_path=get_config_path()))
+    print(_("   {color(f'nano {get_env_path}', Colors.DIM)}").format(get_env_path=get_env_path()))
     print()
 
     print(color("─" * 60, Colors.DIM))
     print()
-    print(color("[启动] Ready to go!", Colors.CYAN, Colors.BOLD))
+    print(color(_("[启动] Ready to go!"), Colors.CYAN, Colors.BOLD))
     print()
-    print(f"   {color('bookworm', Colors.GREEN)}              Start chatting")
-    print(f"   {color('bookworm gateway', Colors.GREEN)}      Start messaging gateway")
-    print(f"   {color('bookworm doctor', Colors.GREEN)}       Check for issues")
+    print(_("   {color}              Start chatting").format(color=color('bookworm', Colors.GREEN)))
+    print(_("   {color}      Start messaging gateway").format(color=color('bookworm gateway', Colors.GREEN)))
+    print(_("   {color}       Check for issues").format(color=color('bookworm doctor', Colors.GREEN)))
     print()
 
 
@@ -2671,7 +2672,7 @@ def _print_migration_preview(report: dict):
     warnings_shown = set()
 
     if migrated_items:
-        print(color("  Would import:", Colors.GREEN))
+        print(color(_("  Would import:"), Colors.GREEN))
         for item in migrated_items:
             kind = item.get("kind", "unknown")
             dest = item.get("destination", "")
@@ -2690,7 +2691,7 @@ def _print_migration_preview(report: dict):
         print()
 
     if conflict_items:
-        print(color("  Would overwrite (conflicts with existing BookwormPRO config):", Colors.YELLOW))
+        print(color(_("  Would overwrite (conflicts with existing BookwormPRO config):"), Colors.YELLOW))
         for item in conflict_items:
             kind = item.get("kind", "unknown")
             reason = item.get("reason", "already exists")
@@ -2698,7 +2699,7 @@ def _print_migration_preview(report: dict):
         print()
 
     if skipped_items:
-        print(color("  Would skip:", Colors.DIM))
+        print(color(_("  Would skip:"), Colors.DIM))
         for item in skipped_items:
             kind = item.get("kind", "unknown")
             reason = item.get("reason", "")
@@ -2707,13 +2708,13 @@ def _print_migration_preview(report: dict):
 
     # Print collected warnings
     if warnings_shown:
-        print(color("  ── Warnings ──", Colors.YELLOW))
+        print(color(_("  ── Warnings ──"), Colors.YELLOW))
         for warning in sorted(warnings_shown):
             print(color(f"    {warning}", Colors.YELLOW))
         print()
-        print(color("  Note: OpenClaw config values may have different semantics in BookwormPRO.", Colors.YELLOW))
+        print(color(_("  Note: OpenClaw config values may have different semantics in BookwormPRO."), Colors.YELLOW))
         print(color("  For example, OpenClaw's tool_call_execution: \"auto\" ≠ BookwormPRO's yolo mode.", Colors.YELLOW))
-        print(color("  Instruction files (.md) from OpenClaw may contain incompatible procedures.", Colors.YELLOW))
+        print(color(_("  Instruction files (.md) from OpenClaw may contain incompatible procedures."), Colors.YELLOW))
         print()
 
 
@@ -2932,7 +2933,7 @@ def run_setup_wizard(args):
                         Colors.MAGENTA,
                     )
                 )
-                print(color(f"│     [BWM] BookwormPRO Setup — {label:<34s} │", Colors.MAGENTA))
+                print(color(_("│     [BWM] BookwormPRO Setup — {label:<34s} │").format(label=label), Colors.MAGENTA))
                 print(
                     color(
                         "└─────────────────────────────────────────────────────────┘",

@@ -2289,6 +2289,8 @@ import re
 import asyncio
 
 from bwm_cli.pty_bridge import PtyBridge, PtyUnavailableError
+from bwm_cli.i18n import _
+
 
 _RESIZE_RE = re.compile(rb"\x1b\[RESIZE:(\d+);(\d+)\]")
 _PTY_READ_CHUNK_TIMEOUT = 0.2
@@ -3169,5 +3171,5 @@ def start_server(
 
         threading.Thread(target=_open, daemon=True).start()
 
-    print(f"  BookwormPRO Web UI → http://{host}:{port}")
+    print(_("  BookwormPRO Web UI → http://{host}:{port}").format(host=host, port=port))
     uvicorn.run(app, host=host, port=port, log_level="warning")

@@ -8,6 +8,8 @@ mcp_config.py, and memory_setup.py.
 import getpass
 
 from bwm_cli.colors import Colors, color
+from bwm_cli.i18n import _
+
 
 
 # ─── Print Helpers ────────────────────────────────────────────────────────────
@@ -20,17 +22,17 @@ def print_info(text: str) -> None:
 
 def print_success(text: str) -> None:
     """Print a green success message with [成功] prefix."""
-    print(color(f"[成功] {text}", Colors.GREEN))
+    print(color(f"[{_('成功')}] {text}", Colors.GREEN))
 
 
 def print_warning(text: str) -> None:
     """Print a yellow warning message with [警告] prefix."""
-    print(color(f"[警告] {text}", Colors.YELLOW))
+    print(color(f"[{_('警告')}] {text}", Colors.YELLOW))
 
 
 def print_error(text: str) -> None:
     """Print a red error message with [失败] prefix."""
-    print(color(f"[失败] {text}", Colors.RED))
+    print(color(f"[{_('失败')}] {text}", Colors.RED))
 
 
 def print_header(text: str) -> None:

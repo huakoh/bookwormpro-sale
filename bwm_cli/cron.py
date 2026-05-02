@@ -14,6 +14,8 @@ PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from bwm_cli.colors import Colors, color
+from bwm_cli.i18n import _
+
 
 
 def _normalize_skills(single_skill=None, skills: Optional[Iterable[str]] = None) -> Optional[List[str]]:
@@ -45,13 +47,13 @@ def cron_list(show_all: bool = False):
     jobs = list_jobs(include_disabled=show_all)
 
     if not jobs:
-        print(color("No scheduled jobs.", Colors.DIM))
-        print(color("Create one with 'bookworm cron create ...' or the /cron command in chat.", Colors.DIM))
+        print(color(_("No scheduled jobs."), Colors.DIM))
+        print(color(_("Create one with 'bookworm cron create ...' or the /cron command in chat."), Colors.DIM))
         return
 
     print()
     print(color("┌─────────────────────────────────────────────────────────────────────────┐", Colors.CYAN))
-    print(color("│                         Scheduled Jobs                                  │", Colors.CYAN))
+    print(color(_("│                         Scheduled Jobs                                  │"), Colors.CYAN))
     print(color("└─────────────────────────────────────────────────────────────────────────┘", Colors.CYAN))
     print()
 
@@ -74,28 +76,28 @@ def cron_list(show_all: bool = False):
 
         skills = job.get("skills") or ([job["skill"]] if job.get("skill") else [])
         if state == "paused":
-            status = color("[paused]", Colors.YELLOW)
+            status = color(_("[paused]"), Colors.YELLOW)
         elif state == "completed":
-            status = color("[completed]", Colors.BLUE)
+            status = color(_("[completed]"), Colors.BLUE)
         elif job.get("enabled", True):
-            status = color("[active]", Colors.GREEN)
+            status = color(_("[active]"), Colors.GREEN)
         else:
-            status = color("[disabled]", Colors.RED)
+            status = color(_("[disabled]"), Colors.RED)
 
         print(f"  {color(job_id, Colors.YELLOW)} {status}")
-        print(f"    Name:      {name}")
-        print(f"    Schedule:  {schedule}")
-        print(f"    Repeat:    {repeat_str}")
-        print(f"    Next run:  {next_run}")
-        print(f"    Deliver:   {deliver_str}")
+        print(_("    Name:      {name}").format(name=name))
+        print(_("    Schedule:  {schedule}").format(schedule=schedule))
+        print(_("    Repeat:    {repeat_str}").format(repeat_str=repeat_str))
+        print(_("    Next run:  {next_run}").format(next_run=next_run))
+        print(_("    Deliver:   {deliver_str}").format(deliver_str=deliver_str))
         if skills:
-            print(f"    Skills:    {', '.join(skills)}")
+            print(_("    Skills:    {skills}").format(skills=', '.join(skills)))
         script = job.get("script")
         if script:
-            print(f"    Script:    {script}")
+            print(_("    Script:    {script}").format(script=script))
         workdir = job.get("workdir")
         if workdir:
-            print(f"    Workdir:   {workdir}")
+            print(_("    Workdir:   {workdir}").format(workdir=workdir))
 
         # Execution history
         last_status = job.get("last_status")
@@ -105,19 +107,19 @@ def cron_list(show_all: bool = False):
                 status_display = color("ok", Colors.GREEN)
             else:
                 status_display = color(f"{last_status}: {job.get('last_error', '?')}", Colors.RED)
-            print(f"    Last run:  {last_run}  {status_display}")
+            print(_("    Last run:  {last_run}  {status_display}").format(last_run=last_run, status_display=status_display))
 
         delivery_err = job.get("last_delivery_error")
         if delivery_err:
-            print(f"    {color('[警告] Delivery failed:', Colors.YELLOW)} {delivery_err}")
+            print(f"    {color(_('[警告] Delivery failed:'), Colors.YELLOW)} {delivery_err}")
 
         print()
 
     from bwm_cli.gateway import find_gateway_pids
     if not find_gateway_pids():
-        print(color("  [警告]  Gateway is not running — jobs won't fire automatically.", Colors.YELLOW))
-        print(color("     Start it with: bookworm gateway install", Colors.DIM))
-        print(color("                    sudo bookworm gateway install --system  # Linux servers", Colors.DIM))
+        print(color(_("  [警告]  Gateway is not running — jobs won't fire automatically."), Colors.YELLOW))
+        print(color(_("     Start it with: bookworm gateway install"), Colors.DIM))
+        print(color(_("                    sudo bookworm gateway install --system  # Linux servers"), Colors.DIM))
         print()
 
 
@@ -136,26 +138,26 @@ def cron_status():
 
     pids = find_gateway_pids()
     if pids:
-        print(color("[成功] Gateway is running — cron jobs will fire automatically", Colors.GREEN))
-        print(f"  PID: {', '.join(map(str, pids))}")
+        print(color(_("[成功] Gateway is running — cron jobs will fire automatically"), Colors.GREEN))
+        print(_("  PID: {pids}").format(pids=', '.join(map(str, pids))))
     else:
-        print(color("[失败] Gateway is not running — cron jobs will NOT fire", Colors.RED))
+        print(color(_("[失败] Gateway is not running — cron jobs will NOT fire"), Colors.RED))
         print()
-        print("  To enable automatic execution:")
-        print("    bookworm gateway install    # Install as a user service")
-        print("    sudo bookworm gateway install --system  # Linux servers: boot-time system service")
-        print("    bookworm gateway            # Or run in foreground")
+        print(_("  To enable automatic execution:"))
+        print(_("    bookworm gateway install    # Install as a user service"))
+        print(_("    sudo bookworm gateway install --system  # Linux servers: boot-time system service"))
+        print(_("    bookworm gateway            # Or run in foreground"))
 
     print()
 
     jobs = list_jobs(include_disabled=False)
     if jobs:
         next_runs = [j.get("next_run_at") for j in jobs if j.get("next_run_at")]
-        print(f"  {len(jobs)} active job(s)")
+        print(_("  {len} active job(s)").format(len=len(jobs)))
         if next_runs:
-            print(f"  Next run: {min(next_runs)}")
+            print(_("  Next run: {min}").format(min=min(next_runs)))
     else:
-        print("  No active jobs")
+        print(_("  No active jobs"))
 
     print()
 
@@ -174,19 +176,19 @@ def cron_create(args):
         workdir=getattr(args, "workdir", None),
     )
     if not result.get("success"):
-        print(color(f"Failed to create job: {result.get('error', 'unknown error')}", Colors.RED))
+        print(color(_("Failed to create job: {result}").format(result=result.get('error', 'unknown error')), Colors.RED))
         return 1
-    print(color(f"Created job: {result['job_id']}", Colors.GREEN))
-    print(f"  Name: {result['name']}")
-    print(f"  Schedule: {result['schedule']}")
+    print(color(_("Created job: {result}").format(result=result['job_id']), Colors.GREEN))
+    print(_("  Name: {result}").format(result=result['name']))
+    print(_("  Schedule: {result}").format(result=result['schedule']))
     if result.get("skills"):
-        print(f"  Skills: {', '.join(result['skills'])}")
+        print(_("  Skills: {join_skills}").format(join_skills=', '.join(result['skills'])))
     job_data = result.get("job", {})
     if job_data.get("script"):
-        print(f"  Script: {job_data['script']}")
+        print(_("  Script: {job_data}").format(job_data=job_data['script']))
     if job_data.get("workdir"):
-        print(f"  Workdir: {job_data['workdir']}")
-    print(f"  Next run: {result['next_run_at']}")
+        print(_("  Workdir: {job_data}").format(job_data=job_data['workdir']))
+    print(_("  Next run: {result}").format(result=result['next_run_at']))
     return 0
 
 
@@ -195,7 +197,7 @@ def cron_edit(args):
 
     job = get_job(args.job_id)
     if not job:
-        print(color(f"Job not found: {args.job_id}", Colors.RED))
+        print(color(_("Job not found: {args_job_id}").format(args_job_id=args.job_id), Colors.RED))
         return 1
 
     existing_skills = list(job.get("skills") or ([] if not job.get("skill") else [job.get("skill")]))
@@ -227,35 +229,35 @@ def cron_edit(args):
         workdir=getattr(args, "workdir", None),
     )
     if not result.get("success"):
-        print(color(f"Failed to update job: {result.get('error', 'unknown error')}", Colors.RED))
+        print(color(_("Failed to update job: {result}").format(result=result.get('error', 'unknown error')), Colors.RED))
         return 1
 
     updated = result["job"]
-    print(color(f"Updated job: {updated['job_id']}", Colors.GREEN))
-    print(f"  Name: {updated['name']}")
-    print(f"  Schedule: {updated['schedule']}")
+    print(color(_("Updated job: {updated}").format(updated=updated['job_id']), Colors.GREEN))
+    print(_("  Name: {updated}").format(updated=updated['name']))
+    print(_("  Schedule: {updated}").format(updated=updated['schedule']))
     if updated.get("skills"):
-        print(f"  Skills: {', '.join(updated['skills'])}")
+        print(_("  Skills: {join_skills}").format(join_skills=', '.join(updated['skills'])))
     else:
-        print("  Skills: none")
+        print(_("  Skills: none"))
     if updated.get("script"):
-        print(f"  Script: {updated['script']}")
+        print(_("  Script: {updated}").format(updated=updated['script']))
     if updated.get("workdir"):
-        print(f"  Workdir: {updated['workdir']}")
+        print(_("  Workdir: {updated}").format(updated=updated['workdir']))
     return 0
 
 
 def _job_action(action: str, job_id: str, success_verb: str) -> int:
     result = _cron_api(action=action, job_id=job_id)
     if not result.get("success"):
-        print(color(f"Failed to {action} job: {result.get('error', 'unknown error')}", Colors.RED))
+        print(color(_("Failed to {action} job: {result}").format(action=action, result=result.get('error', 'unknown error')), Colors.RED))
         return 1
     job = result.get("job") or result.get("removed_job") or {}
-    print(color(f"{success_verb} job: {job.get('name', job_id)} ({job_id})", Colors.GREEN))
+    print(color(_("{success_verb} job: {job} ({job_id})").format(success_verb=success_verb, job=job.get('name', job_id), job_id=job_id), Colors.GREEN))
     if action in {"resume", "run"} and result.get("job", {}).get("next_run_at"):
-        print(f"  Next run: {result['job']['next_run_at']}")
+        print(_("  Next run: {result}").format(result=result['job']['next_run_at']))
     if action == "run":
-        print("  It will run on the next scheduler tick.")
+        print(_("  It will run on the next scheduler tick."))
     return 0
 
 
@@ -294,6 +296,6 @@ def cron_command(args):
     if subcmd in {"remove", "rm", "delete"}:
         return _job_action("remove", args.job_id, "Removed")
 
-    print(f"Unknown cron command: {subcmd}")
-    print("Usage: bookworm cron [list|create|edit|pause|resume|run|remove|status|tick]")
+    print(_("Unknown cron command: {subcmd}").format(subcmd=subcmd))
+    print(_("Usage: bookworm cron [list|create|edit|pause|resume|run|remove|status|tick]"))
     sys.exit(1)

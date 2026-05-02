@@ -357,7 +357,7 @@ def _get_client_secret() -> str:
         return env_val
     if _DEFAULT_CLIENT_SECRET:
         return _DEFAULT_CLIENT_SECRET
-    _, scraped = _scrape_client_credentials()
+    _unused, scraped = _scrape_client_credentials()
     return scraped
 
 

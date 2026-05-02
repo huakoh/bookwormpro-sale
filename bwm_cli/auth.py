@@ -43,6 +43,7 @@ import yaml
 
 from bwm_cli.config import get_hermes_home, get_config_path, read_raw_config
 from bwm_constants import OPENROUTER_BASE_URL
+from bwm_cli.i18n import _
 
 logger = logging.getLogger(__name__)
 
@@ -1953,22 +1954,22 @@ def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
     print(_("Spotify first-time setup"))
     print("=" * 70)
     print()
-    print("Spotify requires every user to register their own lightweight")
-    print("developer app. This takes about two minutes and only has to be")
-    print("done once per machine.")
+    print(_("Spotify requires every user to register their own lightweight"))
+    print(_("developer app. This takes about two minutes and only has to be"))
+    print(_("done once per machine."))
     print()
-    print(f"Full guide: {SPOTIFY_DOCS_URL}")
+    print(_("Full guide: {SPOTIFY_DOCS_URL}").format(SPOTIFY_DOCS_URL=SPOTIFY_DOCS_URL))
     print()
     print(_("Steps:"))
-    print(f"  1. Opening {SPOTIFY_DASHBOARD_URL} in your browser...")
-    print("  2. Click 'Create app' and fill in:")
-    print("       App name:     anything (e.g. bookwormpro)")
-    print("       Description:  anything")
-    print(f"       Redirect URI: {redirect_uri_hint}")
-    print("       API/SDK:      Web API")
-    print("  3. Agree to the terms, click Save.")
-    print("  4. Open the app's Settings page and copy the Client ID.")
-    print("  5. Paste it below.")
+    print(_("  1. Opening {SPOTIFY_DASHBOARD_URL} in your browser...").format(SPOTIFY_DASHBOARD_URL=SPOTIFY_DASHBOARD_URL))
+    print(_("  2. Click 'Create app' and fill in:"))
+    print(_("       App name:     anything (e.g. bookwormpro)"))
+    print(_("       Description:  anything"))
+    print(_("       Redirect URI: {redirect_uri_hint}").format(redirect_uri_hint=redirect_uri_hint))
+    print(_("       API/SDK:      Web API"))
+    print(_("  3. Agree to the terms, click Save."))
+    print(_("  4. Open the app's Settings page and copy the Client ID."))
+    print(_("  5. Paste it below."))
     print()
 
     if not _is_remote_session():
@@ -1978,14 +1979,14 @@ def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
             pass
 
     try:
-        raw = input("Spotify Client ID: ").strip()
+        raw = input(_("Spotify Client ID: ")).strip()
     except (EOFError, KeyboardInterrupt):
         print()
         raise SystemExit("Spotify setup cancelled.")
 
     if not raw:
         print()
-        print(f"No Client ID entered. See {SPOTIFY_DOCS_URL} for the full guide.")
+        print(_("No Client ID entered. See {SPOTIFY_DOCS_URL} for the full guide.").format(SPOTIFY_DOCS_URL=SPOTIFY_DOCS_URL))
         raise SystemExit("Spotify setup cancelled: empty Client ID.")
 
     # Persist so subsequent `bookworm auth spotify` runs skip the wizard.
@@ -1996,7 +1997,7 @@ def _spotify_interactive_setup(redirect_uri_hint: str) -> str:
         save_env_value("BOOKWORMPRO_SPOTIFY_REDIRECT_URI", redirect_uri_hint)
 
     print()
-    print("Saved BOOKWORMPRO_SPOTIFY_CLIENT_ID to ~/.bookwormpro/.env")
+    print(_("Saved BOOKWORMPRO_SPOTIFY_CLIENT_ID to ~/.bookwormpro/.env"))
     print()
     return raw
 
@@ -2036,14 +2037,14 @@ def login_spotify_command(args) -> None:
     )
 
     print(_("Starting Spotify PKCE login..."))
-    print(f"Client ID: {client_id}")
-    print(f"Redirect URI: {redirect_uri}")
-    print("Make sure this redirect URI is allow-listed in your Spotify app settings.")
+    print(_("Client ID: {client_id}").format(client_id=client_id))
+    print(_("Redirect URI: {redirect_uri}").format(redirect_uri=redirect_uri))
+    print(_("Make sure this redirect URI is allow-listed in your Spotify app settings."))
     print()
-    print("Open this URL to authorize BookwormPRO:")
+    print(_("Open this URL to authorize BookwormPRO:"))
     print(authorize_url)
     print()
-    print(f"Full setup guide: {SPOTIFY_DOCS_URL}")
+    print(_("Full setup guide: {SPOTIFY_DOCS_URL}").format(SPOTIFY_DOCS_URL=SPOTIFY_DOCS_URL))
     print()
 
     if open_browser and not _is_remote_session():
@@ -2052,9 +2053,9 @@ def login_spotify_command(args) -> None:
         except Exception:
             opened = False
         if opened:
-            print("Browser opened for Spotify authorization.")
+            print(_("Browser opened for Spotify authorization."))
         else:
-            print("Could not open the browser automatically; use the URL above.")
+            print(_("Could not open the browser automatically; use the URL above."))
 
     callback = _spotify_wait_for_callback(
         redirect_uri,
@@ -2089,9 +2090,9 @@ def login_spotify_command(args) -> None:
         saved_to = _save_auth_store(auth_store)
 
     print(_("Spotify login successful!"))
-    print(f"  Auth state: {saved_to}")
-    print("  Provider state saved under providers.spotify")
-    print(f"  Docs: {SPOTIFY_DOCS_URL}")
+    print(_("  Auth state: {saved_to}").format(saved_to=saved_to))
+    print(_("  Provider state saved under providers.spotify"))
+    print(_("  Docs: {SPOTIFY_DOCS_URL}").format(SPOTIFY_DOCS_URL=SPOTIFY_DOCS_URL))
 
 # =============================================================================
 # SSH / remote session detection
@@ -3746,7 +3747,7 @@ def _prompt_model_selection(
             for mid in _unavailable:
                 print(f"{_DIM}     {_label(mid)}{_RESET}")
             print()
-            print(f"{_DIM}  ── Upgrade at {_upgrade_url} for paid models ──{_RESET}")
+            print(_("{_DIM}  ── Upgrade at {_upgrade_url} for paid models ──{_RESET}").format(_DIM=_DIM, _upgrade_url=_upgrade_url, _RESET=_RESET))
             print()
             effective_title = "Available free models:"
         else:
@@ -3771,7 +3772,7 @@ def _prompt_model_selection(
         if idx < len(ordered):
             return ordered[idx]
         elif idx == len(ordered):
-            custom = input("Enter model name: ").strip()
+            custom = input(_("Enter model name: ")).strip()
             return custom if custom else None
         return None
     except (ImportError, NotImplementedError, OSError, subprocess.SubprocessError):
@@ -3783,33 +3784,33 @@ def _prompt_model_selection(
     for i, mid in enumerate(ordered, 1):
         print(f"  {i:>{num_width}}. {_label(mid)}")
     n = len(ordered)
-    print(f"  {n + 1:>{num_width}}. Enter custom model name")
-    print(f"  {n + 2:>{num_width}}. Skip (keep current)")
+    print(_("  {n + 1:>{num_width}}. Enter custom model name").format(num_width=num_width))
+    print(_("  {n + 2:>{num_width}}. Skip (keep current)").format(num_width=num_width))
 
     if _unavailable:
         _upgrade_url = (portal_url or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
         print()
-        print(f"  {_DIM}── Unavailable models (requires paid tier — upgrade at {_upgrade_url}) ──{_RESET}")
+        print(_("  {_DIM}── Unavailable models (requires paid tier — upgrade at {_upgrade_url}) ──{_RESET}").format(_DIM=_DIM, _upgrade_url=_upgrade_url, _RESET=_RESET))
         for mid in _unavailable:
             print(f"  {'':>{num_width}}  {_DIM}{_label(mid)}{_RESET}")
     print()
 
     while True:
         try:
-            choice = input(f"Choice [1-{n + 2}] (default: skip): ").strip()
+            choice = input(_("Choice [1-{n}] (default: skip): ").format(n=n + 2)).strip()
             if not choice:
                 return None
             idx = int(choice)
             if 1 <= idx <= n:
                 return ordered[idx - 1]
             elif idx == n + 1:
-                custom = input("Enter model name: ").strip()
+                custom = input(_("Enter model name: ")).strip()
                 return custom if custom else None
             elif idx == n + 2:
                 return None
-            print(f"Please enter 1-{n + 2}")
+            print(_("Please enter 1-{n}").format(n=n + 2))
         except ValueError:
-            print("Please enter a number")
+            print(_("Please enter a number"))
         except (KeyboardInterrupt, EOFError):
             return None
 
@@ -3833,9 +3834,9 @@ def _save_model_choice(model_id: str) -> None:
 
 def login_command(args) -> None:
     """Deprecated: use 'bookworm model' or 'bookworm setup' instead."""
-    print("The 'bookworm login' command has been removed.")
-    print("Use 'bookworm auth' to manage credentials,")
-    print("'bookworm model' to select a provider, or 'bookworm setup' for full setup.")
+    print(_("The 'bookworm login' command has been removed."))
+    print(_("Use 'bookworm auth' to manage credentials,"))
+    print(_("'bookworm model' to select a provider, or 'bookworm setup' for full setup."))
     raise SystemExit(0)
 
 
@@ -3859,19 +3860,19 @@ def _login_openai_codex(
             # the user "Login successful!".
             _resolved_key = existing.get("api_key", "")
             if isinstance(_resolved_key, str) and _resolved_key and not _codex_access_token_is_expiring(_resolved_key, 60):
-                print("Existing Codex credentials found in BookwormPRO auth store.")
+                print(_("Existing Codex credentials found in BookwormPRO auth store."))
                 try:
-                    reuse = input("Use existing credentials? [Y/n]: ").strip().lower()
+                    reuse = input(_("Use existing credentials? [Y/n]: ")).strip().lower()
                 except (EOFError, KeyboardInterrupt):
                     reuse = "y"
                 if reuse in ("", "y", "yes"):
                     config_path = _update_config_for_provider("openai-codex", existing.get("base_url", DEFAULT_CODEX_BASE_URL))
                     print()
                     print(_("Login successful!"))
-                    print(f"  Config updated: {config_path} (model.provider=openai-codex)")
+                    print(_("  Config updated: {config_path} (model.provider=openai-codex)").format(config_path=config_path))
                     return
             else:
-                print("Existing Codex credentials are expired. Starting fresh login...")
+                print(_("Existing Codex credentials are expired. Starting fresh login..."))
         except AuthError:
             pass
 
@@ -3879,10 +3880,10 @@ def _login_openai_codex(
     if not force_new_login:
         cli_tokens = _import_codex_cli_tokens()
         if cli_tokens:
-            print("Found existing Codex CLI credentials at ~/.codex/auth.json")
-            print("BookwormPRO will create its own session to avoid conflicts with Codex CLI / VS Code.")
+            print(_("Found existing Codex CLI credentials at ~/.codex/auth.json"))
+            print(_("BookwormPRO will create its own session to avoid conflicts with Codex CLI / VS Code."))
             try:
-                do_import = input("Import these credentials? (a separate login is recommended) [y/N]: ").strip().lower()
+                do_import = input(_("Import these credentials? (a separate login is recommended) [y/N]: ")).strip().lower()
             except (EOFError, KeyboardInterrupt):
                 do_import = "n"
             if do_import in ("y", "yes"):
@@ -3890,15 +3891,15 @@ def _login_openai_codex(
                 base_url = os.getenv("BOOKWORMPRO_CODEX_BASE_URL", "").strip().rstrip("/") or DEFAULT_CODEX_BASE_URL
                 config_path = _update_config_for_provider("openai-codex", base_url)
                 print()
-                print("Credentials imported. Note: if Codex CLI refreshes its token,")
-                print("BookwormPRO will keep working independently with its own session.")
-                print(f"  Config updated: {config_path} (model.provider=openai-codex)")
+                print(_("Credentials imported. Note: if Codex CLI refreshes its token,"))
+                print(_("BookwormPRO will keep working independently with its own session."))
+                print(_("  Config updated: {config_path} (model.provider=openai-codex)").format(config_path=config_path))
                 return
 
     # Run a fresh device code flow — BookwormPRO gets its own OAuth session
     print()
     print(_("Signing in to OpenAI Codex..."))
-    print("(BookwormPRO creates its own session — won't affect Codex CLI or VS Code)")
+    print(_("(BookwormPRO creates its own session — won't affect Codex CLI or VS Code)"))
     print()
 
     creds = _codex_device_code_login()
@@ -3909,8 +3910,8 @@ def _login_openai_codex(
     print()
     print(_("Login successful!"))
     from bwm_constants import display_hermes_home as _dhh
-    print(f"  Auth state: {_dhh()}/auth.json")
-    print(f"  Config updated: {config_path} (model.provider=openai-codex)")
+    print(_("  Auth state: {_dhh}/auth.json").format(_dhh=_dhh()))
+    print(_("  Config updated: {config_path} (model.provider=openai-codex)").format(config_path=config_path))
 
 
 def _codex_device_code_login() -> Dict[str, Any]:
@@ -3952,11 +3953,11 @@ def _codex_device_code_login() -> Dict[str, Any]:
         )
 
     # Step 2: Show user the code
-    print("To continue, follow these steps:\n")
-    print("  1. Open this URL in your browser:")
-    print(f"     \033[94m{issuer}/codex/device\033[0m\n")
-    print("  2. Enter this code:")
-    print(f"     \033[94m{user_code}\033[0m\n")
+    print(_("To continue, follow these steps:\n"))
+    print(_("  1. Open this URL in your browser:"))
+    print(_("     \033[94m{issuer}/codex/device\033[0m\n").format(issuer=issuer))
+    print(_("  2. Enter this code:"))
+    print(_("     \033[94m{user_code}\033[0m\n").format(user_code=user_code))
     print(_("Waiting for sign-in... (press Ctrl+C to cancel)"))
 
     # Step 3: Poll for authorization code
@@ -3985,7 +3986,7 @@ def _codex_device_code_login() -> Dict[str, Any]:
                         provider="openai-codex", code="device_code_poll_error",
                     )
     except KeyboardInterrupt:
-        print("\nLogin cancelled.")
+        print(_("\nLogin cancelled."))
         raise SystemExit(130)
 
     if code_resp is None:
@@ -4091,12 +4092,12 @@ def _nous_device_code_login(
     if _is_remote_session():
         open_browser = False
 
-    print(f"Starting BookwormPRO login via {pconfig.name}...")
-    print(f"Portal: {portal_base_url}")
+    print(_("Starting BookwormPRO login via {pconfig_name}...").format(pconfig_name=pconfig.name))
+    print(_("Portal: {portal_base_url}").format(portal_base_url=portal_base_url))
     if insecure:
-        print("TLS verification: disabled (--insecure)")
+        print(_("TLS verification: disabled (--insecure)"))
     elif ca_bundle:
-        print(f"TLS verification: custom CA bundle ({ca_bundle})")
+        print(_("TLS verification: custom CA bundle ({ca_bundle})").format(ca_bundle=ca_bundle))
 
     with httpx.Client(timeout=timeout, headers={"Accept": "application/json"}, verify=verify) as client:
         device_data = _request_device_code(
@@ -4113,18 +4114,18 @@ def _nous_device_code_login(
 
         print()
         print(_("To continue:"))
-        print(f"  1. Open: {verification_url}")
-        print(f"  2. If prompted, enter code: {user_code}")
+        print(_("  1. Open: {verification_url}").format(verification_url=verification_url))
+        print(_("  2. If prompted, enter code: {user_code}").format(user_code=user_code))
 
         if open_browser:
             opened = webbrowser.open(verification_url)
             if opened:
-                print("  (Opened browser for verification)")
+                print(_("  (Opened browser for verification)"))
             else:
-                print("  Could not open browser automatically — use the URL above.")
+                print(_("  Could not open browser automatically — use the URL above."))
 
         effective_interval = max(1, min(interval, DEVICE_AUTH_POLL_INTERVAL_CAP_SECONDS))
-        print(f"Waiting for approval (polling every {effective_interval}s)...")
+        print(_("Waiting for approval (polling every {effective_interval}s)...").format(effective_interval=effective_interval))
 
         token_data = _poll_for_token(
             client=client,
@@ -4143,7 +4144,7 @@ def _nous_device_code_login(
         or requested_inference_url
     )
     if resolved_inference_url != requested_inference_url:
-        print(f"Using portal-provided inference URL: {resolved_inference_url}")
+        print(_("Using portal-provided inference URL: {resolved_inference_url}").format(resolved_inference_url=resolved_inference_url))
 
     auth_state = {
         "portal_base_url": portal_base_url,
@@ -4181,10 +4182,10 @@ def _nous_device_code_login(
                 "portal_base_url", DEFAULT_NOUS_PORTAL_URL
             ).rstrip("/")
             print()
-            print("Your BookwormPRO Portal account does not have an active subscription.")
-            print(f"  Subscribe here: {portal_url}/billing")
+            print(_("Your BookwormPRO Portal account does not have an active subscription."))
+            print(_("  Subscribe here: {portal_url}/billing").format(portal_url=portal_url))
             print()
-            print("After subscribing, run `bookworm model` again to finish setup.")
+            print(_("After subscribing, run `bookworm model` again to finish setup."))
             raise SystemExit(1)
         raise
 
@@ -4229,7 +4230,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
 
         print()
         print(_("Login successful!"))
-        print(f"  Auth state: {saved_to}")
+        print(_("  Auth state: {saved_to}").format(saved_to=saved_to))
 
         # Resolve model BEFORE writing provider to config.yaml so we never
         # leave the config in a half-updated state (provider=bookwormpro but model
@@ -4270,14 +4271,14 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
                 )
             elif unavailable_models:
                 _url = (_portal or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
-                print("No free models currently available.")
-                print(f"Upgrade at {_url} to access paid models.")
+                print(_("No free models currently available."))
+                print(_("Upgrade at {_url} to access paid models.").format(_url=_url))
             else:
-                print("No curated models available for BookwormPRO Portal.")
+                print(_("No curated models available for BookwormPRO Portal."))
         except Exception as exc:
             message = format_auth_error(exc) if isinstance(exc, AuthError) else str(exc)
             print()
-            print(f"Login succeeded, but could not fetch available models. Reason: {message}")
+            print(_("Login succeeded, but could not fetch available models. Reason: {message}").format(message=message))
 
         # Write provider + model atomically so config is never mismatched.
         # If no model was selected (user picked "Skip (keep current)",
@@ -4297,8 +4298,8 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
                     auth_store.pop("active_provider", None)
                 _save_auth_store(auth_store)
             print()
-            print("No provider change. BookwormPRO credentials saved for future use.")
-            print("  Run `bookworm model` again to switch to BookwormPRO Portal.")
+            print(_("No provider change. BookwormPRO credentials saved for future use."))
+            print(_("  Run `bookworm model` again to switch to BookwormPRO Portal."))
             return
 
         config_path = _update_config_for_provider(
@@ -4306,14 +4307,14 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
         )
         if selected_model:
             _save_model_choice(selected_model)
-            print(f"Default model set to: {selected_model}")
-        print(f"  Config updated: {config_path} (model.provider=bookwormpro)")
+            print(_("Default model set to: {selected_model}").format(selected_model=selected_model))
+        print(_("  Config updated: {config_path} (model.provider=bookwormpro)").format(config_path=config_path))
 
     except KeyboardInterrupt:
-        print("\nLogin cancelled.")
+        print(_("\nLogin cancelled."))
         raise SystemExit(130)
     except Exception as exc:
-        print(f"Login failed: {exc}")
+        print(_("Login failed: {exc}").format(exc=exc))
         raise SystemExit(1)
 
 
@@ -4322,14 +4323,14 @@ def logout_command(args) -> None:
     provider_id = getattr(args, "provider", None)
 
     if provider_id and not is_known_auth_provider(provider_id):
-        print(f"Unknown provider: {provider_id}")
+        print(_("Unknown provider: {provider_id}").format(provider_id=provider_id))
         raise SystemExit(1)
 
     active = get_active_provider()
     target = provider_id or active or _logout_default_provider_from_config()
 
     if not target:
-        print("No provider is currently logged in.")
+        print(_("No provider is currently logged in."))
         return
 
     config_matches = _config_provider_matches(target)
@@ -4337,10 +4338,10 @@ def logout_command(args) -> None:
 
     if clear_provider_auth(target) or config_matches:
         _reset_config_provider()
-        print(f"Logged out of {provider_name}.")
+        print(_("Logged out of {provider_name}.").format(provider_name=provider_name))
         if os.getenv("OPENROUTER_API_KEY"):
-            print("BookwormPRO will use OpenRouter for inference.")
+            print(_("BookwormPRO will use OpenRouter for inference."))
         else:
-            print("Run `bookworm model` or configure an API key to use BookwormPRO.")
+            print(_("Run `bookworm model` or configure an API key to use BookwormPRO."))
     else:
-        print(f"No auth state found for {provider_name}.")
+        print(_("No auth state found for {provider_name}.").format(provider_name=provider_name))

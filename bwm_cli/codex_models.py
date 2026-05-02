@@ -88,7 +88,7 @@ def _fetch_models_from_api(access_token: str) -> List[str]:
         sortable.append((rank, slug))
 
     sortable.sort(key=lambda x: (x[0], x[1]))
-    return _add_forward_compat_models([slug for _, slug in sortable])
+    return _add_forward_compat_models([slug for _unused, slug in sortable])
 
 
 def _read_default_model(codex_home: Path) -> Optional[str]:
@@ -139,7 +139,7 @@ def _read_cache_models(codex_home: Path) -> List[str]:
 
     sortable.sort(key=lambda item: (item[0], item[1]))
     deduped: List[str] = []
-    for _, slug in sortable:
+    for _unused, slug in sortable:
         if slug not in deduped:
             deduped.append(slug)
     return deduped

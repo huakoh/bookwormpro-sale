@@ -16,6 +16,8 @@ from typing import List, Optional, Set
 from bwm_cli.config import load_config, save_config
 from bwm_cli.colors import Colors, color
 from bwm_cli.platforms import PLATFORMS as _PLATFORMS
+from bwm_cli.i18n import _
+
 
 # Backward-compatible view: {key: label_string} so existing code that
 # iterates ``PLATFORMS.items()`` or calls ``PLATFORMS.get(key)`` keeps
@@ -69,7 +71,7 @@ def _select_platform() -> Optional[str]:
     """Ask user which platform to configure, or global."""
     options = [("global", "All platforms (global default)")] + list(PLATFORMS.items())
     print()
-    print(color("  Configure skills for:", Colors.BOLD))
+    print(color(_("  Configure skills for:"), Colors.BOLD))
     for i, (key, label) in enumerate(options, 1):
         print(f"  {i}. {label}")
     print()
@@ -130,7 +132,7 @@ def skills_command(args=None):
     skills = _list_all_skills()
 
     if not skills:
-        print(color("  No skills installed.", Colors.DIM))
+        print(color(_("  No skills installed."), Colors.DIM))
         return
 
     # Step 1: Select platform
@@ -139,10 +141,10 @@ def skills_command(args=None):
 
     # Step 2: Select mode — individual or by category
     print()
-    print(color(f"  Configure for: {platform_label}", Colors.DIM))
+    print(color(_("  Configure for: {platform_label}").format(platform_label=platform_label), Colors.DIM))
     print()
-    print("  1. Toggle individual skills")
-    print("  2. Toggle by category")
+    print(_("  1. Toggle individual skills"))
+    print(_("  2. Toggle by category"))
     print()
     try:
         mode = input(color("  Select [1]: ", Colors.YELLOW)).strip() or "1"
@@ -169,9 +171,9 @@ def skills_command(args=None):
         new_disabled = {skills[i]["name"] for i in range(len(skills)) if i not in chosen}
 
     if new_disabled == disabled:
-        print(color("  No changes.", Colors.DIM))
+        print(color(_("  No changes."), Colors.DIM))
         return
 
     save_disabled_skills(config, new_disabled, platform)
     enabled_count = len(skills) - len(new_disabled)
-    print(color(f"[成功] Saved: {enabled_count} enabled, {len(new_disabled)} disabled ({platform_label}).", Colors.GREEN))
+    print(color(_("[成功] Saved: {enabled_count} enabled, {len} disabled ({platform_label}).").format(enabled_count=enabled_count, len=len(new_disabled), platform_label=platform_label), Colors.GREEN))

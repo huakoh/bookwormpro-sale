@@ -22,6 +22,8 @@ import json
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from bwm_cli.i18n import _
+
 
 
 def hooks_command(args) -> None:
@@ -29,8 +31,8 @@ def hooks_command(args) -> None:
     sub = getattr(args, "hooks_action", None)
 
     if not sub:
-        print("Usage: bookworm hooks {list|test|revoke|doctor}")
-        print("Run 'bookworm hooks --help' for details.")
+        print(_("Usage: bookworm hooks {list|test|revoke|doctor}"))
+        print(_("Run 'bookworm hooks --help' for details."))
         return
 
     if sub in ("list", "ls"):
@@ -42,7 +44,7 @@ def hooks_command(args) -> None:
     elif sub == "doctor":
         _cmd_doctor(args)
     else:
-        print(f"Unknown hooks subcommand: {sub}")
+        print(_("Unknown hooks subcommand: {sub}").format(sub=sub))
 
 
 # ---------------------------------------------------------------------------
@@ -56,10 +58,10 @@ def _cmd_list(_args) -> None:
     specs = shell_hooks.iter_configured_hooks(load_config())
 
     if not specs:
-        print("No shell hooks configured in ~/.bookwormpro/config.yaml.")
-        print("See `bookworm hooks --help` or")
-        print("    website/docs/user-guide/features/hooks.md")
-        print("for the config schema and worked examples.")
+        print(_("No shell hooks configured in ~/.bookwormpro/config.yaml."))
+        print(_("See `bookworm hooks --help` or"))
+        print(_("    website/docs/user-guide/features/hooks.md"))
+        print(_("for the config schema and worked examples."))
         return
 
     by_event: Dict[str, List] = {}
@@ -73,7 +75,7 @@ def _cmd_list(_args) -> None:
         if isinstance(e, dict)
     }
 
-    print(f"Configured shell hooks ({len(specs)} total):\n")
+    print(_("Configured shell hooks ({len} total):\n").format(len=len(specs)))
 
     for event in sorted(by_event.keys()):
         print(f"  [{event}]")
@@ -89,7 +91,7 @@ def _cmd_list(_args) -> None:
             if is_approved:
                 entry = shell_hooks.allowlist_entry_for(spec.event, spec.command)
                 if entry and entry.get("approved_at"):
-                    print(f"      approved_at: {entry['approved_at']}")
+                    print(_("      approved_at: {entry}").format(entry=entry['approved_at']))
                     mtime_now = shell_hooks.script_mtime_iso(spec.command)
                     mtime_at = entry.get("script_mtime_at_approval")
                     if mtime_now and mtime_at and mtime_now > mtime_at:
@@ -192,8 +194,8 @@ def _cmd_test(args) -> None:
 
     event = args.event
     if event not in VALID_HOOKS:
-        print(f"Unknown event: {event!r}")
-        print(f"Valid events: {', '.join(sorted(VALID_HOOKS))}")
+        print(_("Unknown event: {event}").format(event=repr(event)))
+        print(_("Valid events: {join_events}").format(join_events=', '.join(sorted(VALID_HOOKS))))
         return
 
     # Synthetic kwargs in the same shape invoke_hook() would pass.  Merged
@@ -209,9 +211,9 @@ def _cmd_test(args) -> None:
             if isinstance(custom, dict):
                 payload.update(custom)
             else:
-                print(f"Warning: {args.payload_file} is not a JSON object; ignoring")
+                print(_("Warning: {args_payload_file} is not a JSON object; ignoring").format(args_payload_file=args.payload_file))
         except Exception as exc:
-            print(f"Error reading payload file: {exc}")
+            print(_("Error reading payload file: {exc}").format(exc=exc))
             return
 
     specs = shell_hooks.iter_configured_hooks(load_config())
@@ -225,12 +227,12 @@ def _cmd_test(args) -> None:
         ]
 
     if not specs:
-        print(f"No shell hooks configured for event: {event}")
+        print(_("No shell hooks configured for event: {event}").format(event=event))
         if getattr(args, "for_tool", None):
-            print(f"(with matcher filter --for-tool={args.for_tool})")
+            print(_("(with matcher filter --for-tool={args_for_tool})").format(args_for_tool=args.for_tool))
         return
 
-    print(f"Firing {len(specs)} hook(s) for event '{event}':\n")
+    print(_("Firing {len} hook(s) for event '{event}':\n").format(len=len(specs), event=event))
     for spec in specs:
         print(f"  → {spec.command}")
         result = shell_hooks.run_once(spec, payload)
@@ -240,28 +242,28 @@ def _cmd_test(args) -> None:
 
 def _print_run_result(result: Dict[str, Any]) -> None:
     if result.get("error"):
-        print(f"      [失败] error: {result['error']}")
+        print(_("      [失败] error: {result}").format(result=result['error']))
         return
     if result.get("timed_out"):
-        print(f"      [失败] timed out after {result['elapsed_seconds']}s")
+        print(_("      [失败] timed out after {result}s").format(result=result['elapsed_seconds']))
         return
 
     rc = result.get("returncode")
     elapsed = result.get("elapsed_seconds", 0)
-    print(f"      exit={rc}  elapsed={elapsed}s")
+    print(_("      exit={rc}  elapsed={elapsed}s").format(rc=rc, elapsed=elapsed))
 
     stdout = (result.get("stdout") or "").strip()
     stderr = (result.get("stderr") or "").strip()
     if stdout:
-        print(f"      stdout: {_truncate(stdout, 400)}")
+        print(_("      stdout: {_truncate}").format(_truncate=_truncate(stdout, 400)))
     if stderr:
-        print(f"      stderr: {_truncate(stderr, 400)}")
+        print(_("      stderr: {_truncate}").format(_truncate=_truncate(stderr, 400)))
 
     parsed = result.get("parsed")
     if parsed:
-        print(f"      parsed (BookwormPRO wire shape): {json.dumps(parsed)}")
+        print(_("      parsed (BookwormPRO wire shape): {json}").format(json=json.dumps(parsed)))
     else:
-        print("      parsed: <none — hook contributed nothing to the dispatcher>")
+        print(_("      parsed: <none — hook contributed nothing to the dispatcher>"))
 
 
 def _truncate(s: str, n: int) -> str:
@@ -277,9 +279,9 @@ def _cmd_revoke(args) -> None:
 
     removed = shell_hooks.revoke(args.command)
     if removed == 0:
-        print(f"No allowlist entry found for command: {args.command}")
+        print(_("No allowlist entry found for command: {args_command}").format(args_command=args.command))
         return
-    print(f"Removed {removed} allowlist entry/entries for: {args.command}")
+    print(_("Removed {removed} allowlist entry/entries for: {args_command}").format(removed=removed, args_command=args.command))
     print(
         "Note: currently running CLI / gateway processes keep their "
         "already-registered callbacks until they restart."
@@ -297,10 +299,10 @@ def _cmd_doctor(_args) -> None:
     specs = shell_hooks.iter_configured_hooks(load_config())
 
     if not specs:
-        print("No shell hooks configured — nothing to check.")
+        print(_("No shell hooks configured — nothing to check."))
         return
 
-    print(f"Checking {len(specs)} configured shell hook(s)...\n")
+    print(_("Checking {len} configured shell hook(s)...\n").format(len=len(specs)))
 
     problems = 0
     for spec in specs:
@@ -309,9 +311,9 @@ def _cmd_doctor(_args) -> None:
         print()
 
     if problems:
-        print(f"{problems} issue(s) found.  Fix before relying on these hooks.")
+        print(_("{problems} issue(s) found.  Fix before relying on these hooks.").format(problems=problems))
     else:
-        print("All shell hooks look healthy.")
+        print(_("All shell hooks look healthy."))
 
 
 def _doctor_one(spec, shell_hooks) -> int:
@@ -319,20 +321,18 @@ def _doctor_one(spec, shell_hooks) -> int:
 
     # 1. Script exists and is executable
     if shell_hooks.script_is_executable(spec.command):
-        print("      [成功] script exists and is executable")
+        print(_("      [成功] script exists and is executable"))
     else:
         problems += 1
-        print("      [失败] script missing or not executable "
-              "(chmod +x the file, or fix the path)")
+        print(_("      [失败] 脚本缺失或不可执行 (chmod +x 该文件，或修正路径)"))
 
     # 2. Allowlist status
     entry = shell_hooks.allowlist_entry_for(spec.event, spec.command)
     if entry:
-        print(f"      [成功] allowlisted (approved {entry.get('approved_at', '?')})")
+        print(_("      [成功] allowlisted (approved {entry})").format(entry=entry.get('approved_at', '?')))
     else:
         problems += 1
-        print("      [失败] not allowlisted — hook will NOT fire at runtime "
-              "(run with --accept-hooks once, or confirm at the TTY prompt)")
+        print(_("      [失败] 未在白名单中 — 运行时不会触发 (使用 --accept-hooks 运行一次，或在终端确认)"))
 
     # 3. Mtime drift
     if entry and entry.get("script_mtime_at_approval"):
@@ -340,11 +340,9 @@ def _doctor_one(spec, shell_hooks) -> int:
         mtime_at = entry["script_mtime_at_approval"]
         if mtime_now and mtime_at and mtime_now > mtime_at:
             problems += 1
-            print(f"      [警告] script modified since approval "
-                  f"(was {mtime_at}, now {mtime_now}) — review changes, "
-                  f"then `bookworm hooks revoke` + re-approve to refresh")
+            print(_("      [警告] 脚本自审批后已修改 (原: {mtime_at}, 现: {mtime_now}) — 请检查变更，然后 `bookworm hooks revoke` 并重新审批").format(mtime_at=mtime_at, mtime_now=mtime_now))
         elif mtime_now and mtime_at and mtime_now == mtime_at:
-            print("      [成功] script unchanged since approval")
+            print(_("      [成功] script unchanged since approval"))
 
     # 4. Produces valid JSON for a synthetic payload — only when the entry
     # is already allowlisted.  Otherwise `bookworm hooks doctor` would execute
@@ -352,19 +350,16 @@ def _doctor_one(spec, shell_hooks) -> int:
     # reviewed them, which directly contradicts the documented workflow
     # ("spot newly-added hooks *before they register*").
     if not entry:
-        print("      ℹ skipped JSON smoke test — not allowlisted yet. "
-              "Approve the hook first (via TTY prompt or --accept-hooks), "
-              "then re-run `bookworm hooks doctor`.")
+        print(_("      ℹ 跳过 JSON 冒烟测试 — 尚未加入白名单。请先审批 (在终端确认或使用 --accept-hooks)，然后重新运行 `bookworm hooks doctor`。"))
     elif shell_hooks.script_is_executable(spec.command):
         payload = _DEFAULT_PAYLOADS.get(spec.event, {"extra": {}})
         result = shell_hooks.run_once(spec, payload)
         if result.get("timed_out"):
             problems += 1
-            print(f"      [失败] timed out after {result['elapsed_seconds']}s "
-                  f"on synthetic payload (timeout={spec.timeout}s)")
+            print(_("      [失败] 合成负载超时 (已等待: {elapsed}s, 超时设置: {timeout}s)").format(elapsed=result['elapsed_seconds'], timeout=spec.timeout))
         elif result.get("error"):
             problems += 1
-            print(f"      [失败] execution error: {result['error']}")
+            print(_("      [失败] execution error: {result}").format(result=result['error']))
         else:
             rc = result.get("returncode")
             elapsed = result.get("elapsed_seconds", 0)
@@ -372,14 +367,11 @@ def _doctor_one(spec, shell_hooks) -> int:
             if stdout:
                 try:
                     json.loads(stdout)
-                    print(f"      [成功] produced valid JSON on synthetic payload "
-                          f"(exit={rc}, {elapsed}s)")
+                    print(_("      [成功] 合成负载返回有效 JSON (exit={rc}, {elapsed}s)").format(rc=rc, elapsed=elapsed))
                 except json.JSONDecodeError:
                     problems += 1
-                    print(f"      [失败] stdout was not valid JSON (exit={rc}, "
-                          f"{elapsed}s): {_truncate(stdout, 120)}")
+                    print(_("      [失败] stdout 不是有效 JSON (exit={rc}, {elapsed}s): {output}").format(rc=rc, elapsed=elapsed, output=_truncate(stdout, 120)))
             else:
-                print(f"      [成功] ran clean with empty stdout "
-                      f"(exit={rc}, {elapsed}s) — hook is observer-only")
+                print(_("      [成功] 空 stdout 正常退出 (exit={rc}, {elapsed}s) — hook 为纯观察模式").format(rc=rc, elapsed=elapsed))
 
     return problems

@@ -17,6 +17,7 @@ from bwm_cli.config import get_hermes_home, get_env_path, get_project_root, load
 from bwm_constants import display_hermes_home
 
 
+
 def _get_git_commit(project_root: Path) -> str:
     """Return short git commit hash, or '(unknown)'."""
     try:

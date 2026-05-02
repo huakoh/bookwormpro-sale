@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Optional
 
 from bwm_constants import get_hermes_home
+from bwm_cli.i18n import _
+
 
 logger = logging.getLogger(__name__)
 
@@ -140,13 +142,9 @@ def _copy_example_files(plugin_dir: Path, console) -> None:
         if not real_path.exists():
             try:
                 shutil.copy2(example_file, real_path)
-                console.print(
-                    f"[dim]  Created {real_name} from {example_file.name}[/dim]"
-                )
+                console.print(_("[dim]  Created {real_name} from {example_file.name}[/dim]").format(real_name=real_name, example_file=example_file))
             except OSError as e:
-                console.print(
-                    f"[yellow]Warning:[/yellow] Failed to copy {example_file.name}: {e}"
-                )
+                console.print(_("[yellow]Warning:[/yellow] Failed to copy {example_file.name}: {e}").format(example_file=example_file, e=e))
 
 
 def _prompt_plugin_env_vars(manifest: dict, console) -> None:
@@ -190,7 +188,7 @@ def _prompt_plugin_env_vars(manifest: dict, console) -> None:
         return
 
     plugin_name = manifest.get("name", "this plugin")
-    console.print(f"\n[bold]{plugin_name}[/bold] requires the following environment variables:\n")
+    console.print(_("\n[bold]{plugin_name}[/bold] requires the following environment variables:\n").format(plugin_name=plugin_name))
 
     for spec in missing:
         name = spec["name"]
@@ -203,7 +201,7 @@ def _prompt_plugin_env_vars(manifest: dict, console) -> None:
             label += f" — {desc}"
         console.print(label)
         if url:
-            console.print(f"  [dim]Get yours at: {url}[/dim]")
+            console.print(_("  [dim]Get yours at: {url}[/dim]").format(url=url))
 
         try:
             if secret:
@@ -212,15 +210,15 @@ def _prompt_plugin_env_vars(manifest: dict, console) -> None:
             else:
                 value = input(f"  {name}: ").strip()
         except (EOFError, KeyboardInterrupt):
-            console.print(f"\n[dim]  Skipped (you can set these later in {display_hermes_home()}/.env)[/dim]")
+            console.print(_("\n[dim]  Skipped (you can set these later in {display_hermes_home}/.env)[/dim]").format(display_hermes_home=display_hermes_home()))
             return
 
         if value:
             save_env_value(name, value)
             os.environ[name] = value
-            console.print(f"  [green][成功][/green] Saved to {display_hermes_home()}/.env")
+            console.print(_("  [green][成功][/green] Saved to {display_hermes_home}/.env").format(display_hermes_home=display_hermes_home()))
         else:
-            console.print(f"  [dim]  Skipped (set {name} in {display_hermes_home()}/.env later)[/dim]")
+            console.print(_("  [dim]  Skipped (set {name} in {display_hermes_home}/.env later)[/dim]").format(name=name, display_hermes_home=display_hermes_home()))
 
     console.print()
 
@@ -260,7 +258,7 @@ def _display_removed(name: str, plugins_dir: Path) -> None:
 
     console = Console()
     console.print()
-    console.print(f"[red][失败][/red] Plugin [bold]{name}[/bold] removed from {plugins_dir}")
+    console.print(_("[red][失败][/red] Plugin [bold]{name}[/bold] removed from {plugins_dir}").format(name=name, plugins_dir=plugins_dir))
     console.print()
 
 
@@ -269,10 +267,7 @@ def _require_installed_plugin(name: str, plugins_dir: Path, console) -> Path:
     target = _sanitize_plugin_name(name, plugins_dir)
     if not target.exists():
         installed = ", ".join(d.name for d in plugins_dir.iterdir() if d.is_dir()) or "(none)"
-        console.print(
-            f"[red]Error:[/red] Plugin '{name}' not found in {plugins_dir}.\n"
-            f"Installed plugins: {installed}"
-        )
+        console.print(_("[red]Error:[/red] Plugin '{name}' not found in {plugins_dir}.\nInstalled plugins: {installed}").format(name=name, plugins_dir=plugins_dir, installed=installed))
         sys.exit(1)
     return target
 
@@ -300,22 +295,19 @@ def cmd_install(
     try:
         git_url = _resolve_git_url(identifier)
     except ValueError as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(_("[red]Error:[/red] {e}").format(e=e))
         sys.exit(1)
 
     # Warn about insecure / local URL schemes
     if git_url.startswith(("http://", "file://")):
-        console.print(
-            "[yellow]Warning:[/yellow] Using insecure/local URL scheme. "
-            "Consider using https:// or git@ for production installs."
-        )
+        console.print(_("[yellow]Warning:[/yellow] Using insecure/local URL scheme. Consider using https:// or git@ for production installs."))
 
     plugins_dir = _plugins_dir()
 
     # Clone into a temp directory first so we can read plugin.yaml for the name
     with tempfile.TemporaryDirectory() as tmp:
         tmp_target = Path(tmp) / "plugin"
-        console.print(f"[dim]Cloning {git_url}...[/dim]")
+        console.print(_("[dim]Cloning {git_url}...[/dim]").format(git_url=git_url))
 
         try:
             result = subprocess.run(
@@ -325,16 +317,14 @@ def cmd_install(
                 timeout=60,
             )
         except FileNotFoundError:
-            console.print("[red]Error:[/red] git is not installed or not in PATH.")
+            console.print(_("[red]Error:[/red] git is not installed or not in PATH."))
             sys.exit(1)
         except subprocess.TimeoutExpired:
-            console.print("[red]Error:[/red] Git clone timed out after 60 seconds.")
+            console.print(_("[red]Error:[/red] Git clone timed out after 60 seconds."))
             sys.exit(1)
 
         if result.returncode != 0:
-            console.print(
-                f"[red]Error:[/red] Git clone failed:\n{result.stderr.strip()}"
-            )
+            console.print(_("[red]Error:[/red] Git clone failed:\n{result_stderr_strip}").format(result_stderr_strip=result.stderr.strip()))
             sys.exit(1)
 
         # Read manifest
@@ -345,7 +335,7 @@ def cmd_install(
         try:
             target = _sanitize_plugin_name(plugin_name, plugins_dir)
         except ValueError as e:
-            console.print(f"[red]Error:[/red] {e}")
+            console.print(_("[red]Error:[/red] {e}").format(e=e))
             sys.exit(1)
 
         # Check manifest_version compatibility
@@ -354,29 +344,18 @@ def cmd_install(
             try:
                 mv_int = int(mv)
             except (ValueError, TypeError):
-                console.print(
-                    f"[red]Error:[/red] Plugin '{plugin_name}' has invalid "
-                    f"manifest_version '{mv}' (expected an integer)."
-                )
+                console.print(_("[red]Error:[/red] Plugin '{plugin_name}' has invalid manifest_version '{mv}' (expected an integer).").format(plugin_name=plugin_name, mv=mv))
                 sys.exit(1)
             if mv_int > _SUPPORTED_MANIFEST_VERSION:
                 from bwm_cli.config import recommended_update_command
-                console.print(
-                    f"[red]Error:[/red] Plugin '{plugin_name}' requires manifest_version "
-                    f"{mv}, but this installer only supports up to {_SUPPORTED_MANIFEST_VERSION}.\n"
-                    f"Run [bold]{recommended_update_command()}[/bold] to get a newer installer."
-                )
+                console.print(_("[red]Error:[/red] Plugin '{plugin_name}' requires manifest_version {mv}, but this installer only supports up to {_SUPPORTED_MANIFEST_VERSION}.\nRun [bold]{recommended_update_command}[/bold] to get a newer installer.").format(plugin_name=plugin_name, mv=mv, _SUPPORTED_MANIFEST_VERSION=_SUPPORTED_MANIFEST_VERSION, recommended_update_command=recommended_update_command()))
                 sys.exit(1)
 
         if target.exists():
             if not force:
-                console.print(
-                    f"[red]Error:[/red] Plugin '{plugin_name}' already exists at {target}.\n"
-                    f"Use [bold]--force[/bold] to remove and reinstall, or "
-                    f"[bold]bookworm plugins update {plugin_name}[/bold] to pull latest."
-                )
+                console.print(_("[red]Error:[/red] Plugin '{plugin_name}' already exists at {target}.\nUse [bold]--force[/bold] to remove and reinstall, or [bold]bookworm plugins update {plugin_name}[/bold] to pull latest.").format(plugin_name=plugin_name, target=target))
                 sys.exit(1)
-            console.print(f"[dim]  Removing existing {plugin_name}...[/dim]")
+            console.print(_("[dim]  Removing existing {plugin_name}...[/dim]").format(plugin_name=plugin_name))
             shutil.rmtree(target)
 
         # Move from temp to final location
@@ -384,10 +363,7 @@ def cmd_install(
 
     # Validate it looks like a plugin
     if not (target / "plugin.yaml").exists() and not (target / "__init__.py").exists():
-        console.print(
-            f"[yellow]Warning:[/yellow] {plugin_name} doesn't contain plugin.yaml "
-            f"or __init__.py. It may not be a valid BookwormPRO plugin."
-        )
+        console.print(_("[yellow]Warning:[/yellow] {plugin_name} doesn't contain plugin.yaml or __init__.py. It may not be a valid BookwormPRO plugin.").format(plugin_name=plugin_name))
 
     # Copy .example files to their real names (e.g. config.yaml.example → config.yaml)
     _copy_example_files(target, console)
@@ -425,17 +401,12 @@ def cmd_install(
         disabled.discard(installed_name)
         _save_enabled_set(enabled)
         _save_disabled_set(disabled)
-        console.print(
-            f"[green][成功][/green] Plugin [bold]{installed_name}[/bold] enabled."
-        )
+        console.print(_("[green][成功][/green] Plugin [bold]{installed_name}[/bold] enabled.").format(installed_name=installed_name))
     else:
-        console.print(
-            f"[dim]Plugin installed but not enabled. "
-            f"Run `bookworm plugins enable {installed_name}` to activate.[/dim]"
-        )
+        console.print(_("[dim]Plugin installed but not enabled. Run `bookworm plugins enable {installed_name}` to activate.[/dim]").format(installed_name=installed_name))
 
-    console.print("[dim]Restart the gateway for the plugin to take effect:[/dim]")
-    console.print("[dim]  bookworm gateway restart[/dim]")
+    console.print(_("[dim]Restart the gateway for the plugin to take effect:[/dim]"))
+    console.print(_("[dim]  bookworm gateway restart[/dim]"))
     console.print()
 
 
@@ -449,17 +420,14 @@ def cmd_update(name: str) -> None:
     try:
         target = _require_installed_plugin(name, plugins_dir, console)
     except ValueError as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(_("[red]Error:[/red] {e}").format(e=e))
         sys.exit(1)
 
     if not (target / ".git").exists():
-        console.print(
-            f"[red]Error:[/red] Plugin '{name}' was not installed from git "
-            f"(no .git directory). Cannot update."
-        )
+        console.print(_("[red]Error:[/red] Plugin '{name}' was not installed from git (no .git directory). Cannot update.").format(name=name))
         sys.exit(1)
 
-    console.print(f"[dim]Updating {name}...[/dim]")
+    console.print(_("[dim]Updating {name}...[/dim]").format(name=name))
 
     try:
         result = subprocess.run(
@@ -470,14 +438,14 @@ def cmd_update(name: str) -> None:
             cwd=str(target),
         )
     except FileNotFoundError:
-        console.print("[red]Error:[/red] git is not installed or not in PATH.")
+        console.print(_("[red]Error:[/red] git is not installed or not in PATH."))
         sys.exit(1)
     except subprocess.TimeoutExpired:
-        console.print("[red]Error:[/red] Git pull timed out after 60 seconds.")
+        console.print(_("[red]Error:[/red] Git pull timed out after 60 seconds."))
         sys.exit(1)
 
     if result.returncode != 0:
-        console.print(f"[red]Error:[/red] Git pull failed:\n{result.stderr.strip()}")
+        console.print(_("[red]Error:[/red] Git pull failed:\n{result_stderr_strip}").format(result_stderr_strip=result.stderr.strip()))
         sys.exit(1)
 
     # Copy any new .example files
@@ -485,12 +453,10 @@ def cmd_update(name: str) -> None:
 
     output = result.stdout.strip()
     if "Already up to date" in output:
-        console.print(
-            f"[green][成功][/green] Plugin [bold]{name}[/bold] is already up to date."
-        )
+        console.print(_("[green][成功][/green] Plugin [bold]{name}[/bold] is already up to date.").format(name=name))
     else:
-        console.print(f"[green][成功][/green] Plugin [bold]{name}[/bold] updated.")
-        console.print(f"[dim]{output}[/dim]")
+        console.print(_("[green][成功][/green] Plugin [bold]{name}[/bold] updated.").format(name=name))
+        console.print(_("[dim]{output}[/dim]").format(output=output))
 
 
 def cmd_remove(name: str) -> None:
@@ -503,7 +469,7 @@ def cmd_remove(name: str) -> None:
     try:
         target = _require_installed_plugin(name, plugins_dir, console)
     except ValueError as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(_("[red]Error:[/red] {e}").format(e=e))
         sys.exit(1)
 
     shutil.rmtree(target)
@@ -570,24 +536,21 @@ def cmd_enable(name: str) -> None:
     console = Console()
     # Discover the plugin — check installed (user) AND bundled.
     if not _plugin_exists(name):
-        console.print(f"[red]Plugin '{name}' is not installed or bundled.[/red]")
+        console.print(_("[red]Plugin '{name}' is not installed or bundled.[/red]").format(name=name))
         sys.exit(1)
 
     enabled = _get_enabled_set()
     disabled = _get_disabled_set()
 
     if name in enabled and name not in disabled:
-        console.print(f"[dim]Plugin '{name}' is already enabled.[/dim]")
+        console.print(_("[dim]Plugin '{name}' is already enabled.[/dim]").format(name=name))
         return
 
     enabled.add(name)
     disabled.discard(name)
     _save_enabled_set(enabled)
     _save_disabled_set(disabled)
-    console.print(
-        f"[green][成功][/green] Plugin [bold]{name}[/bold] enabled. "
-        "Takes effect on next session."
-    )
+    console.print(_("[green][成功][/green] Plugin [bold]{name}[/bold] enabled. Takes effect on next session.").format(name=name))
 
 
 def cmd_disable(name: str) -> None:
@@ -596,24 +559,21 @@ def cmd_disable(name: str) -> None:
 
     console = Console()
     if not _plugin_exists(name):
-        console.print(f"[red]Plugin '{name}' is not installed or bundled.[/red]")
+        console.print(_("[red]Plugin '{name}' is not installed or bundled.[/red]").format(name=name))
         sys.exit(1)
 
     enabled = _get_enabled_set()
     disabled = _get_disabled_set()
 
     if name not in enabled and name in disabled:
-        console.print(f"[dim]Plugin '{name}' is already disabled.[/dim]")
+        console.print(_("[dim]Plugin '{name}' is already disabled.[/dim]").format(name=name))
         return
 
     enabled.discard(name)
     disabled.add(name)
     _save_enabled_set(enabled)
     _save_disabled_set(disabled)
-    console.print(
-        f"[yellow]\u2298[/yellow] Plugin [bold]{name}[/bold] disabled. "
-        "Takes effect on next session."
-    )
+    console.print(_("[yellow]\u2298[/yellow] Plugin [bold]{name}[/bold] disabled. Takes effect on next session.").format(name=name))
 
 
 def _plugin_exists(name: str) -> bool:
@@ -704,8 +664,8 @@ def cmd_list() -> None:
     console = Console()
     entries = _discover_all_plugins()
     if not entries:
-        console.print("[dim]No plugins installed.[/dim]")
-        console.print("[dim]Install with:[/dim] bookworm plugins install owner/repo")
+        console.print(_("[dim]No plugins installed.[/dim]"))
+        console.print(_("[dim]Install with:[/dim] bookworm plugins install owner/repo"))
         return
 
     enabled = _get_enabled_set()
@@ -730,9 +690,9 @@ def cmd_list() -> None:
     console.print()
     console.print(table)
     console.print()
-    console.print("[dim]Interactive toggle:[/dim] bookworm plugins")
-    console.print("[dim]Enable/disable:[/dim] bookworm plugins enable/disable <name>")
-    console.print("[dim]Plugins are opt-in by default — only 'enabled' plugins load.[/dim]")
+    console.print(_("[dim]Interactive toggle:[/dim] bookworm plugins"))
+    console.print(_("[dim]Enable/disable:[/dim] bookworm plugins enable/disable <name>"))
+    console.print(_("[dim]Plugins are opt-in by default — only 'enabled' plugins load.[/dim]"))
 
 
 # ---------------------------------------------------------------------------
@@ -916,13 +876,13 @@ def cmd_toggle() -> None:
     has_categories = bool(categories)
 
     if not has_plugins and not has_categories:
-        console.print("[dim]No plugins installed and no provider categories available.[/dim]")
-        console.print("[dim]Install with:[/dim] bookworm plugins install owner/repo")
+        console.print(_("[dim]No plugins installed and no provider categories available.[/dim]"))
+        console.print(_("[dim]Install with:[/dim] bookworm plugins install owner/repo"))
         return
 
     # Non-TTY fallback
     if not sys.stdin.isatty():
-        console.print("[dim]Interactive mode requires a terminal.[/dim]")
+        console.print(_("[dim]Interactive mode requires a terminal.[/dim]"))
         return
 
     # Launch the composite curses UI
@@ -1165,23 +1125,17 @@ def _run_composite_ui(curses, plugin_names, plugin_labels, plugin_selected,
     if enabled_changed or disabled_changed:
         _save_enabled_set(new_enabled)
         _save_disabled_set(new_disabled)
-        console.print(
-            f"\n[green]\u2713[/green] General plugins: {len(new_enabled)} enabled, "
-            f"{len(plugin_names) - len(new_enabled)} disabled."
-        )
+        console.print(_("\n[green]\u2713[/green] General plugins: {len_new_enabled} enabled, {len_plugin_names_len_new_enabl} disabled.").format(len_new_enabled=len(new_enabled), len_plugin_names_len_new_enabl=len(plugin_names) - len(new_enabled)))
     elif n_plugins > 0:
-        console.print("\n[dim]General plugins unchanged.[/dim]")
+        console.print(_("\n[dim]General plugins unchanged.[/dim]"))
 
     if result_holder["providers_changed"]:
         new_memory = _get_current_memory_provider() or "built-in"
         new_context = _get_current_context_engine()
-        console.print(
-            f"[green]\u2713[/green] Memory provider: [bold]{new_memory}[/bold]  "
-            f"Context engine: [bold]{new_context}[/bold]"
-        )
+        console.print(_("[green]\u2713[/green] Memory provider: [bold]{new_memory}[/bold]  Context engine: [bold]{new_context}[/bold]").format(new_memory=new_memory, new_context=new_context))
 
     if n_plugins > 0 or result_holder["providers_changed"]:
-        console.print("[dim]Changes take effect on next session.[/dim]")
+        console.print(_("[dim]Changes take effect on next session.[/dim]"))
     console.print()
 
 
@@ -1190,13 +1144,13 @@ def _run_composite_fallback(plugin_names, plugin_labels, plugin_selected,
     """Text-based fallback for the composite plugins UI."""
     from bwm_cli.colors import Colors, color
 
-    print(color("\n  Plugins", Colors.YELLOW))
+    print(color(_("\n  Plugins"), Colors.YELLOW))
 
     # General plugins
     if plugin_names:
         chosen = set(plugin_selected)
-        print(color("\n  General Plugins", Colors.YELLOW))
-        print(color("  Toggle by number, Enter to confirm.\n", Colors.DIM))
+        print(color(_("\n  General Plugins"), Colors.YELLOW))
+        print(color(_("  Toggle by number, Enter to confirm.\n"), Colors.DIM))
 
         while True:
             for i, label in enumerate(plugin_labels):
@@ -1229,7 +1183,7 @@ def _run_composite_fallback(plugin_names, plugin_labels, plugin_selected,
 
     # Provider categories
     if categories:
-        print(color("\n  Provider Plugins", Colors.YELLOW))
+        print(color(_("\n  Provider Plugins"), Colors.YELLOW))
         for ci, (cat_name, cat_current, cat_fn) in enumerate(categories):
             print(f"  {ci + 1}. {cat_name} [{cat_current}]")
         print()

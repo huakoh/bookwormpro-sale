@@ -85,6 +85,8 @@ from gateway.platforms.telegram_network import (
     parse_fallback_ip_env,
 )
 
+from bwm_cli.i18n import _
+
 
 def check_telegram_requirements() -> bool:
     """Check if Telegram dependencies are available."""
@@ -1836,7 +1838,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 )
             return SendResult(success=True, message_id=str(msg.message_id))
         except Exception as e:
-            print(f"[{self.name}] Failed to send document: {e}")
+            print(_("[{name}] Failed to send document: {e}").format(name=self.name, e=e))
             return await super().send_document(chat_id, file_path, caption, file_name, reply_to)
 
     async def send_video(
@@ -1867,7 +1869,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 )
             return SendResult(success=True, message_id=str(msg.message_id))
         except Exception as e:
-            print(f"[{self.name}] Failed to send video: {e}")
+            print(_("[{name}] Failed to send video: {e}").format(name=self.name, e=e))
             return await super().send_video(chat_id, video_path, caption, reply_to)
 
     async def send_image(
@@ -2685,7 +2687,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 ext = ""
                 original_filename = doc.file_name or ""
                 if original_filename:
-                    _, ext = os.path.splitext(original_filename)
+                    _unused, ext = os.path.splitext(original_filename)
                     ext = ext.lower()
 
                 # If no extension from filename, reverse-lookup from MIME type

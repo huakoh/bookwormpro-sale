@@ -41,6 +41,7 @@ from gateway.platforms.base import (
     cache_image_from_bytes,
 )
 from gateway.config import Platform, PlatformConfig
+from bwm_cli.i18n import _
 
 logger = logging.getLogger(__name__)
 # Automated sender patterns — emails from these are silently ignored
@@ -302,7 +303,7 @@ class EmailAdapter(BasePlatformAdapter):
 
         self._running = True
         self._poll_task = asyncio.create_task(self._poll_loop())
-        print(f"[Email] Connected as {self._address}")
+        print(_("[Email] Connected as {addr}").format(addr=self._address))
         return True
 
     async def disconnect(self) -> None:

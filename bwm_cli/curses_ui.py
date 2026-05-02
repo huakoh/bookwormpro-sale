@@ -8,6 +8,8 @@ import sys
 from typing import Callable, List, Optional, Set
 
 from bwm_cli.colors import Colors, color
+from bwm_cli.i18n import _
+
 
 
 def flush_stdin() -> None:
@@ -289,8 +291,8 @@ def _radio_numbered_fallback(
     cancel_returns: int,
 ) -> int:
     """Text-based numbered fallback for radio selection."""
-    print(color(f"\n  {title}", Colors.YELLOW))
-    print(color("  Select by number, Enter to confirm.\n", Colors.DIM))
+    print(color(_("\n  {title}").format(title=title), Colors.YELLOW))
+    print(color(_("  Select by number, Enter to confirm.\n"), Colors.DIM))
 
     for i, label in enumerate(items):
         marker = color("(\u25cf)", Colors.GREEN) if i == selected else "(\u25cb)"
@@ -413,12 +415,12 @@ def _numbered_single_fallback(
     cancel_idx: int,
 ) -> int | None:
     """Text-based numbered fallback for single-select."""
-    print(f"\n  {title}\n")
+    print(_("\n  {title}\n").format(title=title))
     for i, label in enumerate(items, 1):
         print(f"  {i}. {label}")
     print()
     try:
-        val = input(f"  Choice [1-{len(items)}]: ").strip()
+        val = input(_("  Choice [1-{len}]: ").format(len=len(items))).strip()
         if not val:
             return None
         idx = int(val) - 1
@@ -440,8 +442,8 @@ def _numbered_fallback(
 ) -> Set[int]:
     """Text-based toggle fallback for terminals without curses."""
     chosen = set(selected)
-    print(color(f"\n  {title}", Colors.YELLOW))
-    print(color("  Toggle by number, Enter to confirm.\n", Colors.DIM))
+    print(color(_("\n  {title}").format(title=title), Colors.YELLOW))
+    print(color(_("  Toggle by number, Enter to confirm.\n"), Colors.DIM))
 
     while True:
         for i, label in enumerate(items):
@@ -450,7 +452,7 @@ def _numbered_fallback(
         if status_fn:
             status_text = status_fn(chosen)
             if status_text:
-                print(color(f"\n  {status_text}", Colors.DIM))
+                print(color(_("\n  {status_text}").format(status_text=status_text), Colors.DIM))
         print()
         try:
             val = input(color("  Toggle # (or Enter to confirm): ", Colors.DIM)).strip()

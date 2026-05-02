@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, List, Optional
 
 
+
 @dataclass
 class CanaryResult:
     name: str

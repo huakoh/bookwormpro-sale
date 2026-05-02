@@ -14,6 +14,8 @@ from pathlib import Path
 from bwm_constants import get_hermes_home
 
 from bwm_cli.colors import Colors, color
+from bwm_cli.i18n import _
+
 
 def log_info(msg: str):
     print(f"{color('→', Colors.CYAN)} {msg}")
@@ -90,7 +92,7 @@ def remove_path_from_shell_configs():
                 removed_from.append(config_path)
                 
         except Exception as e:
-            log_warn(f"Could not update {config_path}: {e}")
+            log_warn(_("Could not update {config_path}: {e}").format(config_path=config_path, e=e))
     
     return removed_from
 
@@ -112,7 +114,7 @@ def remove_wrapper_script():
                     wrapper.unlink()
                     removed.append(wrapper)
             except Exception as e:
-                log_warn(f"Could not remove {wrapper}: {e}")
+                log_warn(_("Could not remove {wrapper}: {e}").format(wrapper=wrapper, e=e))
     
     return removed
 
@@ -137,10 +139,10 @@ def uninstall_gateway_service():
         if pids:
             killed = kill_gateway_processes()
             if killed:
-                log_success(f"Killed {killed} running gateway process(es)")
+                log_success(_("Killed {killed} running gateway process(es)").format(killed=killed))
                 stopped_something = True
     except Exception as e:
-        log_warn(f"Could not check for gateway processes: {e}")
+        log_warn(_("Could not check for gateway processes: {e}").format(e=e))
 
     system = platform.system()
 
@@ -168,8 +170,8 @@ def uninstall_gateway_service():
                 scope = "system" if is_system else "user"
                 try:
                     if is_system and os.geteuid() != 0:
-                        log_warn(f"System gateway service exists at {unit_path} "
-                                 f"but needs sudo to remove")
+                        log_warn(_("System gateway service exists at {unit_path} "
+                                   "but needs sudo to remove").format(unit_path=unit_path))
                         continue
 
                     cmd = _systemctl_cmd(is_system)
@@ -180,12 +182,12 @@ def uninstall_gateway_service():
                     unit_path.unlink()
                     subprocess.run(cmd + ["daemon-reload"],
                                    capture_output=True, check=False)
-                    log_success(f"Removed {scope} gateway service ({unit_path})")
+                    log_success(_("Removed {scope} gateway service ({unit_path})").format(scope=scope, unit_path=unit_path))
                     stopped_something = True
                 except Exception as e:
-                    log_warn(f"Could not remove {scope} gateway service: {e}")
+                    log_warn(_("Could not remove {scope} gateway service: {e}").format(scope=scope, e=e))
         except Exception as e:
-            log_warn(f"Could not check systemd gateway services: {e}")
+            log_warn(_("Could not check systemd gateway services: {e}").format(e=e))
 
     # 3. macOS: uninstall launchd plist
     elif system == "Darwin":
@@ -196,10 +198,10 @@ def uninstall_gateway_service():
                 subprocess.run(["launchctl", "unload", str(plist_path)],
                                capture_output=True, check=False)
                 plist_path.unlink()
-                log_success(f"Removed macOS gateway service ({plist_path})")
+                log_success(_("Removed macOS gateway service ({plist_path})").format(plist_path=plist_path))
                 stopped_something = True
         except Exception as e:
-            log_warn(f"Could not remove launchd gateway service: {e}")
+            log_warn(_("Could not remove launchd gateway service: {e}").format(e=e))
 
     return stopped_something
 
@@ -224,7 +226,7 @@ def _discover_named_profiles():
     try:
         return [p for p in list_profiles() if not getattr(p, "is_default", False)]
     except Exception as e:
-        log_warn(f"Could not enumerate profiles: {e}")
+        log_warn(_("Could not enumerate profiles: {e}").format(e=e))
         return []
 
 
@@ -240,7 +242,7 @@ def _uninstall_profile(profile) -> None:
     name = profile.name
     profile_home = profile.path
 
-    log_info(f"Uninstalling profile '{name}'...")
+    log_info(_("Uninstalling profile '{name}'...").format(name=name))
 
     # 1. Stop and remove this profile's gateway service.
     #    Use `python -m bwm_cli.main` so we don't depend on a `bookworm`
@@ -256,26 +258,26 @@ def _uninstall_profile(profile) -> None:
                 check=False,
             )
         except subprocess.TimeoutExpired:
-            log_warn(f"  Gateway {subcmd} timed out for '{name}'")
+            log_warn(_("  Gateway {subcmd} timed out for '{name}'").format(subcmd=subcmd, name=name))
         except Exception as e:
-            log_warn(f"  Could not run gateway {subcmd} for '{name}': {e}")
+            log_warn(_("  Could not run gateway {subcmd} for '{name}': {e}").format(subcmd=subcmd, name=name, e=e))
 
     # 2. Remove the wrapper alias script at ~/.local/bin/<name> (if any).
     alias_path = getattr(profile, "alias_path", None)
     if alias_path and alias_path.exists():
         try:
             alias_path.unlink()
-            log_success(f"  Removed alias {alias_path}")
+            log_success(_("  Removed alias {alias_path}").format(alias_path=alias_path))
         except Exception as e:
-            log_warn(f"  Could not remove alias {alias_path}: {e}")
+            log_warn(_("  Could not remove alias {alias_path}: {e}").format(alias_path=alias_path, e=e))
 
     # 3. Wipe the profile's BOOKWORMPRO_HOME directory.
     try:
         if profile_home.exists():
             shutil.rmtree(profile_home)
-            log_success(f"  Removed {profile_home}")
+            log_success(_("  Removed {profile_home}").format(profile_home=profile_home))
     except Exception as e:
-        log_warn(f"  Could not remove {profile_home}: {e}")
+        log_warn(_("  Could not remove {profile_home}: {e}").format(profile_home=profile_home, e=e))
 
 
 def run_uninstall(args):
@@ -297,47 +299,47 @@ def run_uninstall(args):
 
     print()
     print(color("┌─────────────────────────────────────────────────────────┐", Colors.MAGENTA, Colors.BOLD))
-    print(color("│            [BWM] BookwormPRO Uninstaller                  │", Colors.MAGENTA, Colors.BOLD))
+    print(color(_("│            [BWM] BookwormPRO Uninstaller                  │"), Colors.MAGENTA, Colors.BOLD))
     print(color("└─────────────────────────────────────────────────────────┘", Colors.MAGENTA, Colors.BOLD))
     print()
     
     # Show what will be affected
-    print(color("Current Installation:", Colors.CYAN, Colors.BOLD))
-    print(f"  Code:    {project_root}")
-    print(f"  Config:  {hermes_home / 'config.yaml'}")
-    print(f"  Secrets: {hermes_home / '.env'}")
-    print(f"  Data:    {hermes_home / 'cron/'}, {hermes_home / 'sessions/'}, {hermes_home / 'logs/'}")
+    print(color(_("Current Installation:"), Colors.CYAN, Colors.BOLD))
+    print(_("  Code:    {project_root}").format(project_root=project_root))
+    print(_("  Config:  {config_path}").format(config_path=hermes_home / 'config.yaml'))
+    print(_("  Secrets: {secrets_path}").format(secrets_path=hermes_home / '.env'))
+    print(_("  Data:    {cron}, {sessions}, {logs}").format(cron=hermes_home / 'cron/', sessions=hermes_home / 'sessions/', logs=hermes_home / 'logs/'))
     print()
 
     if named_profiles:
-        print(color("Other profiles detected:", Colors.CYAN, Colors.BOLD))
+        print(color(_("Other profiles detected:"), Colors.CYAN, Colors.BOLD))
         for p in named_profiles:
-            running = " (gateway running)" if getattr(p, "gateway_running", False) else ""
-            print(f"  • {p.name}{running}: {p.path}")
+            running = _(" (gateway running)") if getattr(p, "gateway_running", False) else ""
+            print(_("  • {name}{running}: {path}").format(name=p.name, running=running, path=p.path))
         print()
     
     # Ask for confirmation
-    print(color("Uninstall Options:", Colors.YELLOW, Colors.BOLD))
+    print(color(_("Uninstall Options:"), Colors.YELLOW, Colors.BOLD))
     print()
-    print("  1) " + color("Keep data", Colors.GREEN) + " - Remove code only, keep configs/sessions/logs")
-    print("     (Recommended - you can reinstall later with your settings intact)")
+    print("  1) " + color(_("Keep data"), Colors.GREEN) + _(" - Remove code only, keep configs/sessions/logs"))
+    print(_("     (Recommended - you can reinstall later with your settings intact)"))
     print()
-    print("  2) " + color("Full uninstall", Colors.RED) + " - Remove everything including all data")
-    print("     (Warning: This deletes all configs, sessions, and logs permanently)")
+    print("  2) " + color(_("Full uninstall"), Colors.RED) + _(" - Remove everything including all data"))
+    print(_("     (Warning: This deletes all configs, sessions, and logs permanently)"))
     print()
-    print("  3) " + color("Cancel", Colors.CYAN) + " - Don't uninstall")
+    print("  3) " + color(_("Cancel"), Colors.CYAN) + _(" - Don't uninstall"))
     print()
     
     try:
-        choice = input(color("Select option [1/2/3]: ", Colors.BOLD)).strip()
+        choice = input(color(_("Select option [1/2/3]: "), Colors.BOLD)).strip()
     except (KeyboardInterrupt, EOFError):
         print()
-        print("Cancelled.")
+        print(_("Cancelled."))
         return
-    
+
     if choice == "3" or choice.lower() in ("c", "cancel", "q", "quit", "n", "no"):
         print()
-        print("Uninstall cancelled.")
+        print(_("Uninstall cancelled."))
         return
     
     full_uninstall = (choice == "2")
@@ -349,78 +351,78 @@ def run_uninstall(args):
     remove_profiles = False
     if full_uninstall and named_profiles:
         print()
-        print(color("Other profiles will NOT be removed by default.", Colors.YELLOW))
-        print(f"Found {len(named_profiles)} named profile(s): " +
+        print(color(_("Other profiles will NOT be removed by default."), Colors.YELLOW))
+        print(_("Found {count} named profile(s): ").format(count=len(named_profiles)) +
               ", ".join(p.name for p in named_profiles))
         print()
         try:
             resp = input(color(
-                f"Also stop and remove these {len(named_profiles)} profile(s)? [y/N]: ",
+                _("Also stop and remove these {count} profile(s)? [y/N]: ").format(count=len(named_profiles)),
                 Colors.BOLD
             )).strip().lower()
         except (KeyboardInterrupt, EOFError):
             print()
-            print("Cancelled.")
+            print(_("Cancelled."))
             return
         remove_profiles = resp in ("y", "yes")
 
     # Final confirmation
     print()
     if full_uninstall:
-        print(color("[警告]  WARNING: This will permanently delete ALL BookwormPRO data!", Colors.RED, Colors.BOLD))
-        print(color("   Including: configs, API keys, sessions, scheduled jobs, logs", Colors.RED))
+        print(color(_("[WARNING]  WARNING: This will permanently delete ALL BookwormPRO data!"), Colors.RED, Colors.BOLD))
+        print(color(_("   Including: configs, API keys, sessions, scheduled jobs, logs"), Colors.RED))
         if remove_profiles:
             print(color(
-                f"   Plus {len(named_profiles)} profile(s): " +
+                _("   Plus {count} profile(s): ").format(count=len(named_profiles)) +
                 ", ".join(p.name for p in named_profiles),
                 Colors.RED
             ))
     else:
-        print("This will remove the BookwormPRO code but keep your configuration and data.")
+        print(_("This will remove the BookwormPRO code but keep your configuration and data."))
     
     print()
     try:
-        confirm = input(f"Type '{color('yes', Colors.YELLOW)}' to confirm: ").strip().lower()
+        confirm = input(_("Type '{yes_word}' to confirm: ").format(yes_word=color('yes', Colors.YELLOW))).strip().lower()
     except (KeyboardInterrupt, EOFError):
         print()
-        print("Cancelled.")
+        print(_("Cancelled."))
         return
-    
+
     if confirm != "yes":
         print()
-        print("Uninstall cancelled.")
+        print(_("Uninstall cancelled."))
         return
-    
+
     print()
-    print(color("Uninstalling...", Colors.CYAN, Colors.BOLD))
+    print(color(_("Uninstalling..."), Colors.CYAN, Colors.BOLD))
     print()
     
     # 1. Stop and uninstall gateway service + kill standalone processes
-    log_info("Checking for running gateway...")
+    log_info(_("Checking for running gateway..."))
     if not uninstall_gateway_service():
-        log_info("No gateway service or processes found")
-    
+        log_info(_("No gateway service or processes found"))
+
     # 2. Remove PATH entries from shell configs
-    log_info("Removing PATH entries from shell configs...")
+    log_info(_("Removing PATH entries from shell configs..."))
     removed_configs = remove_path_from_shell_configs()
     if removed_configs:
         for config in removed_configs:
-            log_success(f"Updated {config}")
+            log_success(_("Updated {config}").format(config=config))
     else:
-        log_info("No PATH entries found to remove")
-    
+        log_info(_("No PATH entries found to remove"))
+
     # 3. Remove wrapper script
-    log_info("Removing bookworm command...")
+    log_info(_("Removing bookworm command..."))
     removed_wrappers = remove_wrapper_script()
     if removed_wrappers:
         for wrapper in removed_wrappers:
-            log_success(f"Removed {wrapper}")
+            log_success(_("Removed {wrapper}").format(wrapper=wrapper))
     else:
-        log_info("No wrapper script found")
+        log_info(_("No wrapper script found"))
     
     # 4. Remove installation directory (code)
-    log_info("Removing installation directory...")
-    
+    log_info(_("Removing installation directory..."))
+
     # Check if we're running from within the install dir
     # We need to be careful here
     try:
@@ -428,14 +430,14 @@ def run_uninstall(args):
             # If the install is inside ~/.bookwormpro/, just remove the bookwormpro subdir
             if hermes_home in project_root.parents or project_root.parent == hermes_home:
                 shutil.rmtree(project_root)
-                log_success(f"Removed {project_root}")
+                log_success(_("Removed {project_root}").format(project_root=project_root))
             else:
                 # Installation is somewhere else entirely
                 shutil.rmtree(project_root)
-                log_success(f"Removed {project_root}")
+                log_success(_("Removed {project_root}").format(project_root=project_root))
     except Exception as e:
-        log_warn(f"Could not fully remove {project_root}: {e}")
-        log_info("You may need to manually remove it")
+        log_warn(_("Could not fully remove {project_root}: {e}").format(project_root=project_root, e=e))
+        log_info(_("You may need to manually remove it"))
     
     # 5. Optionally remove ~/.bookwormpro/ data directory (and named profiles)
     if full_uninstall:
@@ -448,34 +450,34 @@ def run_uninstall(args):
             for prof in named_profiles:
                 _uninstall_profile(prof)
 
-        log_info("Removing configuration and data...")
+        log_info(_("Removing configuration and data..."))
         try:
             if hermes_home.exists():
                 shutil.rmtree(hermes_home)
-                log_success(f"Removed {hermes_home}")
+                log_success(_("Removed {hermes_home}").format(hermes_home=hermes_home))
         except Exception as e:
-            log_warn(f"Could not fully remove {hermes_home}: {e}")
-            log_info("You may need to manually remove it")
+            log_warn(_("Could not fully remove {hermes_home}: {e}").format(hermes_home=hermes_home, e=e))
+            log_info(_("You may need to manually remove it"))
     else:
-        log_info(f"Keeping configuration and data in {hermes_home}")
+        log_info(_("Keeping configuration and data in {hermes_home}").format(hermes_home=hermes_home))
     
     # Done
     print()
     print(color("┌─────────────────────────────────────────────────────────┐", Colors.GREEN, Colors.BOLD))
-    print(color("│              [成功] Uninstall Complete!                      │", Colors.GREEN, Colors.BOLD))
+    print(color(_("│              [成功] Uninstall Complete!                      │"), Colors.GREEN, Colors.BOLD))
     print(color("└─────────────────────────────────────────────────────────┘", Colors.GREEN, Colors.BOLD))
     print()
     
     if not full_uninstall:
-        print(color("Your configuration and data have been preserved:", Colors.CYAN))
-        print(f"  {hermes_home}/")
+        print(color(_("Your configuration and data have been preserved:"), Colors.CYAN))
+        print(_("  {hermes_home}/").format(hermes_home=hermes_home))
         print()
-        print("To reinstall later with your existing settings:")
-        print(color("  curl -fsSL https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.sh | bash", Colors.DIM))
+        print(_("To reinstall later with your existing settings:"))
+        print(color(_("  curl -fsSL https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.sh | bash"), Colors.DIM))
         print()
-    
-    print(color("Reload your shell to complete the process:", Colors.YELLOW))
-    print("  source ~/.bashrc  # or ~/.zshrc")
+
+    print(color(_("Reload your shell to complete the process:"), Colors.YELLOW))
+    print(_("  source ~/.bashrc  # or ~/.zshrc"))
     print()
-    print("Thank you for using BookwormPRO! [BWM]")
+    print(_("Thank you for using BookwormPRO! [BWM]"))
     print()

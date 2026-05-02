@@ -17,6 +17,7 @@ import threading
 import time
 import unicodedata
 from typing import Optional
+from bwm_cli.i18n import _
 
 logger = logging.getLogger(__name__)
 
@@ -445,13 +446,13 @@ def prompt_dangerous_approval(command: str, description: str,
     try:
         while True:
             print()
-            print(f"  [警告]  DANGEROUS COMMAND: {description}")
+            print(_("  [警告]  危险命令: {description}").format(description=description))
             print(f"      {command}")
             print()
             if allow_permanent:
-                print("      [o]nce  |  [s]ession  |  [a]lways  |  [d]eny")
+                print(_("      [o]一次  |  [s]会话  |  [a]永久  |  [d]拒绝"))
             else:
-                print("      [o]nce  |  [s]ession  |  [d]eny")
+                print(_("      [o]一次  |  [s]会话  |  [d]拒绝"))
             print()
             sys.stdout.flush()
 
@@ -459,7 +460,7 @@ def prompt_dangerous_approval(command: str, description: str,
 
             def get_input():
                 try:
-                    prompt = "      Choice [o/s/a/D]: " if allow_permanent else "      Choice [o/s/D]: "
+                    prompt = _("      选择 [o/s/a/D]: ") if allow_permanent else _("      选择 [o/s/D]: ")
                     result["choice"] = input(prompt).strip().lower()
                 except (EOFError, OSError):
                     result["choice"] = ""
@@ -469,28 +470,28 @@ def prompt_dangerous_approval(command: str, description: str,
             thread.join(timeout=timeout_seconds)
 
             if thread.is_alive():
-                print("\n      [耗时] Timeout - denying command")
+                print(_("\n      [耗时] 超时 — 拒绝命令"))
                 return "deny"
 
             choice = result["choice"]
             if choice in ('o', 'once'):
-                print("      [成功] Allowed once")
+                print(_("      [成功] 本次允许"))
                 return "once"
             elif choice in ('s', 'session'):
-                print("      [成功] Allowed for this session")
+                print(_("      [成功] 本次会话允许"))
                 return "session"
             elif choice in ('a', 'always'):
                 if not allow_permanent:
-                    print("      [成功] Allowed for this session")
+                    print(_("      [成功] 本次会话允许"))
                     return "session"
-                print("      [成功] Added to permanent allowlist")
+                print(_("      [成功] 已加入永久白名单"))
                 return "always"
             else:
-                print("      [失败] Denied")
+                print(_("      [失败] 已拒绝"))
                 return "deny"
 
     except (EOFError, KeyboardInterrupt):
-        print("\n      [失败] Cancelled")
+        print(_("\n      [失败] 已取消"))
         return "deny"
     finally:
         if "BOOKWORMPRO_SPINNER_PAUSE" in os.environ:

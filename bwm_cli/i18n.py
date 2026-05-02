@@ -62,7 +62,7 @@ class _Translator:
         return True
 
     def gettext(self, text: str) -> str:
-        return self._catalog.get(text, text)
+        return self._catalog.get(text, text) or text
 
     def __bool__(self) -> bool:
         return bool(self._catalog)

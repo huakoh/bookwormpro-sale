@@ -105,6 +105,7 @@ def _get_plugin_toolset_keys() -> set:
 # module shares the same data.  Kept as dict-of-dicts for backward
 # compatibility with existing ``PLATFORMS[key]["label"]`` access patterns.
 from bwm_cli.platforms import PLATFORMS as _PLATFORMS_REGISTRY
+from bwm_cli.i18n import _
 
 PLATFORMS = {
     k: {"label": info.label, "default_toolset": info.default_toolset}
@@ -1452,7 +1453,7 @@ def _configure_simple_requirements(ts_key: str):
         if _toolset_has_keys("vision"):
             return
         print()
-        print(color("  Vision / Image Analysis requires a multimodal backend:", Colors.YELLOW))
+        print(color(_("  Vision / Image Analysis requires a multimodal backend:"), Colors.YELLOW))
         choices = [
             "OpenRouter — uses Gemini",
             "OpenAI-compatible endpoint — base URL, API key, and vision model",
@@ -1496,7 +1497,7 @@ def _configure_simple_requirements(ts_key: str):
 
     ts_label = next((l for k, l, _ in _get_effective_configurable_toolsets() if k == ts_key), ts_key)
     print()
-    print(color(f"  {ts_label} requires configuration:", Colors.YELLOW))
+    print(color(_("  {ts_label} requires configuration:").format(ts_label=ts_label), Colors.YELLOW))
 
     for var, url in missing:
         if url:
@@ -1556,7 +1557,7 @@ def _configure_tool_category_for_reconfig(ts_key: str, cat: dict, config: dict):
         _reconfigure_provider(provider, config)
     else:
         print()
-        print(color(f"  --- {icon} {name} - Choose a provider ---", Colors.CYAN))
+        print(color(_("  --- {icon} {name} - Choose a provider ---").format(icon=icon, name=name), Colors.CYAN))
         print()
 
         provider_choices = []
@@ -1721,7 +1722,7 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
     # Non-interactive summary mode for CLI usage
     if getattr(args, "summary", False):
         total = len(_get_effective_configurable_toolsets())
-        print(color("[BWM] Tool Summary", Colors.CYAN, Colors.BOLD))
+        print(color(_("[BWM] Tool Summary"), Colors.CYAN, Colors.BOLD))
         print()
         summary = _platform_toolset_summary(config, enabled_platforms)
         for pkey in enabled_platforms:
@@ -1732,15 +1733,15 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
             if enabled:
                 for ts_key in sorted(enabled):
                     label = next((l for k, l, _ in _get_effective_configurable_toolsets() if k == ts_key), ts_key)
-                    print(color(f"    [成功] {label}", Colors.GREEN))
+                    print(color(_("    [成功] {label}").format(label=label), Colors.GREEN))
             else:
-                print(color("    (none enabled)", Colors.DIM))
+                print(color(_("    (none enabled)"), Colors.DIM))
         print()
         return
-    print(color("[BWM] BookwormPRO Tool Configuration", Colors.CYAN, Colors.BOLD))
-    print(color("  Enable or disable tools per platform.", Colors.DIM))
-    print(color("  Tools that need API keys will be configured when enabled.", Colors.DIM))
-    print(color("  Guide: https://bookwormpro.local/docs/user-guide/features/tools", Colors.DIM))
+    print(color(_("[BWM] BookwormPRO Tool Configuration"), Colors.CYAN, Colors.BOLD))
+    print(color(_("  Enable or disable tools per platform."), Colors.DIM))
+    print(color(_("  Tools that need API keys will be configured when enabled."), Colors.DIM))
+    print(color(_("  Guide: https://bookwormpro.local/docs/user-guide/features/tools"), Colors.DIM))
     print()
 
     # ── First-time install: linear flow, no platform menu ──
@@ -1773,7 +1774,7 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
             if managed_nous_tools_enabled():
                 for ts_key in sorted(auto_configured):
                     label = next((l for k, l, _ in CONFIGURABLE_TOOLSETS if k == ts_key), ts_key)
-                    print(color(f"  [成功] {label}: using your BookwormPRO subscription defaults", Colors.GREEN))
+                    print(color(_("  [成功] {label}: using your BookwormPRO subscription defaults").format(label=label), Colors.GREEN))
 
             # Walk through ALL selected tools that have provider options or
             # need API keys.  This ensures browser (Local vs Browserbase),
@@ -1787,18 +1788,18 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
 
             if to_configure:
                 print()
-                print(color(f"  Configuring {len(to_configure)} tool(s):", Colors.YELLOW))
+                print(color(_("  Configuring {len} tool(s):").format(len=len(to_configure)), Colors.YELLOW))
                 for ts_key in to_configure:
                     label = next((l for k, l, _ in _get_effective_configurable_toolsets() if k == ts_key), ts_key)
                     print(color(f"    • {label}", Colors.DIM))
-                print(color("  You can skip any tool you don't need right now.", Colors.DIM))
+                print(color(_("  You can skip any tool you don't need right now."), Colors.DIM))
                 print()
                 for ts_key in to_configure:
                     _configure_toolset(ts_key, config)
 
             _save_platform_tools(config, pkey, new_enabled)
             save_config(config)
-            print(color(f"  [成功] Saved {pinfo['label']} tool configuration", Colors.GREEN))
+            print(color(_("  [成功] Saved {pinfo} tool configuration").format(pinfo=pinfo['label']), Colors.GREEN))
             print()
 
         return
@@ -1879,14 +1880,14 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
                                 _configure_toolset(ts_key, config)
                     _save_platform_tools(config, pk, new_enabled)
                 save_config(config)
-                print(color("  [成功] Saved configuration for all platforms", Colors.GREEN))
+                print(color(_("  [成功] Saved configuration for all platforms"), Colors.GREEN))
                 # Update choice labels
                 for ci, pk in enumerate(platform_keys):
                     new_count = len(_get_platform_tools(config, pk, include_default_mcp_servers=False))
                     total = len(_get_effective_configurable_toolsets())
                     platform_choices[ci] = f"Configure {PLATFORMS[pk]['label']}  ({new_count}/{total} enabled)"
             else:
-                print(color("  No changes", Colors.DIM))
+                print(color(_("  No changes"), Colors.DIM))
             print()
             continue
 
@@ -1920,9 +1921,9 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
 
             _save_platform_tools(config, pkey, new_enabled)
             save_config(config)
-            print(color(f"  [成功] Saved {pinfo['label']} configuration", Colors.GREEN))
+            print(color(_("  [成功] Saved {pinfo} configuration").format(pinfo=pinfo['label']), Colors.GREEN))
         else:
-            print(color(f"  No changes to {pinfo['label']}", Colors.DIM))
+            print(color(_("  No changes to {pinfo}").format(pinfo=pinfo['label']), Colors.DIM))
 
         print()
 
@@ -1933,8 +1934,8 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
 
     print()
     from bwm_constants import display_hermes_home
-    print(color(f"  Tool configuration saved to {display_hermes_home()}/config.yaml", Colors.DIM))
-    print(color("  Changes take effect on next 'bookworm' or gateway restart.", Colors.DIM))
+    print(color(_("  Tool configuration saved to {display_hermes_home}/config.yaml").format(display_hermes_home=display_hermes_home()), Colors.DIM))
+    print(color(_("  Changes take effect on next 'bookworm' or gateway restart."), Colors.DIM))
     print()
 
 
@@ -1965,8 +1966,8 @@ def _configure_mcp_tools_interactive(config: dict):
         return
 
     print()
-    print(color("  Discovering tools from MCP servers...", Colors.YELLOW))
-    print(color(f"  Connecting to {len(enabled_names)} server(s): {', '.join(enabled_names)}", Colors.DIM))
+    print(color(_("  Discovering tools from MCP servers..."), Colors.YELLOW))
+    print(color(_("  Connecting to {len} server(s): {', '.join(enabled_names)}").format(len=len(enabled_names)), Colors.DIM))
 
     try:
         from tools.mcp_tool import probe_mcp_server_tools
@@ -1987,7 +1988,7 @@ def _configure_mcp_tools_interactive(config: dict):
             _print_warning(f"  Could not connect to '{name}'")
 
     total_tools = sum(len(tools) for tools in server_tools.values())
-    print(color(f"  Found {total_tools} tool(s) across {len(server_tools)} server(s)", Colors.GREEN))
+    print(color(_("  Found {total_tools} tool(s) across {len} server(s)").format(total_tools=total_tools, len=len(server_tools)), Colors.GREEN))
     print()
 
     any_changes = False
@@ -2064,9 +2065,9 @@ def _configure_mcp_tools_interactive(config: dict):
     if any_changes:
         save_config(config)
         print()
-        print(color("  [成功] MCP tool configuration saved", Colors.GREEN))
+        print(color(_("  [成功] MCP tool configuration saved"), Colors.GREEN))
     else:
-        print(color("  No changes to MCP tools", Colors.DIM))
+        print(color(_("  No changes to MCP tools"), Colors.DIM))
 
 
 # ─── Non-interactive disable/enable ──────────────────────────────────────────
@@ -2112,7 +2113,7 @@ def _print_tools_list(enabled_toolsets: set, mcp_servers: dict, platform: str = 
     effective = _get_effective_configurable_toolsets()
     builtin_keys = {ts_key for ts_key, _, _ in CONFIGURABLE_TOOLSETS}
 
-    print(f"Built-in toolsets ({platform}):")
+    print(_("Built-in toolsets ({platform}):").format(platform=platform))
     for ts_key, label, _ in effective:
         if ts_key not in builtin_keys:
             continue
@@ -2124,7 +2125,7 @@ def _print_tools_list(enabled_toolsets: set, mcp_servers: dict, platform: str = 
     plugin_entries = [(k, l) for k, l, _ in effective if k not in builtin_keys]
     if plugin_entries:
         print()
-        print(f"Plugin toolsets ({platform}):")
+        print(_("Plugin toolsets ({platform}):").format(platform=platform))
         for ts_key, label in plugin_entries:
             status = (color("[成功] enabled", Colors.GREEN) if ts_key in enabled_toolsets
                       else color("[失败] disabled", Colors.RED))
@@ -2132,7 +2133,7 @@ def _print_tools_list(enabled_toolsets: set, mcp_servers: dict, platform: str = 
 
     if mcp_servers:
         print()
-        print("MCP servers:")
+        print(_("MCP servers:"))
         for srv_name, srv_cfg in mcp_servers.items():
             tools_cfg = srv_cfg.get("tools") or {}
             exclude = tools_cfg.get("exclude") or []

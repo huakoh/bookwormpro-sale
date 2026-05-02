@@ -765,7 +765,7 @@ def switch_model(
                 else:
                     for mid in catalog:
                         if "/" in mid:
-                            _, bare = mid.split("/", 1)
+                            _unused, bare = mid.split("/", 1)
                             if bare.lower() == new_model_lower:
                                 new_model = mid
                                 break

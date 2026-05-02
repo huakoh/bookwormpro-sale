@@ -29,7 +29,9 @@ from agent.credential_pool import (
 )
 import bwm_cli.auth as auth_mod
 from bwm_cli.auth import PROVIDER_REGISTRY
+from bwm_cli.i18n import _
 from bwm_constants import OPENROUTER_BASE_URL
+
 
 
 # Providers that support OAuth login in addition to API keys.
@@ -161,7 +163,7 @@ def _format_exhausted_status(entry) -> str:
 def auth_add_command(args) -> None:
     provider = _normalize_provider(getattr(args, "provider", ""))
     if provider not in PROVIDER_REGISTRY and provider != "openrouter" and not provider.startswith(CUSTOM_POOL_PREFIX):
-        raise SystemExit(f"Unknown provider: {provider}")
+        raise SystemExit(_("Unknown provider: {provider}").format(provider=provider))
 
     requested_type = str(getattr(args, "auth_type", "") or "").strip().lower()
     if requested_type in {AUTH_TYPE_API_KEY, "api-key"}:
@@ -194,14 +196,14 @@ def auth_add_command(args) -> None:
     if requested_type == AUTH_TYPE_API_KEY:
         token = (getattr(args, "api_key", None) or "").strip()
         if not token:
-            token = getpass("Paste your API key: ").strip()
+            token = getpass(_("Paste your API key: ")).strip()
         if not token:
-            raise SystemExit("No API key provided.")
+            raise SystemExit(_("No API key provided."))
         default_label = _api_key_default_label(len(pool.entries()) + 1)
         label = (getattr(args, "label", None) or "").strip()
         if not label:
             if sys.stdin.isatty():
-                label = input(f"Label (optional, default: {default_label}): ").strip() or default_label
+                label = input(_("Label (optional, default: {default_label}): ").format(default_label=default_label)).strip() or default_label
             else:
                 label = default_label
         entry = PooledCredential(
@@ -215,7 +217,7 @@ def auth_add_command(args) -> None:
             base_url=_provider_base_url(provider),
         )
         pool.add_entry(entry)
-        print(f'Added {provider} credential #{len(pool.entries())}: "{label}"')
+        print(_('Added {provider} credential #{n}: "{label}"').format(provider=provider, n=len(pool.entries()), label=label))
         return
 
     if provider == "anthropic":
@@ -223,7 +225,7 @@ def auth_add_command(args) -> None:
 
         creds = anthropic_mod.run_hermes_oauth_login_pure()
         if not creds:
-            raise SystemExit("Anthropic OAuth login did not return credentials.")
+            raise SystemExit(_("Anthropic OAuth login did not return credentials."))
         label = (getattr(args, "label", None) or "").strip() or label_from_token(
             creds["access_token"],
             _oauth_default_label(provider, len(pool.entries()) + 1),
@@ -241,7 +243,7 @@ def auth_add_command(args) -> None:
             base_url=_provider_base_url(provider),
         )
         pool.add_entry(entry)
-        print(f'Added {provider} OAuth credential #{len(pool.entries())}: "{entry.label}"')
+        print(_('Added {provider} OAuth credential #{n}: "{label}"').format(provider=provider, n=len(pool.entries()), label=entry.label))
         return
 
     if provider == "bookwormpro":
@@ -264,7 +266,7 @@ def auth_add_command(args) -> None:
         shown_label = entry.label if entry is not None else label_from_token(
             creds.get("access_token", ""), _oauth_default_label(provider, 1),
         )
-        print(f'Saved {provider} OAuth device-code credentials: "{shown_label}"')
+        print(_('Saved {provider} OAuth device-code credentials: "{label}"').format(provider=provider, label=shown_label))
         return
 
     if provider == "openai-codex":
@@ -289,7 +291,7 @@ def auth_add_command(args) -> None:
             last_refresh=creds.get("last_refresh"),
         )
         pool.add_entry(entry)
-        print(f'Added {provider} OAuth credential #{len(pool.entries())}: "{entry.label}"')
+        print(_('Added {provider} OAuth credential #{n}: "{label}"').format(provider=provider, n=len(pool.entries()), label=entry.label))
         return
 
     if provider == "google-gemini-cli":
@@ -310,7 +312,7 @@ def auth_add_command(args) -> None:
             refresh_token=creds.get("refresh_token"),
         )
         pool.add_entry(entry)
-        print(f'Added {provider} OAuth credential #{len(pool.entries())}: "{entry.label}"')
+        print(_('Added {provider} OAuth credential #{n}: "{label}"').format(provider=provider, n=len(pool.entries()), label=entry.label))
         return
 
     if provider == "qwen-oauth":
@@ -330,10 +332,10 @@ def auth_add_command(args) -> None:
             base_url=creds.get("base_url"),
         )
         pool.add_entry(entry)
-        print(f'Added {provider} OAuth credential #{len(pool.entries())}: "{entry.label}"')
+        print(_('Added {provider} OAuth credential #{n}: "{label}"').format(provider=provider, n=len(pool.entries()), label=entry.label))
         return
 
-    raise SystemExit(f"`bookworm auth add {provider}` is not implemented for auth type {requested_type} yet.")
+    raise SystemExit(_('`bookworm auth add {provider}` is not implemented for auth type {requested_type} yet.').format(provider=provider, requested_type=requested_type))
 
 
 def auth_list_command(args) -> None:
@@ -352,7 +354,7 @@ def auth_list_command(args) -> None:
         if not entries:
             continue
         current = pool.peek()
-        print(f"{provider} ({len(entries)} credentials):")
+        print(_("{provider} ({len} credentials):").format(provider=provider, len=len(entries)))
         for idx, entry in enumerate(entries, start=1):
             marker = "  "
             if current is not None and entry.id == current.id:
@@ -375,7 +377,7 @@ def auth_remove_command(args) -> None:
     removed = pool.remove_index(index)
     if removed is None:
         raise SystemExit(f'No credential matching "{target}" for provider {provider}.')
-    print(f"Removed {provider} credential #{index} ({removed.label})")
+    print(_("Removed {provider} credential #{index} ({removed_label})").format(provider=provider, index=index, removed_label=removed.label))
 
     # Unified removal dispatch.  Every credential source BookwormPRO reads from
     # (env vars, external OAuth files, auth.json blocks, custom config)
@@ -405,7 +407,7 @@ def auth_reset_command(args) -> None:
     provider = _normalize_provider(getattr(args, "provider", ""))
     pool = load_pool(provider)
     count = pool.reset_statuses()
-    print(f"Reset status on {count} {provider} credentials")
+    print(_("Reset status on {count} {provider} credentials").format(count=count, provider=provider))
 
 
 def auth_status_command(args) -> None:
@@ -416,12 +418,12 @@ def auth_status_command(args) -> None:
     if not status.get("logged_in"):
         reason = status.get("error")
         if reason:
-            print(f"{provider}: logged out ({reason})")
+            print(_("{provider}: logged out ({reason})").format(provider=provider, reason=reason))
         else:
-            print(f"{provider}: logged out")
+            print(_("{provider}: logged out").format(provider=provider))
         return
 
-    print(f"{provider}: logged in")
+    print(_("{provider}: logged in").format(provider=provider))
     for key in ("auth_type", "client_id", "redirect_uri", "scope", "expires_at", "api_base_url"):
         value = status.get(key)
         if value:
@@ -449,7 +451,7 @@ def auth_spotify_command(args) -> None:
 def _interactive_auth() -> None:
     """Interactive credential pool management when `bookworm auth` is called bare."""
     # Show current pool status first
-    print("Credential Pool Status")
+    print(_("Credential Pool Status"))
     print("=" * 50)
 
     auth_list_command(SimpleNamespace(provider=None))
@@ -460,17 +462,17 @@ def _interactive_auth() -> None:
         if has_aws_credentials():
             auth_source = resolve_aws_auth_env_var() or "unknown"
             region = resolve_bedrock_region()
-            print(f"bedrock (AWS SDK credential chain):")
-            print(f"  Auth: {auth_source}")
-            print(f"  Region: {region}")
+            print(_("bedrock (AWS SDK credential chain):"))
+            print(_("  Auth: {auth_source}").format(auth_source=auth_source))
+            print(_("  Region: {region}").format(region=region))
             try:
                 import boto3
                 sts = boto3.client("sts", region_name=region)
                 identity = sts.get_caller_identity()
                 arn = identity.get("Arn", "unknown")
-                print(f"  Identity: {arn}")
+                print(_("  Identity: {arn}").format(arn=arn))
             except Exception:
-                print(f"  Identity: (could not resolve — boto3 STS call failed)")
+                print(_("  Identity: (could not resolve — boto3 STS call failed)"))
             print()
     except ImportError:
         pass  # boto3 or bedrock_adapter not available
@@ -484,12 +486,12 @@ def _interactive_auth() -> None:
         "Set rotation strategy for a provider",
         "Exit",
     ]
-    print("What would you like to do?")
+    print(_("What would you like to do?"))
     for i, choice in enumerate(choices, 1):
         print(f"  {i}. {choice}")
 
     try:
-        raw = input("\nChoice: ").strip()
+        raw = input(_("\nChoice: ")).strip()
     except (EOFError, KeyboardInterrupt):
         return
 
@@ -512,10 +514,10 @@ def _pick_provider(prompt: str = "Provider") -> str:
     custom_names = _get_custom_provider_names()
     if custom_names:
         custom_display = [name for name, _key, _provider_key in custom_names]
-        print(f"\nKnown providers: {', '.join(known)}")
-        print(f"Custom endpoints: {', '.join(custom_display)}")
+        print(_("\nKnown providers: {join_known}").format(join_known=', '.join(known)))
+        print(_("Custom endpoints: {join_custom_display}").format(join_custom_display=', '.join(custom_display)))
     else:
-        print(f"\nKnown providers: {', '.join(known)}")
+        print(_("\nKnown providers: {join_known}").format(join_known=', '.join(known)))
     try:
         raw = input(f"{prompt}: ").strip()
     except (EOFError, KeyboardInterrupt):
@@ -530,11 +532,11 @@ def _interactive_add() -> None:
 
     # For OAuth-capable providers, ask which type
     if provider in _OAUTH_CAPABLE_PROVIDERS:
-        print(f"\n{provider} supports both API keys and OAuth login.")
-        print("  1. API key (paste a key from the provider dashboard)")
-        print("  2. OAuth login (authenticate via browser)")
+        print(_("\n{provider} supports both API keys and OAuth login.").format(provider=provider))
+        print(_("  1. API key (paste a key from the provider dashboard)"))
+        print(_("  2. OAuth login (authenticate via browser)"))
         try:
-            type_choice = input("Type [1/2]: ").strip()
+            type_choice = input(_("Type [1/2]: ")).strip()
         except (EOFError, KeyboardInterrupt):
             return
         if type_choice == "2":
@@ -546,7 +548,7 @@ def _interactive_add() -> None:
 
     label = None
     try:
-        typed_label = input("Label / account name (optional): ").strip()
+        typed_label = input(_("Label / account name (optional): ")).strip()
     except (EOFError, KeyboardInterrupt):
         return
     if typed_label:
@@ -563,16 +565,16 @@ def _interactive_remove() -> None:
     provider = _pick_provider("Provider to remove credential from")
     pool = load_pool(provider)
     if not pool.has_credentials():
-        print(f"No credentials for {provider}.")
+        print(_("No credentials for {provider}.").format(provider=provider))
         return
 
     # Show entries with indices
     for i, e in enumerate(pool.entries(), 1):
         exhausted = _format_exhausted_status(e)
-        print(f"  #{i}  {e.label:25s} {e.auth_type:10s} {e.source}{exhausted} [id:{e.id}]")
+        print(_("  #{i}  {e_label:25s} {e_auth_type:10s} {e_source}{exhausted} [id:{e_id}]").format(i=i, e_label=e.label, e_auth_type=e.auth_type, e_source=e.source, exhausted=exhausted, e_id=e.id))
 
     try:
-        raw = input("Remove #, id, or label (blank to cancel): ").strip()
+        raw = input(_("Remove #, id, or label (blank to cancel): ")).strip()
     except (EOFError, KeyboardInterrupt):
         return
     if not raw:
@@ -592,7 +594,7 @@ def _interactive_strategy() -> None:
     current = get_pool_strategy(provider)
     strategies = [STRATEGY_FILL_FIRST, STRATEGY_ROUND_ROBIN, STRATEGY_LEAST_USED, STRATEGY_RANDOM]
 
-    print(f"\nCurrent strategy for {provider}: {current}")
+    print(_("\nCurrent strategy for {provider}: {current}").format(provider=provider, current=current))
     print()
     descriptions = {
         STRATEGY_FILL_FIRST: "Use first key until exhausted, then next",
@@ -605,7 +607,7 @@ def _interactive_strategy() -> None:
         print(f"  {i}. {s:15s} — {descriptions.get(s, '')}{marker}")
 
     try:
-        raw = input("\nStrategy [1-4]: ").strip()
+        raw = input(_("\nStrategy [1-4]: ")).strip()
     except (EOFError, KeyboardInterrupt):
         return
     if not raw:
@@ -615,7 +617,7 @@ def _interactive_strategy() -> None:
         idx = int(raw) - 1
         strategy = strategies[idx]
     except (ValueError, IndexError):
-        print("Invalid choice.")
+        print(_("Invalid choice."))
         return
 
     from bwm_cli.config import load_config, save_config
@@ -626,7 +628,7 @@ def _interactive_strategy() -> None:
     pool_strategies[provider] = strategy
     cfg["credential_pool_strategies"] = pool_strategies
     save_config(cfg)
-    print(f"Set {provider} strategy to: {strategy}")
+    print(_("Set {provider} strategy to: {strategy}").format(provider=provider, strategy=strategy))
 
 
 def auth_command(args) -> None:

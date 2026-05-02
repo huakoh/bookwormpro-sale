@@ -1,4 +1,5 @@
 """
+from bwm_cli.i18n import _
 CLI commands for the DM pairing system.
 
 Usage:
@@ -24,8 +25,8 @@ def pairing_command(args):
     elif action == "clear-pending":
         _cmd_clear_pending(store)
     else:
-        print("Usage: bookworm pairing {list|approve|revoke|clear-pending}")
-        print("Run 'bookworm pairing --help' for details.")
+        print(_("Usage: bookworm pairing {list|approve|revoke|clear-pending}"))
+        print(_("Run 'bookworm pairing --help' for details."))
 
 
 def _cmd_list(store):
@@ -34,11 +35,11 @@ def _cmd_list(store):
     approved = store.list_approved()
 
     if not pending and not approved:
-        print("No pairing data found. No one has tried to pair yet~")
+        print(_("No pairing data found. No one has tried to pair yet~"))
         return
 
     if pending:
-        print(f"\n  Pending Pairing Requests ({len(pending)}):")
+        print(_("\n  Pending Pairing Requests ({len}):").format(len=len(pending)))
         print(f"  {'Platform':<12} {'Code':<10} {'User ID':<20} {'Name':<20} {'Age'}")
         print(f"  {'--------':<12} {'----':<10} {'-------':<20} {'----':<20} {'---'}")
         for p in pending:
@@ -47,16 +48,16 @@ def _cmd_list(store):
                 f"{(p.get('user_name') or ''):<20} {p['age_minutes']}m ago"
             )
     else:
-        print("\n  No pending pairing requests.")
+        print(_("\n  No pending pairing requests."))
 
     if approved:
-        print(f"\n  Approved Users ({len(approved)}):")
+        print(_("\n  Approved Users ({len}):").format(len=len(approved)))
         print(f"  {'Platform':<12} {'User ID':<20} {'Name':<20}")
         print(f"  {'--------':<12} {'-------':<20} {'----':<20}")
         for a in approved:
             print(f"  {a['platform']:<12} {a['user_id']:<20} {(a.get('user_name') or ''):<20}")
     else:
-        print("\n  No approved users.")
+        print(_("\n  No approved users."))
 
     print()
 
@@ -71,11 +72,11 @@ def _cmd_approve(store, platform: str, code: str):
         uid = result["user_id"]
         name = result.get("user_name") or ""
         display = f"{name} ({uid})" if name else uid
-        print(f"\n  Approved! User {display} on {platform} can now use the bot~")
-        print("  They'll be recognized automatically on their next message.\n")
+        print(_("\n  Approved! User {display} on {platform} can now use the bot~").format(display=display, platform=platform))
+        print(_("  They'll be recognized automatically on their next message.\n"))
     else:
-        print(f"\n  Code '{code}' not found or expired for platform '{platform}'.")
-        print("  Run 'bookworm pairing list' to see pending codes.\n")
+        print(_("\n  Code '{code}' not found or expired for platform '{platform}'.").format(code=code, platform=platform))
+        print(_("  Run 'bookworm pairing list' to see pending codes.\n"))
 
 
 def _cmd_revoke(store, platform: str, user_id: str):
@@ -83,15 +84,15 @@ def _cmd_revoke(store, platform: str, user_id: str):
     platform = platform.lower().strip()
 
     if store.revoke(platform, user_id):
-        print(f"\n  Revoked access for user {user_id} on {platform}.\n")
+        print(_("\n  Revoked access for user {user_id} on {platform}.\n").format(user_id=user_id, platform=platform))
     else:
-        print(f"\n  User {user_id} not found in approved list for {platform}.\n")
+        print(_("\n  User {user_id} not found in approved list for {platform}.\n").format(user_id=user_id, platform=platform))
 
 
 def _cmd_clear_pending(store):
     """Clear all pending pairing codes."""
     count = store.clear_pending()
     if count:
-        print(f"\n  Cleared {count} pending pairing request(s).\n")
+        print(_("\n  Cleared {count} pending pairing request(s).\n").format(count=count))
     else:
-        print("\n  No pending requests to clear.\n")
+        print(_("\n  No pending requests to clear.\n"))

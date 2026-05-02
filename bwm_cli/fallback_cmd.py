@@ -21,6 +21,9 @@ from __future__ import annotations
 import copy
 from typing import Any, Dict, List, Optional
 
+from bwm_cli.i18n import _
+
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -120,22 +123,22 @@ def cmd_fallback_list(args) -> None:  # noqa: ARG001
 
     print()
     if not chain:
-        print("  No fallback providers configured.")
+        print(_("  No fallback providers configured."))
         print()
-        print("  Add one with:  bookworm fallback add")
+        print(_("  Add one with:  bookworm fallback add"))
         print()
         return
 
     primary = _describe_primary(config)
     if primary:
-        print(f"  Primary:   {primary}")
+        print(_("  Primary:   {primary}").format(primary=primary))
         print()
-    print(f"  Fallback chain ({len(chain)} {'entry' if len(chain) == 1 else 'entries'}):")
+    print(_("  Fallback chain ({count} {noun}):").format(count=len(chain), noun=_('entry') if len(chain) == 1 else _('entries')))
     for i, entry in enumerate(chain, 1):
         print(f"    {i}. {_format_entry(entry)}")
     print()
-    print("  Tried in order when the primary fails (rate-limit, 5xx, connection errors).")
-    print("  Docs: https://github.com/huakoh/BookwormPRO")
+    print(_("  Tried in order when the primary fails (rate-limit, 5xx, connection errors)."))
+    print(_("  Docs: https://github.com/huakoh/BookwormPRO"))
     print()
 
 
@@ -165,8 +168,8 @@ def cmd_fallback_add(args) -> None:
     active_provider_before = _snapshot_auth_active_provider()
 
     print()
-    print("  Adding a fallback provider.  The picker below is the same one used by")
-    print("  `bookworm model` — select the provider + model you want as a fallback.")
+    print(_("  Adding a fallback provider.  The picker below is the same one used by"))
+    print(_("  `bookworm model` — select the provider + model you want as a fallback."))
     print()
 
     try:
@@ -187,7 +190,7 @@ def cmd_fallback_add(args) -> None:
         _restore_model_cfg(model_before)
         _restore_auth_active_provider(active_provider_before)
         print()
-        print("  No fallback added.")
+        print(_("  No fallback added."))
         return
 
     # Picker picked the same thing that's already the primary → nothing changed,
@@ -198,8 +201,8 @@ def cmd_fallback_add(args) -> None:
         _restore_model_cfg(model_before)
         _restore_auth_active_provider(active_provider_before)
         print()
-        print(f"  Selected model matches the current primary ({_format_entry(new_entry)}).")
-        print("  A provider cannot be a fallback for itself — no change.")
+        print(_("  Selected model matches the current primary ({_format_entry}).").format(_format_entry=_format_entry(new_entry)))
+        print(_("  A provider cannot be a fallback for itself — no change."))
         return
 
     # Reload the config with the primary restored, then append the new entry
@@ -217,7 +220,7 @@ def cmd_fallback_add(args) -> None:
         if existing.get("provider") == new_entry["provider"] \
                 and existing.get("model") == new_entry["model"]:
             print()
-            print(f"  {_format_entry(new_entry)} is already in the fallback chain — skipped.")
+            print(_("  {_format_entry} is already in the fallback chain — skipped.").format(_format_entry=_format_entry(new_entry)))
             return
 
     chain.append(new_entry)
@@ -225,10 +228,10 @@ def cmd_fallback_add(args) -> None:
     save_config(final_cfg)
 
     print()
-    print(f"  Added fallback: {_format_entry(new_entry)}")
-    print(f"  Chain is now {len(chain)} {'entry' if len(chain) == 1 else 'entries'} long.")
+    print(_("  Added fallback: {_format_entry}").format(_format_entry=_format_entry(new_entry)))
+    print(_("  Chain is now {len} {'entry' if len(chain) == 1 else 'entries'} long.").format(len=len(chain)))
     print()
-    print("  Run `bookworm fallback list` to view, or `bookworm fallback remove` to delete.")
+    print(_("  Run `bookworm fallback list` to view, or `bookworm fallback remove` to delete."))
 
 
 def _restore_model_cfg(model_before: Any) -> None:
@@ -252,7 +255,7 @@ def cmd_fallback_remove(args) -> None:  # noqa: ARG001
 
     if not chain:
         print()
-        print("  No fallback providers configured — nothing to remove.")
+        print(_("  No fallback providers configured — nothing to remove."))
         print()
         return
 
@@ -267,7 +270,7 @@ def cmd_fallback_remove(args) -> None:  # noqa: ARG001
 
     if idx is None or idx < 0 or idx >= len(chain):
         print()
-        print("  Cancelled — no change.")
+        print(_("  Cancelled — no change."))
         return
 
     removed = chain.pop(idx)
@@ -275,11 +278,11 @@ def cmd_fallback_remove(args) -> None:  # noqa: ARG001
     save_config(config)
 
     print()
-    print(f"  Removed fallback: {_format_entry(removed)}")
+    print(_("  Removed fallback: {_format_entry}").format(_format_entry=_format_entry(removed)))
     if chain:
-        print(f"  Chain is now {len(chain)} {'entry' if len(chain) == 1 else 'entries'} long.")
+        print(_("  Chain is now {len} {'entry' if len(chain) == 1 else 'entries'} long.").format(len=len(chain)))
     else:
-        print("  Fallback chain is now empty.")
+        print(_("  Fallback chain is now empty."))
     print()
 
 
@@ -292,29 +295,29 @@ def cmd_fallback_clear(args) -> None:  # noqa: ARG001
 
     if not chain:
         print()
-        print("  No fallback providers configured — nothing to clear.")
+        print(_("  No fallback providers configured — nothing to clear."))
         print()
         return
 
     print()
-    print(f"  Current fallback chain ({len(chain)} {'entry' if len(chain) == 1 else 'entries'}):")
+    print(_("  Current fallback chain ({len} {'entry' if len(chain) == 1 else 'entries'}):").format(len=len(chain)))
     for i, entry in enumerate(chain, 1):
         print(f"    {i}. {_format_entry(entry)}")
     print()
     try:
-        resp = input("  Clear all entries? [y/N]: ").strip().lower()
+        resp = input(_("  Clear all entries? [y/N]: ")).strip().lower()
     except (KeyboardInterrupt, EOFError):
         print()
-        print("  Cancelled.")
+        print(_("  Cancelled."))
         return
     if resp not in ("y", "yes"):
-        print("  Cancelled — no change.")
+        print(_("  Cancelled — no change."))
         return
 
     _write_chain(config, [])
     save_config(config)
     print()
-    print("  Fallback chain cleared.")
+    print(_("  Fallback chain cleared."))
     print()
 
 
@@ -326,15 +329,15 @@ def _numbered_pick(question: str, choices: List[str]) -> Optional[int]:
     print()
     while True:
         try:
-            val = input(f"Choice [1-{len(choices)}]: ").strip()
+            val = input(_("Choice [1-{len}]: ").format(len=len(choices))).strip()
             if not val:
                 return None
             idx = int(val) - 1
             if 0 <= idx < len(choices):
                 return idx
-            print(f"Please enter 1-{len(choices)}")
+            print(_("Please enter 1-{len}").format(len=len(choices)))
         except ValueError:
-            print("Please enter a number")
+            print(_("Please enter a number"))
         except (KeyboardInterrupt, EOFError):
             print()
             return None
@@ -356,6 +359,6 @@ def cmd_fallback(args) -> None:
     elif sub == "clear":
         cmd_fallback_clear(args)
     else:
-        print(f"Unknown fallback subcommand: {sub}")
-        print("Use one of: list, add, remove, clear")
+        print(_("Unknown fallback subcommand: {sub}").format(sub=sub))
+        print(_("Use one of: list, add, remove, clear"))
         raise SystemExit(2)

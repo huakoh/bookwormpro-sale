@@ -80,6 +80,8 @@ def _effective_provider_label() -> str:
 
 
 from bwm_constants import is_termux as _is_termux
+from bwm_cli.i18n import _
+
 
 
 def show_status(args):
@@ -89,33 +91,33 @@ def show_status(args):
     
     print()
     print(color("┌─────────────────────────────────────────────────────────┐", Colors.CYAN))
-    print(color("│                 [BWM] BookwormPRO Status                  │", Colors.CYAN))
+    print(color(_("│                 [BWM] BookwormPRO Status                  │"), Colors.CYAN))
     print(color("└─────────────────────────────────────────────────────────┘", Colors.CYAN))
     
     # =========================================================================
     # Environment
     # =========================================================================
     print()
-    print(color("◆ Environment", Colors.CYAN, Colors.BOLD))
-    print(f"  Project:      {PROJECT_ROOT}")
-    print(f"  Python:       {sys.version.split()[0]}")
+    print(color(_("◆ Environment"), Colors.CYAN, Colors.BOLD))
+    print(_("  Project:      {PROJECT_ROOT}").format(PROJECT_ROOT=PROJECT_ROOT))
+    print(_("  Python:       {sys}").format(sys=sys.version.split()[0]))
     
     env_path = get_env_path()
-    print(f"  .env file:    {check_mark(env_path.exists())} {'exists' if env_path.exists() else 'not found'}")
+    print(f"  .env file:    {check_mark(env_path.exists())} {_('exists') if env_path.exists() else _('not found')}")
 
     try:
         config = load_config()
     except Exception:
         config = {}
 
-    print(f"  Model:        {_configured_model_label(config)}")
-    print(f"  Provider:     {_effective_provider_label()}")
+    print(_("  Model:        {_configured_model_label}").format(_configured_model_label=_configured_model_label(config)))
+    print(_("  Provider:     {_effective_provider_label}").format(_effective_provider_label=_effective_provider_label()))
     
     # =========================================================================
     # API Keys
     # =========================================================================
     print()
-    print(color("◆ API Keys", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ API Keys"), Colors.CYAN, Colors.BOLD))
     
     keys = {
         "OpenRouter": "OPENROUTER_API_KEY",
@@ -151,7 +153,7 @@ def show_status(args):
     # Auth Providers (OAuth)
     # =========================================================================
     print()
-    print(color("◆ Auth Providers", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Auth Providers"), Colors.CYAN, Colors.BOLD))
 
     try:
         from bwm_cli.auth import get_nous_auth_status, get_codex_auth_status, get_qwen_auth_status
@@ -165,7 +167,7 @@ def show_status(args):
 
     nous_logged_in = bool(nous_status.get("logged_in"))
     nous_error = nous_status.get("error")
-    nous_label = "logged in" if nous_logged_in else "not logged in (run: bookworm auth add bookwormpro --type oauth)"
+    nous_label = _("logged in") if nous_logged_in else _("not logged in (run: bookworm auth add bookwormpro --type oauth)")
     print(
         f"  {'BookwormPRO Portal':<12}  {check_mark(nous_logged_in)} "
         f"{nous_label}"
@@ -175,44 +177,44 @@ def show_status(args):
     key_exp = _format_iso_timestamp(nous_status.get("agent_key_expires_at"))
     refresh_label = "yes" if nous_status.get("has_refresh_token") else "no"
     if nous_logged_in or portal_url != "(unknown)" or nous_error:
-        print(f"    Portal URL: {portal_url}")
+        print(_("    Portal URL: {portal_url}").format(portal_url=portal_url))
     if nous_logged_in or nous_status.get("access_expires_at"):
-        print(f"    Access exp: {access_exp}")
+        print(_("    Access exp: {access_exp}").format(access_exp=access_exp))
     if nous_logged_in or nous_status.get("agent_key_expires_at"):
-        print(f"    Key exp:    {key_exp}")
+        print(_("    Key exp:    {key_exp}").format(key_exp=key_exp))
     if nous_logged_in or nous_status.get("has_refresh_token"):
-        print(f"    Refresh:    {refresh_label}")
+        print(_("    Refresh:    {refresh_label}").format(refresh_label=refresh_label))
     if nous_error and not nous_logged_in:
-        print(f"    Error:      {nous_error}")
+        print(_("    Error:      {nous_error}").format(nous_error=nous_error))
 
     codex_logged_in = bool(codex_status.get("logged_in"))
     print(
         f"  {'OpenAI Codex':<12}  {check_mark(codex_logged_in)} "
-        f"{'logged in' if codex_logged_in else 'not logged in (run: bookworm model)'}"
+        f"{_('logged in') if codex_logged_in else _('not logged in (run: bookworm model)')}"
     )
     codex_auth_file = codex_status.get("auth_store")
     if codex_auth_file:
-        print(f"    Auth file:  {codex_auth_file}")
+        print(_("    Auth file:  {codex_auth_file}").format(codex_auth_file=codex_auth_file))
     codex_last_refresh = _format_iso_timestamp(codex_status.get("last_refresh"))
     if codex_status.get("last_refresh"):
-        print(f"    Refreshed:  {codex_last_refresh}")
+        print(_("    Refreshed:  {codex_last_refresh}").format(codex_last_refresh=codex_last_refresh))
     if codex_status.get("error") and not codex_logged_in:
-        print(f"    Error:      {codex_status.get('error')}")
+        print(_("    Error:      {codex_status}").format(codex_status=codex_status.get('error')))
 
     qwen_logged_in = bool(qwen_status.get("logged_in"))
     print(
         f"  {'Qwen OAuth':<12}  {check_mark(qwen_logged_in)} "
-        f"{'logged in' if qwen_logged_in else 'not logged in (run: qwen auth qwen-oauth)'}"
+        f"{_('logged in') if qwen_logged_in else _('not logged in (run: qwen auth qwen-oauth)')}"
     )
     qwen_auth_file = qwen_status.get("auth_file")
     if qwen_auth_file:
-        print(f"    Auth file:  {qwen_auth_file}")
+        print(_("    Auth file:  {qwen_auth_file}").format(qwen_auth_file=qwen_auth_file))
     qwen_exp = qwen_status.get("expires_at_ms")
     if qwen_exp:
         from datetime import datetime, timezone
-        print(f"    Access exp: {datetime.fromtimestamp(int(qwen_exp) / 1000, tz=timezone.utc).isoformat()}")
+        print(_("    Access exp: {datetime}").format(datetime=datetime.fromtimestamp(int(qwen_exp) / 1000, tz=timezone.utc).isoformat()))
     if qwen_status.get("error") and not qwen_logged_in:
-        print(f"    Error:      {qwen_status.get('error')}")
+        print(_("    Error:      {qwen_status}").format(qwen_status=qwen_status.get('error')))
 
     # =========================================================================
     # BookwormPRO Subscription Features
@@ -220,34 +222,34 @@ def show_status(args):
     if managed_nous_tools_enabled():
         features = get_nous_subscription_features(config)
         print()
-        print(color("◆ BookwormPRO Tool Gateway", Colors.CYAN, Colors.BOLD))
+        print(color(_("◆ BookwormPRO Tool Gateway"), Colors.CYAN, Colors.BOLD))
         if not features.nous_auth_present:
-            print("  BookwormPRO Portal   [失败] not logged in")
+            print("  BookwormPRO Portal   [失败] " + _("not logged in"))
         else:
-            print("  BookwormPRO Portal   [成功] managed tools available")
+            print("  BookwormPRO Portal   [成功] " + _("managed tools available"))
         for feature in features.items():
             if feature.managed_by_nous:
-                state = "active via BookwormPRO subscription"
+                state = _("active via BookwormPRO subscription")
             elif feature.active:
-                current = feature.current_provider or "configured provider"
-                state = f"active via {current}"
+                current = feature.current_provider or _("configured provider")
+                state = _("active via {current}").format(current=current)
             elif feature.included_by_default and features.nous_auth_present:
-                state = "included by subscription, not currently selected"
+                state = _("included by subscription, not currently selected")
             elif feature.key == "modal" and features.nous_auth_present:
-                state = "available via subscription (optional)"
+                state = _("available via subscription (optional)")
             else:
-                state = "not configured"
+                state = _("not configured")
             print(f"  {feature.label:<15} {check_mark(feature.available or feature.active or feature.managed_by_nous)} {state}")
     elif nous_logged_in:
         # Logged into BookwormPRO but on the free tier — show upgrade nudge
         print()
-        print(color("◆ BookwormPRO Tool Gateway", Colors.CYAN, Colors.BOLD))
-        print("  Your free-tier BookwormPRO account does not include Tool Gateway access.")
-        print("  Upgrade your subscription to unlock managed web, image, TTS, and browser tools.")
+        print(color(_("◆ BookwormPRO Tool Gateway"), Colors.CYAN, Colors.BOLD))
+        print(_("  Your free-tier BookwormPRO account does not include Tool Gateway access."))
+        print(_("  Upgrade your subscription to unlock managed web, image, TTS, and browser tools."))
         try:
             portal_url = nous_status.get("portal_base_url", "").rstrip("/")
             if portal_url:
-                print(f"  Upgrade: {portal_url}")
+                print(_("  Upgrade: {portal_url}").format(portal_url=portal_url))
         except Exception:
             pass
 
@@ -255,7 +257,7 @@ def show_status(args):
     # API-Key Providers
     # =========================================================================
     print()
-    print(color("◆ API-Key Providers", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ API-Key Providers"), Colors.CYAN, Colors.BOLD))
 
     apikey_providers = {
         "Z.AI / GLM":       ("GLM_API_KEY", "ZAI_API_KEY", "Z_AI_API_KEY"),
@@ -278,7 +280,7 @@ def show_status(args):
     # Terminal Configuration
     # =========================================================================
     print()
-    print(color("◆ Terminal Backend", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Terminal Backend"), Colors.CYAN, Colors.BOLD))
     
     terminal_env = os.getenv("TERMINAL_ENV", "")
     if not terminal_env:
@@ -289,28 +291,29 @@ def show_status(args):
             terminal_env = _cfg.get("terminal", {}).get("backend", "local")
         except Exception:
             terminal_env = "local"
-    print(f"  Backend:      {terminal_env}")
+    print(_("  Backend:      {terminal_env}").format(terminal_env=terminal_env))
     
     if terminal_env == "ssh":
         ssh_host = os.getenv("TERMINAL_SSH_HOST", "")
         ssh_user = os.getenv("TERMINAL_SSH_USER", "")
-        print(f"  SSH Host:     {ssh_host or '(not set)'}")
-        print(f"  SSH User:     {ssh_user or '(not set)'}")
+        print(_("  SSH Host:     {ssh_host}").format(ssh_host=ssh_host or '(not set)'))
+        print(_("  SSH User:     {ssh_user}").format(ssh_user=ssh_user or '(not set)'))
     elif terminal_env == "docker":
         docker_image = os.getenv("TERMINAL_DOCKER_IMAGE", "python:3.11-slim")
-        print(f"  Docker Image: {docker_image}")
+        print(_("  Docker Image: {docker_image}").format(docker_image=docker_image))
     elif terminal_env == "daytona":
         daytona_image = os.getenv("TERMINAL_DAYTONA_IMAGE", "nikolaik/python-nodejs:python3.11-nodejs20")
-        print(f"  Daytona Image: {daytona_image}")
+        print(_("  Daytona Image: {daytona_image}").format(daytona_image=daytona_image))
     
     sudo_password = os.getenv("SUDO_PASSWORD", "")
-    print(f"  Sudo:         {check_mark(bool(sudo_password))} {'enabled' if sudo_password else 'disabled'}")
+    _sudo_state = '已启用' if sudo_password else '已禁用'
+    print(f"  Sudo:         {check_mark(bool(sudo_password))} {_sudo_state}")
     
     # =========================================================================
     # Messaging Platforms
     # =========================================================================
     print()
-    print(color("◆ Messaging Platforms", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Messaging Platforms"), Colors.CYAN, Colors.BOLD))
     
     platforms = {
         "Telegram": ("TELEGRAM_BOT_TOKEN", "TELEGRAM_HOME_CHANNEL"),
@@ -350,43 +353,44 @@ def show_status(args):
     # Gateway Status
     # =========================================================================
     print()
-    print(color("◆ Gateway Service", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Gateway Service"), Colors.CYAN, Colors.BOLD))
 
     try:
         from bwm_cli.gateway import get_gateway_runtime_snapshot, _format_gateway_pids
 
         snapshot = get_gateway_runtime_snapshot()
         is_running = snapshot.running
-        print(f"  Status:       {check_mark(is_running)} {'running' if is_running else 'stopped'}")
-        print(f"  Manager:      {snapshot.manager}")
+        _gw_state = '运行中' if is_running else '已停止'
+        print(f"  Status:       {check_mark(is_running)} {_gw_state}")
+        print(_("  Manager:      {snapshot_manager}").format(snapshot_manager=snapshot.manager))
         if snapshot.gateway_pids:
-            print(f"  PID(s):       {_format_gateway_pids(snapshot.gateway_pids)}")
+            print(_("  PID(s):       {_format_gateway_pids}").format(_format_gateway_pids=_format_gateway_pids(snapshot.gateway_pids)))
         if snapshot.has_process_service_mismatch:
-            print("  Service:      installed but not managing the current running gateway")
+            print(_("  Service:      installed but not managing the current running gateway"))
         elif _is_termux() and not snapshot.gateway_pids:
-            print("  Start with:   bookworm gateway")
-            print("  Note:         Android may stop background jobs when Termux is suspended")
+            print(_("  Start with:   bookworm gateway"))
+            print(_("  Note:         Android may stop background jobs when Termux is suspended"))
         elif snapshot.service_installed and not snapshot.service_running:
-            print("  Service:      installed but stopped")
+            print(_("  Service:      installed but stopped"))
     except Exception:
         if _is_termux():
-            print(f"  Status:       {color('unknown', Colors.DIM)}")
-            print("  Manager:      Termux / manual process")
+            print(_("  Status:       {color}").format(color=color('unknown', Colors.DIM)))
+            print(_("  Manager:      Termux / manual process"))
         elif sys.platform.startswith('linux'):
-            print(f"  Status:       {color('unknown', Colors.DIM)}")
-            print("  Manager:      systemd/manual")
+            print(_("  Status:       {color}").format(color=color('unknown', Colors.DIM)))
+            print(_("  Manager:      systemd/manual"))
         elif sys.platform == 'darwin':
-            print(f"  Status:       {color('unknown', Colors.DIM)}")
-            print("  Manager:      launchd")
+            print(_("  Status:       {color}").format(color=color('unknown', Colors.DIM)))
+            print(_("  Manager:      launchd"))
         else:
-            print(f"  Status:       {color('N/A', Colors.DIM)}")
-            print("  Manager:      (not supported on this platform)")
+            print(_("  Status:       {color}").format(color=color('N/A', Colors.DIM)))
+            print(_("  Manager:      (not supported on this platform)"))
     
     # =========================================================================
     # Cron Jobs
     # =========================================================================
     print()
-    print(color("◆ Scheduled Jobs", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Scheduled Jobs"), Colors.CYAN, Colors.BOLD))
     
     jobs_file = get_hermes_home() / "cron" / "jobs.json"
     if jobs_file.exists():
@@ -396,17 +400,17 @@ def show_status(args):
                 data = json.load(f)
                 jobs = data.get("jobs", [])
                 enabled_jobs = [j for j in jobs if j.get("enabled", True)]
-                print(f"  Jobs:         {len(enabled_jobs)} active, {len(jobs)} total")
+                print(_("  Jobs:         {len} active, {len_1} total").format(len=len(enabled_jobs), len_1=len(jobs)))
         except Exception:
-            print("  Jobs:         (error reading jobs file)")
+            print(_("  Jobs:         (error reading jobs file)"))
     else:
-        print("  Jobs:         0")
+        print(_("  Jobs:         0"))
     
     # =========================================================================
     # Sessions
     # =========================================================================
     print()
-    print(color("◆ Sessions", Colors.CYAN, Colors.BOLD))
+    print(color(_("◆ Sessions"), Colors.CYAN, Colors.BOLD))
     
     sessions_file = get_hermes_home() / "sessions" / "sessions.json"
     if sessions_file.exists():
@@ -414,18 +418,18 @@ def show_status(args):
         try:
             with open(sessions_file, encoding="utf-8") as f:
                 data = json.load(f)
-                print(f"  Active:       {len(data)} session(s)")
+                print(_("  Active:       {len} session(s)").format(len=len(data)))
         except Exception:
-            print("  Active:       (error reading sessions file)")
+            print(_("  Active:       (error reading sessions file)"))
     else:
-        print("  Active:       0")
+        print(_("  Active:       0"))
     
     # =========================================================================
     # Deep checks
     # =========================================================================
     if deep:
         print()
-        print(color("◆ Deep Checks", Colors.CYAN, Colors.BOLD))
+        print(color(_("◆ Deep Checks"), Colors.CYAN, Colors.BOLD))
         
         # Check OpenRouter connectivity
         openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
@@ -438,9 +442,10 @@ def show_status(args):
                     timeout=10
                 )
                 ok = response.status_code == 200
-                print(f"  OpenRouter:   {check_mark(ok)} {'reachable' if ok else f'error ({response.status_code})'}")
+                _or_state = '可访问' if ok else f'错误 ({response.status_code})'
+                print(f"  OpenRouter:   {check_mark(ok)} {_or_state}")
             except Exception as e:
-                print(f"  OpenRouter:   {check_mark(False)} error: {e}")
+                print(_("  OpenRouter:   {check_mark} error: {e}").format(check_mark=check_mark(False), e=e))
         
         # Check gateway port
         try:
@@ -452,12 +457,13 @@ def show_status(args):
             # Port in use = gateway likely running
             port_in_use = result == 0
             # This is informational, not necessarily bad
-            print(f"  Port 18789:   {'in use' if port_in_use else 'available'}")
+            _port_state = '已占用' if port_in_use else '可用'
+            print(f"  Port 18789:   {_port_state}")
         except OSError:
             pass
     
     print()
     print(color("─" * 60, Colors.DIM))
-    print(color("  Run 'bookworm doctor' for detailed diagnostics", Colors.DIM))
-    print(color("  Run 'bookworm setup' to configure", Colors.DIM))
+    print(color(_("  Run 'bookworm doctor' for detailed diagnostics"), Colors.DIM))
+    print(color(_("  Run 'bookworm setup' to configure"), Colors.DIM))
     print()

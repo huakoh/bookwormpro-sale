@@ -30,6 +30,8 @@ from agent.usage_pricing import (
     has_known_pricing,
 )
 
+from bwm_cli.i18n import _
+
 _DEFAULT_PRICING = DEFAULT_PRICING
 
 

@@ -18,6 +18,9 @@ from tools.tool_backend_helpers import (
     resolve_modal_backend_state,
     resolve_openai_audio_api_key,
 )
+from bwm_cli.i18n import _
+
+
 
 
 _DEFAULT_PLATFORM_TOOLSETS = {
@@ -772,7 +775,7 @@ def prompt_enable_tool_gateway(config: Dict[str, object]) -> set[str]:
         newly_switched = changed - set(already_managed)
         for key in sorted(newly_switched):
             label = _GATEWAY_TOOL_LABELS.get(key, key)
-            print(f"  [成功] {label}: enabled via BookwormPRO subscription")
+            print(_("  [成功] {label}: enabled via BookwormPRO subscription").format(label=label))
         if already_managed and not newly_switched:
-            print("  (all tools already using Tool Gateway)")
+            print(_("  (all tools already using Tool Gateway)"))
     return changed

@@ -33,6 +33,9 @@ from tools.voice_mode import (
     play_audio_file,
     transcribe_recording,
 )
+from bwm_cli.i18n import _
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +56,7 @@ def _debug(msg: str) -> None:
     if os.environ.get("BOOKWORMPRO_VOICE_DEBUG", "").strip() != "1":
         return
     try:
-        print(f"[voice] {msg}", file=sys.stderr, flush=True)
+        print(_("[voice] {msg}").format(msg=msg), file=sys.stderr, flush=True)
     except (BrokenPipeError, OSError):
         pass
 

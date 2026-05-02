@@ -19,6 +19,8 @@ from pathlib import Path
 from typing import Dict
 
 from bwm_constants import display_hermes_home
+from bwm_cli.i18n import _
+
 
 
 _SUBSCRIPTIONS_FILENAME = "webhook_subscriptions.json"
@@ -116,8 +118,8 @@ def webhook_command(args):
     sub = getattr(args, "webhook_action", None)
 
     if not sub:
-        print("Usage: bookworm webhook {subscribe|list|remove|test}")
-        print("Run 'bookworm webhook --help' for details.")
+        print(_("Usage: bookworm webhook {subscribe|list|remove|test}"))
+        print(_("Run 'bookworm webhook --help' for details."))
         return
 
     if not _require_webhook_enabled():
@@ -136,7 +138,7 @@ def webhook_command(args):
 def _cmd_subscribe(args):
     name = args.name.strip().lower().replace(" ", "-")
     if not re.match(r'^[a-z0-9][a-z0-9_-]*$', name):
-        print(f"Error: Invalid name '{name}'. Use lowercase alphanumeric with hyphens/underscores.")
+        print(_("Error: Invalid name '{name}'. Use lowercase alphanumeric with hyphens/underscores.").format(name=name))
         return
 
     subs = _load_subscriptions()
@@ -173,34 +175,34 @@ def _cmd_subscribe(args):
     base_url = _get_webhook_base_url()
     status = "Updated" if is_update else "Created"
 
-    print(f"\n  {status} webhook subscription: {name}")
-    print(f"  URL:    {base_url}/webhooks/{name}")
-    print(f"  Secret: {secret}")
+    print(_("\n  {status} webhook subscription: {name}").format(status=status, name=name))
+    print(_("  URL:    {base_url}/webhooks/{name}").format(base_url=base_url, name=name))
+    print(_("  Secret: {secret}").format(secret=secret))
     if events:
-        print(f"  Events: {', '.join(events)}")
+        print(_("  Events: {join_events}").format(join_events=', '.join(events)))
     else:
-        print("  Events: (all)")
-    print(f"  Deliver: {route['deliver']}")
+        print(_("  Events: (all)"))
+    print(_("  Deliver: {route}").format(route=route['deliver']))
     if route.get("deliver_only"):
-        print("  Mode: direct delivery (no agent, zero LLM cost)")
+        print(_("  Mode: direct delivery (no agent, zero LLM cost)"))
     if route.get("prompt"):
         prompt_preview = route["prompt"][:80] + ("..." if len(route["prompt"]) > 80 else "")
         label = "Message" if route.get("deliver_only") else "Prompt"
         print(f"  {label}: {prompt_preview}")
-    print(f"\n  Configure your service to POST to the URL above.")
-    print(f"  Use the secret for HMAC-SHA256 signature validation.")
-    print(f"  The gateway must be running to receive events (bookworm gateway run).\n")
+    print(_("\n  Configure your service to POST to the URL above."))
+    print(_("  Use the secret for HMAC-SHA256 signature validation."))
+    print(_("  The gateway must be running to receive events (bookworm gateway run).\n"))
 
 
 def _cmd_list(args):
     subs = _load_subscriptions()
     if not subs:
-        print("  No dynamic webhook subscriptions.")
-        print("  Create one with: bookworm webhook subscribe <name>")
+        print(_("  No dynamic webhook subscriptions."))
+        print(_("  Create one with: bookworm webhook subscribe <name>"))
         return
 
     base_url = _get_webhook_base_url()
-    print(f"\n  {len(subs)} webhook subscription(s):\n")
+    print(_("\n  {len} webhook subscription(s):\n").format(len=len(subs)))
     for name, route in subs.items():
         events = ", ".join(route.get("events", [])) or "(all)"
         deliver = route.get("deliver", "log")
@@ -210,9 +212,9 @@ def _cmd_list(args):
         print(f"  ◆ {name}")
         if desc:
             print(f"    {desc}")
-        print(f"    URL:     {base_url}/webhooks/{name}")
-        print(f"    Events:  {events}")
-        print(f"    Deliver: {deliver}")
+        print(_("    URL:     {base_url}/webhooks/{name}").format(base_url=base_url, name=name))
+        print(_("    Events:  {events}").format(events=events))
+        print(_("    Deliver: {deliver}").format(deliver=deliver))
         print()
 
 
@@ -221,13 +223,13 @@ def _cmd_remove(args):
     subs = _load_subscriptions()
 
     if name not in subs:
-        print(f"  No subscription named '{name}'.")
-        print("  Note: Static routes from config.yaml cannot be removed here.")
+        print(_("  No subscription named '{name}'.").format(name=name))
+        print(_("  Note: Static routes from config.yaml cannot be removed here."))
         return
 
     del subs[name]
     _save_subscriptions(subs)
-    print(f"  Removed webhook subscription: {name}")
+    print(_("  Removed webhook subscription: {name}").format(name=name))
 
 
 def _cmd_test(args):
@@ -236,7 +238,7 @@ def _cmd_test(args):
     subs = _load_subscriptions()
 
     if name not in subs:
-        print(f"  No subscription named '{name}'.")
+        print(_("  No subscription named '{name}'.").format(name=name))
         return
 
     route = subs[name]
@@ -252,7 +254,7 @@ def _cmd_test(args):
         secret.encode(), payload.encode(), hashlib.sha256
     ).hexdigest()
 
-    print(f"  Sending test POST to {url}")
+    print(_("  Sending test POST to {url}").format(url=url))
     try:
         import urllib.request
         req = urllib.request.Request(
@@ -267,7 +269,7 @@ def _cmd_test(args):
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             body = resp.read().decode()
-            print(f"  Response ({resp.status}): {body}")
+            print(_("  Response ({resp_status}): {body}").format(resp_status=resp.status, body=body))
     except Exception as e:
-        print(f"  Error: {e}")
-        print("  Is the gateway running? (bookworm gateway run)")
+        print(_("  Error: {e}").format(e=e))
+        print(_("  Is the gateway running? (bookworm gateway run)"))

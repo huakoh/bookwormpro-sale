@@ -59,6 +59,7 @@ from gateway.platforms.base import (
     SUPPORTED_DOCUMENT_TYPES,
 )
 from tools.url_safety import is_safe_url
+from bwm_cli.i18n import _
 
 
 def _clean_discord_id(entry: str) -> str:
@@ -2081,7 +2082,7 @@ class DiscordAdapter(BasePlatformAdapter):
         if not to_resolve:
             return
 
-        print(f"[{self.name}] Resolving {len(to_resolve)} username(s): {', '.join(to_resolve)}")
+        print(_("[{name}] Resolving {n} username(s): {join_names}").format(name=self.name, n=len(to_resolve), join_names=', '.join(to_resolve)))
         resolved_count = 0
 
         for guild in self._client.guilds:
@@ -2108,19 +2109,19 @@ class DiscordAdapter(BasePlatformAdapter):
                         display_lower if display_lower in to_resolve else global_lower
                     )
                     to_resolve.discard(matched_name)
-                    print(f"[{self.name}] Resolved '{matched_name}' -> {uid} ({member.name}#{member.discriminator})")
+                    print(_("[{name}] Resolved '{matched}' -> {uid} ({mname}#{disc})").format(name=self.name, matched=matched_name, uid=uid, mname=member.name, disc=member.discriminator))
 
             if not to_resolve:
                 break
 
         if to_resolve:
-            print(f"[{self.name}] Could not resolve usernames: {', '.join(to_resolve)}")
+            print(_("[{name}] Could not resolve usernames: {join_names}").format(name=self.name, join_names=', '.join(to_resolve)))
 
         # Update internal set and env var so gateway auth checks use IDs
         self._allowed_user_ids = numeric_ids
         os.environ["DISCORD_ALLOWED_USERS"] = ",".join(sorted(numeric_ids))
         if resolved_count:
-            print(f"[{self.name}] Updated DISCORD_ALLOWED_USERS with {resolved_count} resolved ID(s)")
+            print(_("[{name}] Updated DISCORD_ALLOWED_USERS with {n} resolved ID(s)").format(name=self.name, n=resolved_count))
 
     def format_message(self, content: str) -> str:
         """
@@ -3283,7 +3284,7 @@ class DiscordAdapter(BasePlatformAdapter):
                     else:
                         doc_ext = ""
                         if att.filename:
-                            _, doc_ext = os.path.splitext(att.filename)
+                            _unused, doc_ext = os.path.splitext(att.filename)
                             doc_ext = doc_ext.lower()
                         if doc_ext in SUPPORTED_DOCUMENT_TYPES:
                             msg_type = MessageType.DOCUMENT
@@ -3338,9 +3339,9 @@ class DiscordAdapter(BasePlatformAdapter):
                     cached_path = await self._cache_discord_image(att, ext)
                     media_urls.append(cached_path)
                     media_types.append(content_type)
-                    print(f"[Discord] Cached user image: {cached_path}", flush=True)
+                    print(_("[Discord] Cached user image: {path}").format(path=cached_path), flush=True)
                 except Exception as e:
-                    print(f"[Discord] Failed to cache image attachment: {e}", flush=True)
+                    print(_("[Discord] Failed to cache image attachment: {e}").format(e=e), flush=True)
                     # Fall back to the CDN URL if caching fails
                     media_urls.append(att.url)
                     media_types.append(content_type)
@@ -3352,16 +3353,16 @@ class DiscordAdapter(BasePlatformAdapter):
                     cached_path = await self._cache_discord_audio(att, ext)
                     media_urls.append(cached_path)
                     media_types.append(content_type)
-                    print(f"[Discord] Cached user audio: {cached_path}", flush=True)
+                    print(_("[Discord] Cached user audio: {path}").format(path=cached_path), flush=True)
                 except Exception as e:
-                    print(f"[Discord] Failed to cache audio attachment: {e}", flush=True)
+                    print(_("[Discord] Failed to cache audio attachment: {e}").format(e=e), flush=True)
                     media_urls.append(att.url)
                     media_types.append(content_type)
             else:
                 # Document attachments: download, cache, and optionally inject text
                 ext = ""
                 if att.filename:
-                    _, ext = os.path.splitext(att.filename)
+                    _unused, ext = os.path.splitext(att.filename)
                     ext = ext.lower()
                 if not ext and content_type:
                     mime_to_ext = {v: k for k, v in SUPPORTED_DOCUMENT_TYPES.items()}

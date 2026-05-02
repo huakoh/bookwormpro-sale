@@ -19,8 +19,10 @@ import subprocess
 from pathlib import Path
 
 from bwm_constants import get_hermes_home
+from bwm_cli.i18n import _
 from typing import Any, Dict, List, Optional, Tuple
 from utils import normalize_proxy_env_vars
+
 
 try:
     import anthropic as _anthropic_sdk
@@ -899,11 +901,11 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
     auth_url = f"https://claude.ai/oauth/authorize?{urlencode(params)}"
 
     print()
-    print("Authorize BookwormPRO with your Claude Pro/Max subscription.")
+    print(_("Authorize BookwormPRO with your Claude Pro/Max subscription."))
     print()
     print("╭─ Claude Pro/Max Authorization ────────────────────╮")
     print("│                                                   │")
-    print("│  Open this link in your browser:                  │")
+    print(_("│  在浏览器中打开以下链接:                          │"))
     print("╰───────────────────────────────────────────────────╯")
     print()
     print(f"  {auth_url}")
@@ -911,20 +913,20 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
 
     try:
         webbrowser.open(auth_url)
-        print("  (Browser opened automatically)")
+        print(_("  (浏览器已自动打开)"))
     except Exception:
         pass
 
     print()
-    print("After authorizing, you'll see a code. Paste it below.")
+    print(_("授权后，您会看到一串代码，请粘贴到下方。"))
     print()
     try:
-        auth_code = input("Authorization code: ").strip()
+        auth_code = input(_("授权码: ")).strip()
     except (KeyboardInterrupt, EOFError):
         return None
 
     if not auth_code:
-        print("No code entered.")
+        print(_("未输入授权码。"))
         return None
 
     splits = auth_code.split("#")
@@ -956,7 +958,7 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
         with urllib.request.urlopen(req, timeout=15) as resp:
             result = json.loads(resp.read().decode())
     except Exception as e:
-        print(f"Token exchange failed: {e}")
+        print(_("令牌交换失败: {e}").format(e=e))
         return None
 
     access_token = result.get("access_token", "")
@@ -964,7 +966,7 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
     expires_in = result.get("expires_in", 3600)
 
     if not access_token:
-        print("No access token in response.")
+        print(_("响应中未包含访问令牌。"))
         return None
 
     expires_at_ms = int(time.time() * 1000) + (expires_in * 1000)

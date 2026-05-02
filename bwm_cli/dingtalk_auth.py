@@ -21,6 +21,8 @@ import logging
 from typing import Optional, Tuple
 
 import requests
+from bwm_cli.i18n import _
+
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +224,7 @@ def render_qr_to_terminal(url: str) -> bool:
                 line_chars.append(EMPTY)
         lines.append("    " + "".join(line_chars))
 
-    print("\n".join(lines))
+    print(_("\n").join(lines))
     return True
 
 

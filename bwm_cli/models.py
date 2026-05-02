@@ -1510,7 +1510,7 @@ def _find_openrouter_slug(model_name: str) -> Optional[str]:
     # Try matching just the model part (after the /)
     for mid in model_ids():
         if "/" in mid:
-            _, model_part = mid.split("/", 1)
+            _unused, model_part = mid.split("/", 1)
             if name_lower == model_part.lower():
                 return mid
 

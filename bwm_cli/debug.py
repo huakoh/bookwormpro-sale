@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Optional
 
 from bwm_constants import get_hermes_home
+from bwm_cli.i18n import _
+
 
 
 # ---------------------------------------------------------------------------
@@ -530,7 +532,7 @@ def run_debug_share(args):
     if not local_only:
         print(_PRIVACY_NOTICE)
 
-    print("Collecting debug report...")
+    print(_("Collecting debug report..."))
 
     # Capture dump once — prepended to every paste for context.
     dump_text = _capture_dump()
@@ -553,18 +555,18 @@ def run_debug_share(args):
     if local_only:
         print(report)
         if agent_log:
-            print(f"\n\n{'=' * 60}")
-            print("FULL agent.log")
-            print(f"{'=' * 60}\n")
+            print(_("\n\n{'=' * 60}"))
+            print(_("FULL agent.log"))
+            print(_("{'=' * 60}\n"))
             print(agent_log)
         if gateway_log:
-            print(f"\n\n{'=' * 60}")
-            print("FULL gateway.log")
-            print(f"{'=' * 60}\n")
+            print(_("\n\n{'=' * 60}"))
+            print(_("FULL gateway.log"))
+            print(_("{'=' * 60}\n"))
             print(gateway_log)
         return
 
-    print("Uploading...")
+    print(_("Uploading..."))
     urls: dict[str, str] = {}
     failures: list[str] = []
 
@@ -572,8 +574,8 @@ def run_debug_share(args):
     try:
         urls["Report"] = upload_to_pastebin(report, expiry_days=expiry)
     except RuntimeError as exc:
-        print(f"\nUpload failed: {exc}", file=sys.stderr)
-        print("\nFull report printed below — copy-paste it manually:\n")
+        print(_("\nUpload failed: {exc}").format(exc=exc), file=sys.stderr)
+        print(_("\nFull report printed below — copy-paste it manually:\n"))
         print(report)
         sys.exit(1)
 
@@ -593,42 +595,42 @@ def run_debug_share(args):
 
     # Print results
     label_width = max(len(k) for k in urls)
-    print(f"\nDebug report uploaded:")
+    print(_("\nDebug report uploaded:"))
     for label, url in urls.items():
         print(f"  {label:<{label_width}}  {url}")
 
     if failures:
-        print(f"\n  (failed to upload: {', '.join(failures)})")
+        print(_("\n  (failed to upload: {join_failures})").format(join_failures=', '.join(failures)))
 
     # Schedule auto-deletion after 6 hours
     _schedule_auto_delete(list(urls.values()))
-    print(f"\n[耗时]  Pastes will auto-delete in 6 hours.")
+    print(_("\n[耗时]  Pastes will auto-delete in 6 hours."))
 
     # Manual delete fallback
-    print(f"To delete now:  bookworm debug delete <url>")
+    print(_("To delete now:  bookworm debug delete <url>"))
 
-    print(f"\nShare these links with the BookwormPRO team for support.")
+    print(_("\nShare these links with the BookwormPRO team for support."))
 
 
 def run_debug_delete(args):
     """Delete one or more paste URLs uploaded by /debug."""
     urls = getattr(args, "urls", [])
     if not urls:
-        print("Usage: bookworm debug delete <url> [<url> ...]")
-        print("  Deletes paste.rs pastes uploaded by 'bookworm debug share'.")
+        print(_("Usage: bookworm debug delete <url> [<url> ...]"))
+        print(_("  Deletes paste.rs pastes uploaded by 'bookworm debug share'."))
         return
 
     for url in urls:
         try:
             ok = delete_paste(url)
             if ok:
-                print(f"  [成功] Deleted: {url}")
+                print(_("  [成功] Deleted: {url}").format(url=url))
             else:
-                print(f"  [失败] Failed to delete: {url} (unexpected response)")
+                print(_("  [失败] Failed to delete: {url} (unexpected response)").format(url=url))
         except ValueError as exc:
-            print(f"  [失败] {exc}")
+            print(_("  [失败] {exc}").format(exc=exc))
         except Exception as exc:
-            print(f"  [失败] Could not delete {url}: {exc}")
+            print(_("  [失败] Could not delete {url}: {exc}").format(url=url, exc=exc))
 
 
 def run_debug(args):
@@ -650,16 +652,16 @@ def run_debug(args):
         run_debug_delete(args)
     else:
         # Default: show help
-        print("Usage: bookworm debug <command>")
+        print(_("Usage: bookworm debug <command>"))
         print()
-        print("Commands:")
-        print("  share    Upload debug report to a paste service and print URL")
-        print("  delete   Delete a previously uploaded paste")
+        print(_("Commands:"))
+        print(_("  share    Upload debug report to a paste service and print URL"))
+        print(_("  delete   Delete a previously uploaded paste"))
         print()
-        print("Options (share):")
-        print("  --lines N    Number of log lines to include (default: 200)")
-        print("  --expire N   Paste expiry in days (default: 7)")
-        print("  --local      Print report locally instead of uploading")
+        print(_("Options (share):"))
+        print(_("  --lines N    Number of log lines to include (default: 200)"))
+        print(_("  --expire N   Paste expiry in days (default: 7)"))
+        print(_("  --local      Print report locally instead of uploading"))
         print()
-        print("Options (delete):")
-        print("  <url> ...    One or more paste URLs to delete")
+        print(_("Options (delete):"))
+        print(_("  <url> ...    One or more paste URLs to delete"))

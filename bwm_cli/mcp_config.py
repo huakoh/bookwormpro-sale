@@ -24,6 +24,8 @@ from bwm_cli.config import (
 )
 from bwm_cli.colors import Colors, color
 from bwm_constants import display_hermes_home
+from bwm_cli.i18n import _
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,13 +41,13 @@ def _info(text: str):
     print(color(f"  {text}", Colors.DIM))
 
 def _success(text: str):
-    print(color(f"  [成功] {text}", Colors.GREEN))
+    print(color(_("  [成功] {text}").format(text=text), Colors.GREEN))
 
 def _warning(text: str):
-    print(color(f"  [警告] {text}", Colors.YELLOW))
+    print(color(_("  [警告] {text}").format(text=text), Colors.YELLOW))
 
 def _error(text: str):
-    print(color(f"  [失败] {text}", Colors.RED))
+    print(color(_("  [失败] {text}").format(text=text), Colors.RED))
 
 
 def _confirm(question: str, default: bool = True) -> bool:
@@ -326,7 +328,7 @@ def cmd_mcp_add(args):
     # ── Discovery: connect and list tools ─────────────────────────────
 
     print()
-    print(color(f"  Connecting to '{name}'...", Colors.CYAN))
+    print(color(_("  Connecting to '{name}'...").format(name=name), Colors.CYAN))
 
     try:
         tools = _probe_single_server(name, server_config)
@@ -524,7 +526,7 @@ def cmd_mcp_test(args):
 
     cfg = servers[name]
     print()
-    print(color(f"  Testing '{name}'...", Colors.CYAN))
+    print(color(_("  Testing '{name}'...").format(name=name), Colors.CYAN))
 
     # Show transport info
     if "url" in cfg:
@@ -642,7 +644,7 @@ def cmd_mcp_configure(args):
     """Reconfigure which tools are enabled for an existing MCP server."""
     import sys as _sys
     if not _sys.stdin.isatty():
-        print("Error: 'bookworm mcp configure' requires an interactive terminal.", file=_sys.stderr)
+        print(_("Error: 'bookworm mcp configure' requires an interactive terminal."), file=_sys.stderr)
         _sys.exit(1)
     name = args.name
     servers = _get_mcp_servers()
@@ -658,7 +660,7 @@ def cmd_mcp_configure(args):
 
     # Discover all available tools
     print()
-    print(color(f"  Connecting to '{name}' to discover tools...", Colors.CYAN))
+    print(color(_("  Connecting to '{name}' to discover tools...").format(name=name), Colors.CYAN))
 
     try:
         all_tools = _probe_single_server(name, cfg)
@@ -764,7 +766,7 @@ def mcp_command(args):
     else:
         # No subcommand — show list
         cmd_mcp_list()
-        print(color("  Commands:", Colors.CYAN))
+        print(color(_("  Commands:"), Colors.CYAN))
         _info("bookworm mcp serve                              Run as MCP server")
         _info("bookworm mcp add <name> --url <endpoint>        Add an MCP server")
         _info("bookworm mcp add <name> --command <cmd>         Add a stdio server")

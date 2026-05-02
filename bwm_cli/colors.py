@@ -4,6 +4,7 @@ import os
 import sys
 
 
+
 def should_use_color() -> bool:
     """Return True when colored output is appropriate.
 

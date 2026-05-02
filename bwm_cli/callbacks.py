@@ -11,6 +11,7 @@ import time as _time
 import getpass
 
 from bwm_cli.banner import cprint, _DIM, _RST
+from bwm_cli.i18n import _
 from bwm_cli.config import save_env_value_secure
 from bwm_constants import display_hermes_home
 
@@ -56,7 +57,7 @@ def clarify_callback(cli, question, choices):
     cli._clarify_deadline = 0
     if hasattr(cli, "_app") and cli._app:
         cli._app.invalidate()
-    cprint(f"\n{_DIM}(clarify timed out after {timeout}s — agent will decide){_RST}")
+    cprint(f"\n{_DIM}{_('(clarify timed out after {timeout}s — agent will decide)').format(timeout=timeout)}{_RST}")
     return (
         "The user did not provide a response within the time limit. "
         "Use your best judgement to make the choice and proceed."
@@ -80,7 +81,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
             value = ""
 
         if not value:
-            cprint(f"\n{_DIM}  ⏭ Secret entry skipped{_RST}")
+            cprint(f"\n{_DIM}  ⏭ {_('Secret entry skipped')}{_RST}")
             return {
                 "success": True,
                 "reason": "cancelled",
@@ -92,7 +93,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
 
         stored = save_env_value_secure(var_name, value)
         _dhh = display_hermes_home()
-        cprint(f"\n{_DIM}  [成功] Stored secret in {_dhh}/.env as {var_name}{_RST}")
+        cprint(f"\n{_DIM}{_('  [成功] 密钥已存储: {path}/.env 变量名: {var_name}').format(path=_dhh, var_name=var_name)}{_RST}")
         return {
             **stored,
             "skipped": False,
@@ -133,7 +134,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
                 cli._app.invalidate()
 
             if not value:
-                cprint(f"\n{_DIM}  ⏭ Secret entry skipped{_RST}")
+                cprint(f"\n{_DIM}  ⏭ {_('Secret entry skipped')}{_RST}")
                 return {
                     "success": True,
                     "reason": "cancelled",
@@ -145,7 +146,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
 
             stored = save_env_value_secure(var_name, value)
             _dhh = display_hermes_home()
-            cprint(f"\n{_DIM}  [成功] Stored secret in {_dhh}/.env as {var_name}{_RST}")
+            cprint(f"\n{_DIM}{_('  [成功] 密钥已存储: {path}/.env 变量名: {var_name}').format(path=_dhh, var_name=var_name)}{_RST}")
             return {
                 **stored,
                 "skipped": False,
@@ -172,7 +173,7 @@ def prompt_for_secret(cli, var_name: str, prompt: str, metadata=None) -> dict:
             pass
     if hasattr(cli, "_app") and cli._app:
         cli._app.invalidate()
-    cprint(f"\n{_DIM}  [耗时] Timeout — secret capture cancelled{_RST}")
+    cprint(f"\n{_DIM}{_('  [耗时] 超时 — 密钥捕获已取消')}{_RST}")
     return {
         "success": True,
         "reason": "timeout",

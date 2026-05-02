@@ -13,6 +13,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOCALE_DIR = PROJECT_ROOT / "locale"
 
 
+def _decode_po(s: str) -> str:
+    """Decode PO escape sequences: \\n→newline, \\t→tab, \\\\→backslash, \\"→quote."""
+    return s.replace("\\n", "\n").replace("\\t", "\t").replace('\\"', '"').replace("\\\\", "\\")
+
+
 def compile_po(po_path: Path, mo_path: Path) -> int:
     """Compile a .po file to .mo binary. Returns entry count."""
     content = po_path.read_text(encoding="utf-8")
@@ -27,7 +32,7 @@ def compile_po(po_path: Path, mo_path: Path) -> int:
     for line in lines:
         if line.startswith('msgid "'):
             if msgid is not None and msgid:
-                entries[msgid] = msgstr or ""
+                entries[_decode_po(msgid)] = _decode_po(msgstr or "")
             msgid = line[7:-1]
             msgstr = ""
             in_msgid = True
@@ -42,7 +47,7 @@ def compile_po(po_path: Path, mo_path: Path) -> int:
             msgstr += line[1:-1]
 
     if msgid is not None and msgid:
-        entries[msgid] = msgstr or ""
+        entries[_decode_po(msgid)] = _decode_po(msgstr or "")
 
     # Remove empty header entry
     non_empty = {k: v for k, v in entries.items() if k}

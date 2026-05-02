@@ -27,6 +27,9 @@ import time
 from pathlib import Path
 from typing import Optional
 
+
+from bwm_cli.i18n import _
+
 logger = logging.getLogger(__name__)
 
 # OAuth device code flow constants (same client ID as opencode/Copilot CLI)
@@ -192,7 +195,7 @@ def copilot_device_code_login(
             device_data = json.loads(resp.read().decode())
     except Exception as exc:
         logger.error("Failed to initiate device authorization: %s", exc)
-        print(f"  [失败] Failed to start device authorization: {exc}")
+        print(_("  [失败] Failed to start device authorization: {exc}").format(exc=exc))
         return None
 
     verification_uri = device_data.get("verification_uri", "https://github.com/login/device")
@@ -201,15 +204,15 @@ def copilot_device_code_login(
     interval = max(device_data.get("interval", _DEVICE_CODE_POLL_INTERVAL), 1)
 
     if not device_code or not user_code:
-        print("  [失败] GitHub did not return a device code.")
+        print(_("  [失败] GitHub did not return a device code."))
         return None
 
     # Step 2: Show instructions
     print()
-    print(f"  Open this URL in your browser: {verification_uri}")
-    print(f"  Enter this code: {user_code}")
+    print(_("  Open this URL in your browser: {verification_uri}").format(verification_uri=verification_uri))
+    print(_("  Enter this code: {user_code}").format(user_code=user_code))
     print()
-    print("  Waiting for authorization...", end="", flush=True)
+    print(_("  Waiting for authorization..."), end="", flush=True)
 
     # Step 3: Poll for completion
     deadline = time.time() + timeout_seconds
@@ -241,7 +244,7 @@ def copilot_device_code_login(
             continue
 
         if result.get("access_token"):
-            print(" [成功]")
+            print(_(" [成功]"))
             return result["access_token"]
 
         error = result.get("error", "")
@@ -259,19 +262,19 @@ def copilot_device_code_login(
             continue
         elif error == "expired_token":
             print()
-            print("  [失败] Device code expired. Please try again.")
+            print(_("  [失败] Device code expired. Please try again."))
             return None
         elif error == "access_denied":
             print()
-            print("  [失败] Authorization was denied.")
+            print(_("  [失败] Authorization was denied."))
             return None
         elif error:
             print()
-            print(f"  [失败] Authorization failed: {error}")
+            print(_("  [失败] Authorization failed: {error}").format(error=error))
             return None
 
     print()
-    print("  [失败] Timed out waiting for authorization.")
+    print(_("  [失败] Timed out waiting for authorization."))
     return None
 
 

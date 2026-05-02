@@ -27,6 +27,9 @@ from bwm_cli.setup import (
     print_error,
     prompt_yes_no,
 )
+from bwm_cli.i18n import _
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -291,13 +294,13 @@ def claw_command(args):
     elif action in ("cleanup", "clean"):
         _cmd_cleanup(args)
     else:
-        print("Usage: bookworm claw <command> [options]")
+        print(_("Usage: bookworm claw <command> [options]"))
         print()
-        print("Commands:")
-        print("  migrate          Migrate settings from OpenClaw to BookwormPRO")
-        print("  cleanup          Archive leftover OpenClaw directories after migration")
+        print(_("Commands:"))
+        print(_("  migrate          Migrate settings from OpenClaw to BookwormPRO"))
+        print(_("  cleanup          Archive leftover OpenClaw directories after migration"))
         print()
-        print("Run 'bookworm claw <command> --help' for options.")
+        print(_("Run 'bookworm claw <command> --help' for options."))
 
 
 def _cmd_migrate(args):
@@ -583,15 +586,15 @@ def _cmd_cleanup(args):
                 detail = ", ".join(items) if items else "empty"
                 print(f"      {ws.name}/  ({detail})")
             if len(workspace_dirs) > 5:
-                print(f"      ... and {len(workspace_dirs) - 5} more")
+                print(_("      ... and {len} more").format(len=len(workspace_dirs) - 5))
 
         if state_files:
             print()
-            print(color(f"  {len(state_files)} state file(s) found:", Colors.YELLOW))
+            print(color(_("  {len} state file(s) found:").format(len=len(state_files)), Colors.YELLOW))
             for path, desc in state_files[:8]:
                 print(f"      {desc}")
             if len(state_files) > 8:
-                print(f"      ... and {len(state_files) - 8} more")
+                print(_("      ... and {len} more").format(len=len(state_files) - 8))
 
         print()
 
@@ -653,7 +656,7 @@ def _print_migration_report(report: dict, dry_run: bool):
 
         if migrated_items:
             label = "Would migrate" if dry_run else "Migrated"
-            print(color(f"  [成功] {label}:", Colors.GREEN))
+            print(color(_("  [成功] {label}:").format(label=label), Colors.GREEN))
             for item in migrated_items:
                 kind = item.get("kind", "unknown")
                 dest = item.get("destination", "")
@@ -665,7 +668,7 @@ def _print_migration_report(report: dict, dry_run: bool):
             print()
 
         if conflict_items:
-            print(color("  [警告] Conflicts (skipped — use --overwrite to force):", Colors.YELLOW))
+            print(color(_("  [警告] Conflicts (skipped — use --overwrite to force):"), Colors.YELLOW))
             for item in conflict_items:
                 kind = item.get("kind", "unknown")
                 reason = item.get("reason", "already exists")
@@ -673,7 +676,7 @@ def _print_migration_report(report: dict, dry_run: bool):
             print()
 
         if skipped_items:
-            print(color("  ─ Skipped:", Colors.DIM))
+            print(color(_("  ─ Skipped:"), Colors.DIM))
             for item in skipped_items:
                 kind = item.get("kind", "unknown")
                 reason = item.get("reason", "")
@@ -681,7 +684,7 @@ def _print_migration_report(report: dict, dry_run: bool):
             print()
 
         if error_items:
-            print(color("  [失败] Errors:", Colors.RED))
+            print(color(_("  [失败] Errors:"), Colors.RED))
             for item in error_items:
                 kind = item.get("kind", "unknown")
                 reason = item.get("reason", "unknown error")
@@ -724,8 +727,8 @@ def _print_migration_report(report: dict, dry_run: bool):
         ]
         if skipped_keys:
             print()
-            print(color("  [警告] API keys were NOT migrated (secrets migration is disabled by default).", Colors.YELLOW))
-            print(color("  Your OPENROUTER_API_KEY and other provider keys must be added manually.", Colors.YELLOW))
+            print(color(_("  [警告] API keys were NOT migrated (secrets migration is disabled by default)."), Colors.YELLOW))
+            print(color(_("  Your OPENROUTER_API_KEY and other provider keys must be added manually."), Colors.YELLOW))
             print()
             print_info("To migrate API keys, re-run with:")
             print_info("  bookworm claw migrate --migrate-secrets")

@@ -270,7 +270,7 @@ def _apply_profile_override() -> None:
 
         except (ValueError, FileNotFoundError) as exc:
 
-            print(f"Error: {exc}", file=sys.stderr)
+            print(_("Error: {exc}").format(exc=exc), file=sys.stderr)
 
             sys.exit(1)
 
@@ -720,7 +720,7 @@ def _session_browse_picker(sessions: list) -> Optional[str]:
 
     if not sessions:
 
-        print("No sessions found.")
+        print(_("No sessions found."))
 
         return None
 
@@ -1136,7 +1136,7 @@ def _session_browse_picker(sessions: list) -> Optional[str]:
 
     # Fallback: numbered list (Windows without curses, etc.)
 
-    print("\n  Browse sessions  (enter number to resume, q to cancel)\n")
+    print(_("\n  Browse sessions  (enter number to resume, q to cancel)\n"))
 
     for i, s in enumerate(sessions):
 
@@ -1162,7 +1162,7 @@ def _session_browse_picker(sessions: list) -> Optional[str]:
 
         try:
 
-            val = input(f"\n  Select [1-{len(sessions)}]: ").strip()
+            val = input(_("\n  Select [1-{len}]: ").format(len=len(sessions))).strip()
 
             if not val or val.lower() in ("q", "quit", "exit"):
 
@@ -1174,11 +1174,11 @@ def _session_browse_picker(sessions: list) -> Optional[str]:
 
                 return sessions[idx]["id"]
 
-            print(f"  Invalid selection. Enter 1-{len(sessions)} or q to cancel.")
+            print(_("  Invalid selection. Enter 1-{len} or q to cancel.").format(len=len(sessions)))
 
         except ValueError:
 
-            print("  Invalid input. Enter a number or q to cancel.")
+            print(_("  Invalid input. Enter a number or q to cancel."))
 
         except (KeyboardInterrupt, EOFError):
 
@@ -1594,23 +1594,23 @@ def _print_tui_exit_summary(session_id: Optional[str]) -> None:
 
     print()
 
-    print("Resume this session with:")
+    print(_("Resume this session with:"))
 
-    print(f"  bookworm --tui --resume {target}")
+    print(_("  bookworm --tui --resume {target}").format(target=target))
 
     if title:
 
-        print(f'  bookworm --tui -c "{title}"')
+        print(_("  bookworm --tui -c \"{title}\"").format(title=title))
 
     print()
 
-    print(f"Session:        {target}")
+    print(_("Session:        {target}").format(target=target))
 
     if title:
 
-        print(f"Title:          {title}")
+        print(_("Title:          {title}").format(title=title))
 
-    print(f"Messages:       {message_count}")
+    print(_("Messages:       {message_count}").format(message_count=message_count))
 
     print(
 
@@ -1900,7 +1900,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
 
         if not path:
 
-            print(f"{bin} not found — install Node.js to use the TUI.")
+            print(_("{bin} not found — install Node.js to use the TUI.").format(bin=bin))
 
             sys.exit(1)
 
@@ -1932,7 +1932,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
 
         if not os.environ.get("BOOKWORMPRO_QUIET"):
 
-            print("Installing TUI dependencies…")
+            print(_("Installing TUI dependencies…"))
 
         result = subprocess.run(
 
@@ -1956,7 +1956,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
 
             preview = "\n".join(err.splitlines()[-30:])
 
-            print("npm install failed.")
+            print(_("npm install failed."))
 
             if preview:
 
@@ -1988,7 +1988,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
 
                 preview = "\n".join(combined.splitlines()[-30:])
 
-                print("@bookworm/ink build failed.")
+                print(_("@bookworm/ink build failed."))
 
                 if preview:
 
@@ -2026,7 +2026,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
 
             preview = "\n".join(combined.splitlines()[-30:])
 
-            print("TUI build failed.")
+            print(_("TUI build failed."))
 
             if preview:
 
@@ -2040,7 +2040,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
 
     if not root:
 
-        print("TUI build did not produce dist/entry.js")
+        print(_("TUI build did not produce dist/entry.js"))
 
         sys.exit(1)
 
@@ -2152,9 +2152,9 @@ def cmd_chat(args):
 
             else:
 
-                print(f"No session found matching '{continue_val}'.")
+                print(_("No session found matching '{continue_val}'.").format(continue_val=continue_val))
 
-                print("Use 'bookworm sessions list' to see available sessions.")
+                print(_("Use 'bookworm sessions list' to see available sessions."))
 
                 sys.exit(1)
 
@@ -2178,7 +2178,7 @@ def cmd_chat(args):
 
                 kind = "TUI" if use_tui else "CLI"
 
-                print(f"No previous {kind} session found to continue.")
+                print(_("No previous {kind} session found to continue.").format(kind=kind))
 
                 sys.exit(1)
 
@@ -2216,7 +2216,7 @@ def cmd_chat(args):
 
         print()
 
-        print("  Run:  bookworm setup")
+        print(_("  Run:  bookworm setup"))
 
         print()
 
@@ -2246,7 +2246,7 @@ def cmd_chat(args):
 
         try:
 
-            reply = input("Run setup now? [Y/n] ").strip().lower()
+            reply = input(_("Run setup now? [Y/n] ")).strip().lower()
 
         except (EOFError, KeyboardInterrupt):
 
@@ -2260,7 +2260,7 @@ def cmd_chat(args):
 
         print()
 
-        print("You can run 'bookworm setup' at any time to configure.")
+        print(_("You can run 'bookworm setup' at any time to configure."))
 
         sys.exit(1)
 
@@ -2408,7 +2408,7 @@ def cmd_chat(args):
 
     except ValueError as e:
 
-        print(f"Error: {e}")
+        print(_("Error: {e}").format(e=e))
 
         sys.exit(1)
 
@@ -2442,7 +2442,7 @@ def cmd_whatsapp(args):
 
     print()
 
-    print("[BWM] WhatsApp Setup")
+    print(_("[BWM] WhatsApp Setup"))
 
     print("=" * 50)
 
@@ -2456,13 +2456,13 @@ def cmd_whatsapp(args):
 
         print()
 
-        print("How will you use WhatsApp with BookwormPRO?")
+        print(_("How will you use WhatsApp with BookwormPRO?"))
 
         print()
 
-        print("  1. Separate bot number (recommended)")
+        print(_("  1. Separate bot number (recommended)"))
 
-        print("     People message the bot's number directly — cleanest experience.")
+        print(_("     People message the bot's number directly — cleanest experience."))
 
         print(
 
@@ -2472,21 +2472,21 @@ def cmd_whatsapp(args):
 
         print()
 
-        print("  2. Personal number (self-chat)")
+        print(_("  2. Personal number (self-chat)"))
 
-        print("     You message yourself to talk to the agent.")
+        print(_("     You message yourself to talk to the agent."))
 
-        print("     Quick to set up, but the UX is less intuitive.")
+        print(_("     Quick to set up, but the UX is less intuitive."))
 
         print()
 
         try:
 
-            choice = input("  Choose [1/2]: ").strip()
+            choice = input(_("  Choose [1/2]: ")).strip()
 
         except (EOFError, KeyboardInterrupt):
 
-            print("\nSetup cancelled.")
+            print(_("\nSetup cancelled."))
 
             return
 
@@ -2498,31 +2498,31 @@ def cmd_whatsapp(args):
 
             wa_mode = "bot"
 
-            print("  [成功] Mode: separate bot number")
+            print(_("  [成功] Mode: separate bot number"))
 
             print()
 
             print("  ┌─────────────────────────────────────────────────┐")
 
-            print("  │  Getting a second number for the bot:           │")
+            print(_("  │  Getting a second number for the bot:           │"))
 
             print("  │                                                 │")
 
-            print("  │  Easiest: Install WhatsApp Business (free app)  │")
+            print(_("  │  Easiest: Install WhatsApp Business (free app)  │"))
 
-            print("  │  on your phone with a second number:            │")
+            print(_("  │  on your phone with a second number:            │"))
 
-            print("  │    • Dual-SIM: use your 2nd SIM slot            │")
+            print(_("  │    • Dual-SIM: use your 2nd SIM slot            │"))
 
-            print("  │    • Google Voice: free US number (voice.google) │")
+            print(_("  │    • Google Voice: free US number (voice.google) │"))
 
-            print("  │    • Prepaid SIM: $3-10, verify once            │")
+            print(_("  │    • Prepaid SIM: $3-10, verify once            │"))
 
             print("  │                                                 │")
 
-            print("  │  WhatsApp Business runs alongside your personal │")
+            print(_("  │  WhatsApp Business runs alongside your personal │"))
 
-            print("  │  WhatsApp — no second phone needed.             │")
+            print(_("  │  WhatsApp — no second phone needed.             │"))
 
             print("  └─────────────────────────────────────────────────┘")
 
@@ -2532,7 +2532,7 @@ def cmd_whatsapp(args):
 
             wa_mode = "self-chat"
 
-            print("  [成功] Mode: personal number (self-chat)")
+            print(_("  [成功] Mode: personal number (self-chat)"))
 
     else:
 
@@ -2544,7 +2544,7 @@ def cmd_whatsapp(args):
 
         )
 
-        print(f"\n[成功] Mode: {mode_label}")
+        print(_("\n[成功] Mode: {mode_label}").format(mode_label=mode_label))
 
 
 
@@ -2556,13 +2556,13 @@ def cmd_whatsapp(args):
 
     if current and current.lower() == "true":
 
-        print("[成功] WhatsApp is already enabled")
+        print(_("[成功] WhatsApp is already enabled"))
 
     else:
 
         save_env_value("WHATSAPP_ENABLED", "true")
 
-        print("[成功] WhatsApp enabled")
+        print(_("[成功] WhatsApp enabled"))
 
 
 
@@ -2572,11 +2572,11 @@ def cmd_whatsapp(args):
 
     if current_users:
 
-        print(f"[成功] Allowed users: {current_users}")
+        print(_("[成功] Allowed users: {current_users}").format(current_users=current_users))
 
         try:
 
-            response = input("\n  Update allowed users? [y/N] ").strip()
+            response = input(_("\n  Update allowed users? [y/N] ")).strip()
 
         except (EOFError, KeyboardInterrupt):
 
@@ -2594,13 +2594,13 @@ def cmd_whatsapp(args):
 
             else:
 
-                phone = input("  Your phone number (e.g. 15551234567): ").strip()
+                phone = input(_("  Your phone number (e.g. 15551234567): ")).strip()
 
             if phone:
 
                 save_env_value("WHATSAPP_ALLOWED_USERS", phone.replace(" ", ""))
 
-                print(f"  [成功] Updated to: {phone}")
+                print(_("  [成功] Updated to: {phone}").format(phone=phone))
 
     else:
 
@@ -2608,7 +2608,7 @@ def cmd_whatsapp(args):
 
         if wa_mode == "bot":
 
-            print("  Who should be allowed to message the bot?")
+            print(_("  Who should be allowed to message the bot?"))
 
             phone = input(
 
@@ -2618,17 +2618,17 @@ def cmd_whatsapp(args):
 
         else:
 
-            phone = input("  Your phone number (e.g. 15551234567): ").strip()
+            phone = input(_("  Your phone number (e.g. 15551234567): ")).strip()
 
         if phone:
 
             save_env_value("WHATSAPP_ALLOWED_USERS", phone.replace(" ", ""))
 
-            print(f"  [成功] Allowed users set: {phone}")
+            print(_("  [成功] Allowed users set: {phone}").format(phone=phone))
 
         else:
 
-            print("  [警告] No allowlist — the agent will respond to ALL incoming messages")
+            print(_("  [警告] No allowlist — the agent will respond to ALL incoming messages"))
 
 
 
@@ -2644,7 +2644,7 @@ def cmd_whatsapp(args):
 
     if not bridge_script.exists():
 
-        print(f"\n[失败] Bridge script not found at {bridge_script}")
+        print(_("\n[失败] Bridge script not found at {bridge_script}").format(bridge_script=bridge_script))
 
         return
 
@@ -2652,13 +2652,13 @@ def cmd_whatsapp(args):
 
     if not (bridge_dir / "node_modules").exists():
 
-        print("\n→ Installing WhatsApp bridge dependencies (this can take a few minutes)...")
+        print(_("\n→ Installing WhatsApp bridge dependencies (this can take a few minutes)..."))
 
         npm = shutil.which("npm")
 
         if not npm:
 
-            print("  [失败] npm not found on PATH — install Node.js first")
+            print(_("  [失败] npm not found on PATH — install Node.js first"))
 
             return
 
@@ -2680,7 +2680,7 @@ def cmd_whatsapp(args):
 
         except KeyboardInterrupt:
 
-            print("\n  [失败] Install cancelled")
+            print(_("\n  [失败] Install cancelled"))
 
             return
 
@@ -2690,17 +2690,17 @@ def cmd_whatsapp(args):
 
             preview = "\n".join(err.splitlines()[-30:]) if err else "(no output)"
 
-            print("  [失败] npm install failed:")
+            print(_("  [失败] npm install failed:"))
 
             print(preview)
 
             return
 
-        print("  [成功] Dependencies installed")
+        print(_("  [成功] Dependencies installed"))
 
     else:
 
-        print("[成功] Bridge dependencies already installed")
+        print(_("[成功] Bridge dependencies already installed"))
 
 
 
@@ -2714,7 +2714,7 @@ def cmd_whatsapp(args):
 
     if (session_dir / "creds.json").exists():
 
-        print("[成功] Existing WhatsApp session found")
+        print(_("[成功] Existing WhatsApp session found"))
 
         try:
 
@@ -2734,13 +2734,13 @@ def cmd_whatsapp(args):
 
             session_dir.mkdir(parents=True, exist_ok=True)
 
-            print("  [成功] Session cleared")
+            print(_("  [成功] Session cleared"))
 
         else:
 
-            print("\n[成功] WhatsApp is configured and paired!")
+            print(_("\n[成功] WhatsApp is configured and paired!"))
 
-            print("  Start the gateway with: bookworm gateway")
+            print(_("  Start the gateway with: bookworm gateway"))
 
             return
 
@@ -2754,17 +2754,17 @@ def cmd_whatsapp(args):
 
     if wa_mode == "bot":
 
-        print("📱 Open WhatsApp (or WhatsApp Business) on the")
+        print(_("📱 Open WhatsApp (or WhatsApp Business) on the"))
 
-        print("   phone with the BOT's number, then scan:")
+        print(_("   phone with the BOT's number, then scan:"))
 
     else:
 
-        print("📱 Open WhatsApp on your phone, then scan:")
+        print(_("📱 Open WhatsApp on your phone, then scan:"))
 
     print()
 
-    print("   Settings → Linked Devices → Link a Device")
+    print(_("   Settings → Linked Devices → Link a Device"))
 
     print("─" * 50)
 
@@ -2794,47 +2794,47 @@ def cmd_whatsapp(args):
 
     if (session_dir / "creds.json").exists():
 
-        print("[成功] WhatsApp paired successfully!")
+        print(_("[成功] WhatsApp paired successfully!"))
 
         print()
 
         if wa_mode == "bot":
 
-            print("  Next steps:")
+            print(_("  Next steps:"))
 
-            print("    1. Start the gateway:  bookworm gateway")
+            print(_("    1. Start the gateway:  bookworm gateway"))
 
-            print("    2. Send a message to the bot's WhatsApp number")
+            print(_("    2. Send a message to the bot's WhatsApp number"))
 
-            print("    3. The agent will reply automatically")
+            print(_("    3. The agent will reply automatically"))
 
             print()
 
-            print("  Tip: Agent responses are prefixed with '[BWM] BookwormPRO'")
+            print(_("  Tip: Agent responses are prefixed with '[BWM] BookwormPRO'"))
 
         else:
 
-            print("  Next steps:")
+            print(_("  Next steps:"))
 
-            print("    1. Start the gateway:  bookworm gateway")
+            print(_("    1. Start the gateway:  bookworm gateway"))
 
-            print("    2. Open WhatsApp → Message Yourself")
+            print(_("    2. Open WhatsApp → Message Yourself"))
 
-            print("    3. Type a message — the agent will reply")
+            print(_("    3. Type a message — the agent will reply"))
 
             print()
 
-            print("  Tip: Agent responses are prefixed with '[BWM] BookwormPRO'")
+            print(_("  Tip: Agent responses are prefixed with '[BWM] BookwormPRO'"))
 
-            print("  so you can tell them apart from your own messages.")
+            print(_("  so you can tell them apart from your own messages."))
 
         print()
 
-        print("  Or install as a service: bookworm gateway install")
+        print(_("  Or install as a service: bookworm gateway install"))
 
     else:
 
-        print("[警告] Pairing may not have completed. Run 'bookworm whatsapp' to try again.")
+        print(_("[警告] Pairing may not have completed. Run 'bookworm whatsapp' to try again."))
 
 
 
@@ -2976,7 +2976,7 @@ def select_provider_and_model(args=None):
 
             )
 
-            print(f"Warning: {warning} Falling back to auto provider detection.")
+            print(_("Warning: {warning} Falling back to auto provider detection.").format(warning=warning))
 
     if active is None:
 
@@ -2990,7 +2990,7 @@ def select_provider_and_model(args=None):
 
                 warning = format_auth_error(exc)
 
-                print(f"Warning: {warning} Falling back to auto provider detection.")
+                print(_("Warning: {warning} Falling back to auto provider detection.").format(warning=warning))
 
             active = None  # no provider yet; default to first in list
 
@@ -3016,9 +3016,9 @@ def select_provider_and_model(args=None):
 
     print()
 
-    print(f"  Current model:    {current_model}")
+    print(_("  Current model:    {current_model}").format(current_model=current_model))
 
-    print(f"  Active provider:  {active_label}")
+    print(_("  Active provider:  {active_label}").format(active_label=active_label))
 
     print()
 
@@ -3156,7 +3156,7 @@ def select_provider_and_model(args=None):
 
     if provider_idx is None or ordered[provider_idx][0] == "cancel":
 
-        print("No change.")
+        print(_("No change."))
 
         return
 
@@ -3618,19 +3618,19 @@ def _aux_config_menu() -> None:
 
         print()
 
-        print("  Auxiliary models — side-task routing")
+        print(_("  Auxiliary models — side-task routing"))
 
         print()
 
-        print("  Side tasks (vision, compression, web extraction, etc.) default")
+        print(_("  Side tasks (vision, compression, web extraction, etc.) default"))
 
-        print("  to your main chat model.  \"auto\" means \"use my main model\" —")
+        print(_('  to your main chat model.  "auto" means "use my main model" —'))
 
-        print("  BookwormPRO only falls back to a lightweight backend (OpenRouter,")
+        print(_("  BookwormPRO only falls back to a lightweight backend (OpenRouter,"))
 
-        print("  BookwormPRO Portal) if the main model is unavailable.  Override a")
+        print(_("  BookwormPRO Portal) if the main model is unavailable.  Override a"))
 
-        print("  task below if you want it pinned to a specific provider/model.")
+        print(_("  task below if you want it pinned to a specific provider/model."))
 
         print()
 
@@ -3682,11 +3682,11 @@ def _aux_config_menu() -> None:
 
             if n:
 
-                print(f"Reset {n} auxiliary task(s) to auto.")
+                print(_("Reset {n} auxiliary task(s) to auto.").format(n=n))
 
             else:
 
-                print("All auxiliary tasks were already set to auto.")
+                print(_("All auxiliary tasks were already set to auto."))
 
             print()
 
@@ -3748,7 +3748,7 @@ def _aux_select_for_task(task: str) -> None:
 
     except Exception as exc:
 
-        print(f"Could not detect authenticated providers: {exc}")
+        print(_("Could not detect authenticated providers: {exc}").format(exc=exc))
 
         providers = []
 
@@ -3794,7 +3794,7 @@ def _aux_select_for_task(task: str) -> None:
 
     print()
 
-    print(f"  Configure {display_name} — current: {_format_aux_current(task_cfg)}")
+    print(_("  Configure {display_name} — current: {_format_aux_current}").format(display_name=display_name, _format_aux_current=_format_aux_current(task_cfg)))
 
     print()
 
@@ -3820,7 +3820,7 @@ def _aux_select_for_task(task: str) -> None:
 
         _save_aux_choice(task, provider="auto", model="", base_url="", api_key="")
 
-        print(f"{display_name}: reset to auto.")
+        print(_("{display_name}: reset to auto.").format(display_name=display_name))
 
         return
 
@@ -3892,13 +3892,13 @@ def _aux_flow_provider_model(
 
     if not model_list:
 
-        print(f"No curated model list for {provider_slug}.")
+        print(_("No curated model list for {provider_slug}.").format(provider_slug=provider_slug))
 
-        print("Enter a model slug manually (blank = use provider default):")
+        print(_("Enter a model slug manually (blank = use provider default):"))
 
         try:
 
-            val = input("Model: ").strip()
+            val = input(_("Model: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -3918,7 +3918,7 @@ def _aux_flow_provider_model(
 
         if selected is None:
 
-            print("No change.")
+            print(_("No change."))
 
             return
 
@@ -3934,7 +3934,7 @@ def _aux_flow_provider_model(
 
     else:
 
-        print(f"{display_name}: {provider_slug} (provider default model)")
+        print(_("{display_name}: {provider_slug} (provider default model)").format(display_name=display_name, provider_slug=provider_slug))
 
 
 
@@ -3958,9 +3958,9 @@ def _aux_flow_custom_endpoint(task: str, task_cfg: dict) -> None:
 
     print()
 
-    print(f"  Custom endpoint for {display_name}")
+    print(_("  Custom endpoint for {display_name}").format(display_name=display_name))
 
-    print("  Provide an OpenAI-compatible base URL (e.g. http://localhost:11434/v1)")
+    print(_("  Provide an OpenAI-compatible base URL (e.g. http://localhost:11434/v1)"))
 
     print()
 
@@ -3980,7 +3980,7 @@ def _aux_flow_custom_endpoint(task: str, task_cfg: dict) -> None:
 
     if not url:
 
-        print("No URL provided. No change.")
+        print(_("No URL provided. No change."))
 
         return
 
@@ -4018,7 +4018,7 @@ def _aux_flow_custom_endpoint(task: str, task_cfg: dict) -> None:
 
     short_url = url.replace("https://", "").replace("http://", "").rstrip("/")
 
-    print(f"{display_name}: custom ({short_url})" + (f" · {model}" if model else ""))
+    print(_("{display_name}: custom ({short_url})").format(display_name=display_name, short_url=short_url) + (f" · {model}" if model else ""))
 
 
 
@@ -4060,7 +4060,7 @@ def _prompt_provider_choice(choices, *, default=0):
 
     # Fallback: numbered list
 
-    print("Select provider:")
+    print(_("Select provider:"))
 
     for i, c in enumerate(choices, 1):
 
@@ -4074,7 +4074,7 @@ def _prompt_provider_choice(choices, *, default=0):
 
         try:
 
-            val = input(f"Choice [1-{len(choices)}] ({default + 1}): ").strip()
+            val = input(_("Choice [1-{len}] ({default}): ").format(len=len(choices), default=default + 1)).strip()
 
             if not val:
 
@@ -4086,11 +4086,11 @@ def _prompt_provider_choice(choices, *, default=0):
 
                 return idx
 
-            print(f"Please enter 1-{len(choices)}")
+            print(_("Please enter 1-{len}").format(len=len(choices)))
 
         except ValueError:
 
-            print("Please enter a number")
+            print(_("Please enter a number"))
 
         except (KeyboardInterrupt, EOFError):
 
@@ -4124,9 +4124,9 @@ def _model_flow_openrouter(config, current_model=""):
 
     if not api_key:
 
-        print("No OpenRouter API key configured.")
+        print(_("No OpenRouter API key configured."))
 
-        print("Get one at: https://openrouter.ai/keys")
+        print(_("Get one at: https://openrouter.ai/keys"))
 
         print()
 
@@ -4146,13 +4146,13 @@ def _model_flow_openrouter(config, current_model=""):
 
         if not key:
 
-            print("Cancelled.")
+            print(_("Cancelled."))
 
             return
 
         save_env_value("OPENROUTER_API_KEY", key)
 
-        print("API key saved.")
+        print(_("API key saved."))
 
         print()
 
@@ -4210,11 +4210,11 @@ def _model_flow_openrouter(config, current_model=""):
 
         deactivate_provider()
 
-        print(f"Default model set to: {selected} (via OpenRouter)")
+        print(_("Default model set to: {selected} (via OpenRouter)").format(selected=selected))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -4242,11 +4242,11 @@ def _model_flow_ai_gateway(config, current_model=""):
 
     if not api_key:
 
-        print("No Vercel AI Gateway API key configured.")
+        print(_("No Vercel AI Gateway API key configured."))
 
-        print("Create API key here: https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway&title=AI+Gateway")
+        print(_("Create API key here: https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway&title=AI+Gateway"))
 
-        print("Add a payment method to get $5 in free credits.")
+        print(_("Add a payment method to get $5 in free credits."))
 
         print()
 
@@ -4266,13 +4266,13 @@ def _model_flow_ai_gateway(config, current_model=""):
 
         if not key:
 
-            print("Cancelled.")
+            print(_("Cancelled."))
 
             return
 
         save_env_value("AI_GATEWAY_API_KEY", key)
 
-        print("API key saved.")
+        print(_("API key saved."))
 
         print()
 
@@ -4324,11 +4324,11 @@ def _model_flow_ai_gateway(config, current_model=""):
 
         deactivate_provider()
 
-        print(f"Default model set to: {selected} (via Vercel AI Gateway)")
+        print(_("Default model set to: {selected} (via Vercel AI Gateway)").format(selected=selected))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -4380,7 +4380,7 @@ def _model_flow_nous(config, current_model="", args=None):
 
     if not state or not state.get("access_token"):
 
-        print("Not logged into BookwormPRO Portal. Starting login...")
+        print(_("Not logged into BookwormPRO Portal. Starting login..."))
 
         print()
 
@@ -4422,13 +4422,13 @@ def _model_flow_nous(config, current_model="", args=None):
 
         except SystemExit:
 
-            print("Login cancelled or failed.")
+            print(_("Login cancelled or failed."))
 
             return
 
         except Exception as exc:
 
-            print(f"Login failed: {exc}")
+            print(_("Login failed: {exc}").format(exc=exc))
 
             return
 
@@ -4462,7 +4462,7 @@ def _model_flow_nous(config, current_model="", args=None):
 
     if not model_ids:
 
-        print("No curated models available for BookwormPRO Portal.")
+        print(_("No curated models available for BookwormPRO Portal."))
 
         return
 
@@ -4482,9 +4482,9 @@ def _model_flow_nous(config, current_model="", args=None):
 
         if relogin:
 
-            print(f"Session expired: {msg}")
+            print(_("Session expired: {msg}").format(msg=msg))
 
-            print("Re-authenticating with BookwormPRO Portal...\n")
+            print(_("Re-authenticating with BookwormPRO Portal...\n"))
 
             try:
 
@@ -4512,11 +4512,11 @@ def _model_flow_nous(config, current_model="", args=None):
 
             except Exception as login_exc:
 
-                print(f"Re-login failed: {login_exc}")
+                print(_("Re-login failed: {login_exc}").format(login_exc=login_exc))
 
             return
 
-        print(f"Could not verify credentials: {msg}")
+        print(_("Could not verify credentials: {msg}").format(msg=msg))
 
         return
 
@@ -4552,7 +4552,7 @@ def _model_flow_nous(config, current_model="", args=None):
 
     if not model_ids and not unavailable_models:
 
-        print("No models available for BookwormPRO Portal after filtering.")
+        print(_("No models available for BookwormPRO Portal after filtering."))
 
         return
 
@@ -4578,7 +4578,7 @@ def _model_flow_nous(config, current_model="", args=None):
 
     if free_tier and not model_ids:
 
-        print("No free models currently available.")
+        print(_("No free models currently available."))
 
         if unavailable_models:
 
@@ -4588,7 +4588,7 @@ def _model_flow_nous(config, current_model="", args=None):
 
             _url = (_nous_portal_url or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
 
-            print(f"Upgrade at {_url} to access paid models.")
+            print(_("Upgrade at {_url} to access paid models.").format(_url=_url))
 
         return
 
@@ -4664,7 +4664,7 @@ def _model_flow_nous(config, current_model="", args=None):
 
         save_config(config)
 
-        print(f"Default model set to: {selected} (via BookwormPRO Portal)")
+        print(_("Default model set to: {selected} (via BookwormPRO Portal)").format(selected=selected))
 
         # Offer Tool Gateway enablement for paid subscribers
 
@@ -4672,7 +4672,7 @@ def _model_flow_nous(config, current_model="", args=None):
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -4708,21 +4708,21 @@ def _model_flow_openai_codex(config, current_model=""):
 
     if status.get("logged_in"):
 
-        print("  OpenAI Codex credentials: [成功]")
+        print(_("  OpenAI Codex credentials: [成功]"))
 
         print()
 
-        print("    1. Use existing credentials")
+        print(_("    1. Use existing credentials"))
 
-        print("    2. Reauthenticate (new OAuth login)")
+        print(_("    2. Reauthenticate (new OAuth login)"))
 
-        print("    3. Cancel")
+        print(_("    3. Cancel"))
 
         print()
 
         try:
 
-            choice = input("  Choice [1/2/3]: ").strip()
+            choice = input(_("  Choice [1/2/3]: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -4732,7 +4732,7 @@ def _model_flow_openai_codex(config, current_model=""):
 
         if choice == "2":
 
-            print("Starting a fresh OpenAI Codex login...")
+            print(_("Starting a fresh OpenAI Codex login..."))
 
             print()
 
@@ -4752,13 +4752,13 @@ def _model_flow_openai_codex(config, current_model=""):
 
             except SystemExit:
 
-                print("Login cancelled or failed.")
+                print(_("Login cancelled or failed."))
 
                 return
 
             except Exception as exc:
 
-                print(f"Login failed: {exc}")
+                print(_("Login failed: {exc}").format(exc=exc))
 
                 return
 
@@ -4766,7 +4766,7 @@ def _model_flow_openai_codex(config, current_model=""):
 
             if not status.get("logged_in"):
 
-                print("Login failed.")
+                print(_("Login failed."))
 
                 return
 
@@ -4776,7 +4776,7 @@ def _model_flow_openai_codex(config, current_model=""):
 
     else:
 
-        print("Not logged into OpenAI Codex. Starting login...")
+        print(_("Not logged into OpenAI Codex. Starting login..."))
 
         print()
 
@@ -4788,13 +4788,13 @@ def _model_flow_openai_codex(config, current_model=""):
 
         except SystemExit:
 
-            print("Login cancelled or failed.")
+            print(_("Login cancelled or failed."))
 
             return
 
         except Exception as exc:
 
-            print(f"Login failed: {exc}")
+            print(_("Login failed: {exc}").format(exc=exc))
 
             return
 
@@ -4848,11 +4848,11 @@ def _model_flow_openai_codex(config, current_model=""):
 
         _update_config_for_provider("openai-codex", DEFAULT_CODEX_BASE_URL)
 
-        print(f"Default model set to: {selected} (via OpenAI Codex)")
+        print(_("Default model set to: {selected} (via OpenAI Codex)").format(selected=selected))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -4898,19 +4898,19 @@ def _model_flow_qwen_oauth(_config, current_model=""):
 
     if not status.get("logged_in"):
 
-        print("Not logged into Qwen CLI OAuth.")
+        print(_("Not logged into Qwen CLI OAuth."))
 
-        print("Run: qwen auth qwen-oauth")
+        print(_("Run: qwen auth qwen-oauth"))
 
         auth_file = status.get("auth_file")
 
         if auth_file:
 
-            print(f"Expected credentials file: {auth_file}")
+            print(_("Expected credentials file: {auth_file}").format(auth_file=auth_file))
 
         if status.get("error"):
 
-            print(f"Error: {status.get('error')}")
+            print(_("Error: {status}").format(status=status.get('error')))
 
         return
 
@@ -4946,11 +4946,11 @@ def _model_flow_qwen_oauth(_config, current_model=""):
 
         _update_config_for_provider("qwen-oauth", DEFAULT_QWEN_BASE_URL)
 
-        print(f"Default model set to: {selected} (via Qwen OAuth)")
+        print(_("Default model set to: {selected} (via Qwen OAuth)").format(selected=selected))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -4998,29 +4998,29 @@ def _model_flow_google_gemini_cli(_config, current_model=""):
 
     print()
 
-    print("[警告]  Google considers using the Gemini CLI OAuth client with third-party")
+    print(_("[警告]  Google considers using the Gemini CLI OAuth client with third-party"))
 
-    print("   software a policy violation. Some users have reported account")
+    print(_("   software a policy violation. Some users have reported account"))
 
-    print("   restrictions. You can use your own API key via 'gemini' provider")
+    print(_("   restrictions. You can use your own API key via 'gemini' provider"))
 
-    print("   for the lowest-risk experience.")
+    print(_("   for the lowest-risk experience."))
 
     print()
 
     try:
 
-        proceed = input("Continue with OAuth login? [y/N]: ").strip().lower()
+        proceed = input(_("Continue with OAuth login? [y/N]: ")).strip().lower()
 
     except (EOFError, KeyboardInterrupt):
 
-        print("Cancelled.")
+        print(_("Cancelled."))
 
         return
 
     if proceed not in {"y", "yes"}:
 
-        print("Cancelled.")
+        print(_("Cancelled."))
 
         return
 
@@ -5042,7 +5042,7 @@ def _model_flow_google_gemini_cli(_config, current_model=""):
 
         except Exception as exc:
 
-            print(f"OAuth login failed: {exc}")
+            print(_("OAuth login failed: {exc}").format(exc=exc))
 
             return
 
@@ -5058,7 +5058,7 @@ def _model_flow_google_gemini_cli(_config, current_model=""):
 
         if project_id:
 
-            print(f"  Using GCP project: {project_id}")
+            print(_("  Using GCP project: {project_id}").format(project_id=project_id))
 
         else:
 
@@ -5070,7 +5070,7 @@ def _model_flow_google_gemini_cli(_config, current_model=""):
 
     except Exception as exc:
 
-        print(f"Failed to resolve Gemini credentials: {exc}")
+        print(_("Failed to resolve Gemini credentials: {exc}").format(exc=exc))
 
         return
 
@@ -5100,7 +5100,7 @@ def _model_flow_google_gemini_cli(_config, current_model=""):
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -5130,15 +5130,15 @@ def _model_flow_custom(config):
 
 
 
-    print("Custom OpenAI-compatible endpoint configuration:")
+    print(_("Custom OpenAI-compatible endpoint configuration:"))
 
     if current_url:
 
-        print(f"  Current URL: {current_url}")
+        print(_("  Current URL: {current_url}").format(current_url=current_url))
 
     if current_key:
 
-        print(f"  Current key: {current_key[:8]}...")
+        print(_("  Current key: {current_key}...").format(current_key=current_key[:8]))
 
     print()
 
@@ -5164,7 +5164,7 @@ def _model_flow_custom(config):
 
     except (KeyboardInterrupt, EOFError):
 
-        print("\nCancelled.")
+        print(_("\nCancelled."))
 
         return
 
@@ -5172,7 +5172,7 @@ def _model_flow_custom(config):
 
     if not base_url and not current_url:
 
-        print("No URL provided. Cancelled.")
+        print(_("No URL provided. Cancelled."))
 
         return
 
@@ -5184,7 +5184,7 @@ def _model_flow_custom(config):
 
     if not effective_url.startswith(("http://", "https://")):
 
-        print(f"Invalid URL: {effective_url} (must start with http:// or https://)")
+        print(_("Invalid URL: {effective_url} (must start with http:// or https://)").format(effective_url=effective_url))
 
         return
 
@@ -5214,15 +5214,15 @@ def _model_flow_custom(config):
 
         print()
 
-        print(f"  Hint: Did you mean to add /v1 at the end?")
+        print(_("  Hint: Did you mean to add /v1 at the end?"))
 
-        print(f"  Most local model servers (Ollama, vLLM, llama.cpp) require it.")
+        print(_("  Most local model servers (Ollama, vLLM, llama.cpp) require it."))
 
-        print(f"  e.g. {effective_url.rstrip('/')}/v1")
+        print(_("  e.g. {effective_url}/v1").format(effective_url=effective_url.rstrip('/')))
 
         try:
 
-            _add_v1 = input("  Add /v1? [Y/n]: ").strip().lower()
+            _add_v1 = input(_("  Add /v1? [Y/n]: ")).strip().lower()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -5236,7 +5236,7 @@ def _model_flow_custom(config):
 
                 base_url = effective_url
 
-            print(f"  Updated URL: {effective_url}")
+            print(_("  Updated URL: {effective_url}").format(effective_url=effective_url))
 
         print()
 
@@ -5298,7 +5298,7 @@ def _model_flow_custom(config):
 
             else:
 
-                print(f"  If /v1 should not be in the base URL, try: {suggested}")
+                print(_("  If /v1 should not be in the base URL, try: {suggested}").format(suggested=suggested))
 
 
 
@@ -5312,9 +5312,9 @@ def _model_flow_custom(config):
 
         if len(detected_models) == 1:
 
-            print(f"  Detected model: {detected_models[0]}")
+            print(_("  Detected model: {detected_models}").format(detected_models=detected_models[0]))
 
-            confirm = input("  Use this model? [Y/n]: ").strip().lower()
+            confirm = input(_("  Use this model? [Y/n]: ")).strip().lower()
 
             if confirm in ("", "y", "yes"):
 
@@ -5322,11 +5322,11 @@ def _model_flow_custom(config):
 
             else:
 
-                model_name = input("Model name (e.g. gpt-4, llama-3-70b): ").strip()
+                model_name = input(_("Model name (e.g. gpt-4, llama-3-70b): ")).strip()
 
         elif len(detected_models) > 1:
 
-            print("  Available models:")
+            print(_("  Available models:"))
 
             for i, m in enumerate(detected_models, 1):
 
@@ -5348,7 +5348,7 @@ def _model_flow_custom(config):
 
         else:
 
-            model_name = input("Model name (e.g. gpt-4, llama-3-70b): ").strip()
+            model_name = input(_("Model name (e.g. gpt-4, llama-3-70b): ")).strip()
 
 
 
@@ -5364,11 +5364,11 @@ def _model_flow_custom(config):
 
         default_name = _auto_provider_name(effective_url)
 
-        display_name = input(f"Display name [{default_name}]: ").strip() or default_name
+        display_name = input(_("Display name [{default_name}]: ").format(default_name=default_name)).strip() or default_name
 
     except (KeyboardInterrupt, EOFError):
 
-        print("\nCancelled.")
+        print(_("\nCancelled."))
 
         return
 
@@ -5396,7 +5396,7 @@ def _model_flow_custom(config):
 
         except ValueError:
 
-            print(f"Invalid context length: {context_length_str} — will auto-detect.")
+            print(_("Invalid context length: {context_length_str} — will auto-detect.").format(context_length_str=context_length_str))
 
             context_length = None
 
@@ -5448,7 +5448,7 @@ def _model_flow_custom(config):
 
 
 
-        print(f"Default model set to: {model_name} (via {effective_url})")
+        print(_("Default model set to: {model_name} (via {effective_url})").format(model_name=model_name, effective_url=effective_url))
 
     else:
 
@@ -5478,7 +5478,7 @@ def _model_flow_custom(config):
 
         config["model"] = _caller_model
 
-        print("Endpoint saved. Use `/model` in chat or `bookworm model` to set a model.")
+        print(_("Endpoint saved. Use `/model` in chat or `bookworm model` to set a model."))
 
 
 
@@ -5648,7 +5648,7 @@ def _save_custom_provider(
 
     save_config(cfg)
 
-    print(f'  [保存] Saved to custom providers as "{name}" (edit in config.yaml)')
+    print(_("  [保存] Saved to custom providers as \"{name}\" (edit in config.yaml)").format(name=name))
 
 
 
@@ -5668,13 +5668,13 @@ def _remove_custom_provider(config):
 
     if not isinstance(providers, list) or not providers:
 
-        print("No custom providers configured.")
+        print(_("No custom providers configured."))
 
         return
 
 
 
-    print("Remove a custom provider:\n")
+    print(_("Remove a custom provider:\n"))
 
 
 
@@ -5746,7 +5746,7 @@ def _remove_custom_provider(config):
 
         try:
 
-            val = input(f"Choice [1-{len(choices)}]: ").strip()
+            val = input(_("Choice [1-{len}]: ").format(len=len(choices))).strip()
 
             idx = int(val) - 1 if val else None
 
@@ -5758,7 +5758,7 @@ def _remove_custom_provider(config):
 
     if idx is None or idx >= len(providers):
 
-        print("No change.")
+        print(_("No change."))
 
         return
 
@@ -5776,7 +5776,7 @@ def _remove_custom_provider(config):
 
     )
 
-    print(f'[成功] Removed "{removed_name}" from custom providers.')
+    print(_("[成功] Removed \"{removed_name}\" from custom providers.").format(removed_name=removed_name))
 
 
 
@@ -5828,19 +5828,19 @@ def _model_flow_named_custom(config, provider_info):
 
 
 
-    print(f"  Provider: {name}")
+    print(_("  Provider: {name}").format(name=name))
 
-    print(f"  URL:      {base_url}")
+    print(_("  URL:      {base_url}").format(base_url=base_url))
 
     if saved_model:
 
-        print(f"  Current:  {saved_model}")
+        print(_("  Current:  {saved_model}").format(saved_model=saved_model))
 
     print()
 
 
 
-    print("Fetching available models...")
+    print(_("Fetching available models..."))
 
     models = fetch_api_models(
 
@@ -5862,7 +5862,7 @@ def _model_flow_named_custom(config, provider_info):
 
 
 
-        print(f"Found {len(models)} model(s):\n")
+        print(_("Found {len} model(s):\n").format(len=len(models)))
 
         try:
 
@@ -5908,7 +5908,7 @@ def _model_flow_named_custom(config, provider_info):
 
             if idx is None or idx >= len(models):
 
-                print("Cancelled.")
+                print(_("Cancelled."))
 
                 return
 
@@ -5922,17 +5922,17 @@ def _model_flow_named_custom(config, provider_info):
 
                 print(f"  {i}. {m}{suffix}")
 
-            print(f"  {len(models) + 1}. Cancel")
+            print(_("  {len}. Cancel").format(len=len(models) + 1))
 
             print()
 
             try:
 
-                val = input(f"Choice [1-{len(models) + 1}]: ").strip()
+                val = input(_("Choice [1-{len}]: ").format(len=len(models) + 1)).strip()
 
                 if not val:
 
-                    print("Cancelled.")
+                    print(_("Cancelled."))
 
                     return
 
@@ -5940,7 +5940,7 @@ def _model_flow_named_custom(config, provider_info):
 
                 if idx < 0 or idx >= len(models):
 
-                    print("Cancelled.")
+                    print(_("Cancelled."))
 
                     return
 
@@ -5948,41 +5948,41 @@ def _model_flow_named_custom(config, provider_info):
 
             except (ValueError, KeyboardInterrupt, EOFError):
 
-                print("\nCancelled.")
+                print(_("\nCancelled."))
 
                 return
 
     elif saved_model:
 
-        print("Could not fetch models from endpoint.")
+        print(_("Could not fetch models from endpoint."))
 
         try:
 
-            model_name = input(f"Model name [{saved_model}]: ").strip() or saved_model
+            model_name = input(_("Model name [{saved_model}]: ").format(saved_model=saved_model)).strip() or saved_model
 
         except (KeyboardInterrupt, EOFError):
 
-            print("\nCancelled.")
+            print(_("\nCancelled."))
 
             return
 
     else:
 
-        print("Could not fetch models from endpoint. Enter model name manually.")
+        print(_("Could not fetch models from endpoint. Enter model name manually."))
 
         try:
 
-            model_name = input("Model name: ").strip()
+            model_name = input(_("Model name: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
-            print("\nCancelled.")
+            print(_("\nCancelled."))
 
             return
 
         if not model_name:
 
-            print("No model specified. Cancelled.")
+            print(_("No model specified. Cancelled."))
 
             return
 
@@ -6076,9 +6076,9 @@ def _model_flow_named_custom(config, provider_info):
 
 
 
-    print(f"\n[成功] Model set to: {model_name}")
+    print(_("\n[成功] Model set to: {model_name}").format(model_name=model_name))
 
-    print(f"   Provider: {name} ({base_url})")
+    print(_("   Provider: {name} ({base_url})").format(name=name, base_url=base_url))
 
 
 
@@ -6087,6 +6087,7 @@ def _model_flow_named_custom(config, provider_info):
 # Curated model lists for direct API-key providers — single source in models.py
 
 from bwm_cli.models import _PROVIDER_MODELS
+from bwm_cli.i18n import _
 
 
 
@@ -6244,7 +6245,7 @@ def _prompt_reasoning_effort_selection(efforts, current_effort=""):
 
 
 
-    print("Select reasoning effort:")
+    print(_("Select reasoning effort:"))
 
     for i, effort in enumerate(ordered, 1):
 
@@ -6264,7 +6265,7 @@ def _prompt_reasoning_effort_selection(efforts, current_effort=""):
 
         try:
 
-            choice = input(f"Choice [1-{n + 2}] (default: keep current): ").strip()
+            choice = input(_("Choice [1-{n}] (default: keep current): ").format(n=n + 2)).strip()
 
             if not choice:
 
@@ -6284,11 +6285,11 @@ def _prompt_reasoning_effort_selection(efforts, current_effort=""):
 
                 return None
 
-            print(f"Please enter 1-{n + 2}")
+            print(_("Please enter 1-{n}").format(n=n + 2))
 
         except ValueError:
 
-            print("Please enter a number")
+            print(_("Please enter a number"))
 
         except (KeyboardInterrupt, EOFError):
 
@@ -6350,11 +6351,11 @@ def _model_flow_copilot(config, current_model=""):
 
     if not api_key:
 
-        print("No GitHub token configured for GitHub Copilot.")
+        print(_("No GitHub token configured for GitHub Copilot."))
 
         print()
 
-        print("  Supported token types:")
+        print(_("  Supported token types:"))
 
         print(
 
@@ -6362,27 +6363,27 @@ def _model_flow_copilot(config, current_model=""):
 
         )
 
-        print("    → Fine-grained PAT (github_pat_*)  with Copilot Requests permission")
+        print(_("    → Fine-grained PAT (github_pat_*)  with Copilot Requests permission"))
 
-        print("    → GitHub App token (ghu_*)     via environment variable")
+        print(_("    → GitHub App token (ghu_*)     via environment variable"))
 
-        print("    [失败] Classic PAT (ghp_*)          NOT supported by Copilot API")
+        print(_("    [失败] Classic PAT (ghp_*)          NOT supported by Copilot API"))
 
         print()
 
-        print("  Options:")
+        print(_("  Options:"))
 
-        print("    1. Login with GitHub (OAuth device code flow)")
+        print(_("    1. Login with GitHub (OAuth device code flow)"))
 
-        print("    2. Enter a token manually")
+        print(_("    2. Enter a token manually"))
 
-        print("    3. Cancel")
+        print(_("    3. Cancel"))
 
         print()
 
         try:
 
-            choice = input("  Choice [1-3]: ").strip()
+            choice = input(_("  Choice [1-3]: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -6406,19 +6407,19 @@ def _model_flow_copilot(config, current_model=""):
 
                     save_env_value("COPILOT_GITHUB_TOKEN", token)
 
-                    print("  Copilot token saved.")
+                    print(_("  Copilot token saved."))
 
                     print()
 
                 else:
 
-                    print("  Login cancelled or failed.")
+                    print(_("  Login cancelled or failed."))
 
                     return
 
             except Exception as exc:
 
-                print(f"  Login failed: {exc}")
+                print(_("  Login failed: {exc}").format(exc=exc))
 
                 return
 
@@ -6440,7 +6441,7 @@ def _model_flow_copilot(config, current_model=""):
 
             if not new_key:
 
-                print("  Cancelled.")
+                print(_("  Cancelled."))
 
                 return
 
@@ -6456,7 +6457,7 @@ def _model_flow_copilot(config, current_model=""):
 
                 if not valid:
 
-                    print(f"  [失败] {msg}")
+                    print(_("  [失败] {msg}").format(msg=msg))
 
                     return
 
@@ -6466,13 +6467,13 @@ def _model_flow_copilot(config, current_model=""):
 
             save_env_value("COPILOT_GITHUB_TOKEN", new_key)
 
-            print("  Token saved.")
+            print(_("  Token saved."))
 
             print()
 
         else:
 
-            print("  Cancelled.")
+            print(_("  Cancelled."))
 
             return
 
@@ -6488,15 +6489,15 @@ def _model_flow_copilot(config, current_model=""):
 
         if source in ("GITHUB_TOKEN", "GH_TOKEN"):
 
-            print(f"  GitHub token: {api_key[:8]}... [成功] ({source})")
+            print(_("  GitHub token: {api_key}... [成功] ({source})").format(api_key=api_key[:8], source=source))
 
         elif source == "gh auth token":
 
-            print("  GitHub token: [成功] (from `gh auth token`)")
+            print(_("  GitHub token: [成功] (from `gh auth token`)"))
 
         else:
 
-            print("  GitHub token: [成功]")
+            print(_("  GitHub token: [成功]"))
 
         print()
 
@@ -6538,7 +6539,7 @@ def _model_flow_copilot(config, current_model=""):
 
         model_list = [model_id for model_id in live_models if model_id]
 
-        print(f"  Found {len(model_list)} model(s) from GitHub Copilot")
+        print(_("  Found {len} model(s) from GitHub Copilot").format(len=len(model_list)))
 
     else:
 
@@ -6552,7 +6553,7 @@ def _model_flow_copilot(config, current_model=""):
 
             )
 
-            print('    Use "Enter custom model name" if you do not see your model.')
+            print(_("    Use \"Enter custom model name\" if you do not see your model."))
 
 
 
@@ -6568,7 +6569,7 @@ def _model_flow_copilot(config, current_model=""):
 
         try:
 
-            selected = input("Model name: ").strip()
+            selected = input(_("Model name: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -6612,7 +6613,7 @@ def _model_flow_copilot(config, current_model=""):
 
         if reasoning_efforts:
 
-            print(f"  {selected} supports reasoning controls.")
+            print(_("  {selected} supports reasoning controls.").format(selected=selected))
 
             selected_effort = _prompt_reasoning_effort_selection(
 
@@ -6660,21 +6661,21 @@ def _model_flow_copilot(config, current_model=""):
 
 
 
-        print(f"Default model set to: {selected} (via {pconfig.name})")
+        print(_("Default model set to: {selected} (via {pconfig_name})").format(selected=selected, pconfig_name=pconfig.name))
 
         if reasoning_efforts:
 
             if selected_effort == "none":
 
-                print("Reasoning disabled for this model.")
+                print(_("Reasoning disabled for this model."))
 
             elif selected_effort:
 
-                print(f"Reasoning effort set to: {selected_effort}")
+                print(_("Reasoning effort set to: {selected_effort}").format(selected_effort=selected_effort))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -6736,15 +6737,15 @@ def _model_flow_copilot_acp(config, current_model=""):
 
 
 
-    print("  GitHub Copilot ACP delegates BookwormPRO turns to `copilot --acp`.")
+    print(_("  GitHub Copilot ACP delegates BookwormPRO turns to `copilot --acp`."))
 
-    print("  BookwormPRO currently starts its own ACP subprocess for each request.")
+    print(_("  BookwormPRO currently starts its own ACP subprocess for each request."))
 
-    print("  BookwormPRO uses your selected model as a hint for the Copilot ACP session.")
+    print(_("  BookwormPRO uses your selected model as a hint for the Copilot ACP session."))
 
-    print(f"  Command: {resolved_command}")
+    print(_("  Command: {resolved_command}").format(resolved_command=resolved_command))
 
-    print(f"  Backend marker: {effective_base}")
+    print(_("  Backend marker: {effective_base}").format(effective_base=effective_base))
 
     print()
 
@@ -6756,7 +6757,7 @@ def _model_flow_copilot_acp(config, current_model=""):
 
     except Exception as exc:
 
-        print(f"  [警告] {exc}")
+        print(_("  [警告] {exc}").format(exc=exc))
 
         print(
 
@@ -6810,7 +6811,7 @@ def _model_flow_copilot_acp(config, current_model=""):
 
         model_list = [item.get("id", "") for item in catalog if item.get("id")]
 
-        print(f"  Found {len(model_list)} model(s) from GitHub Copilot")
+        print(_("  Found {len} model(s) from GitHub Copilot").format(len=len(model_list)))
 
     else:
 
@@ -6824,7 +6825,7 @@ def _model_flow_copilot_acp(config, current_model=""):
 
             )
 
-            print('    Use "Enter custom model name" if you do not see your model.')
+            print(_("    Use \"Enter custom model name\" if you do not see your model."))
 
 
 
@@ -6842,7 +6843,7 @@ def _model_flow_copilot_acp(config, current_model=""):
 
         try:
 
-            selected = input("Model name: ").strip()
+            selected = input(_("Model name: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -6852,7 +6853,7 @@ def _model_flow_copilot_acp(config, current_model=""):
 
     if not selected:
 
-        print("No change.")
+        print(_("No change."))
 
         return
 
@@ -6900,7 +6901,7 @@ def _model_flow_copilot_acp(config, current_model=""):
 
 
 
-    print(f"Default model set to: {selected} (via {pconfig.name})")
+    print(_("Default model set to: {selected} (via {pconfig_name})").format(selected=selected, pconfig_name=pconfig.name))
 
 
 
@@ -6976,7 +6977,7 @@ def _model_flow_kimi(config, current_model=""):
 
     if not existing_key:
 
-        print(f"No {pconfig.name} API key configured.")
+        print(_("No {pconfig_name} API key configured.").format(pconfig_name=pconfig.name))
 
         if key_env:
 
@@ -6996,7 +6997,7 @@ def _model_flow_kimi(config, current_model=""):
 
             if not new_key:
 
-                print("Cancelled.")
+                print(_("Cancelled."))
 
                 return
 
@@ -7004,13 +7005,13 @@ def _model_flow_kimi(config, current_model=""):
 
             existing_key = new_key
 
-            print("API key saved.")
+            print(_("API key saved."))
 
             print()
 
     else:
 
-        print(f"  {pconfig.name} API key: {existing_key[:8]}... [成功]")
+        print(_("  {pconfig_name} API key: {existing_key}... [成功]").format(pconfig_name=pconfig.name, existing_key=existing_key[:8]))
 
         print()
 
@@ -7024,13 +7025,13 @@ def _model_flow_kimi(config, current_model=""):
 
         effective_base = KIMI_CODE_BASE_URL
 
-        print(f"  Detected Kimi Coding Plan key → {effective_base}")
+        print(_("  Detected Kimi Coding Plan key → {effective_base}").format(effective_base=effective_base))
 
     else:
 
         effective_base = pconfig.inference_base_url
 
-        print(f"  Using Moonshot endpoint → {effective_base}")
+        print(_("  Using Moonshot endpoint → {effective_base}").format(effective_base=effective_base))
 
     # Clear any manual base URL override so auto-detection works at runtime
 
@@ -7078,7 +7079,7 @@ def _model_flow_kimi(config, current_model=""):
 
         try:
 
-            selected = input("Enter model name: ").strip()
+            selected = input(_("Enter model name: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -7118,11 +7119,11 @@ def _model_flow_kimi(config, current_model=""):
 
         endpoint_label = "Kimi Coding" if is_coding_plan else "Moonshot"
 
-        print(f"Default model set to: {selected} (via {endpoint_label})")
+        print(_("Default model set to: {selected} (via {endpoint_label})").format(selected=selected, endpoint_label=endpoint_label))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -7216,7 +7217,7 @@ def _model_flow_stepfun(config, current_model=""):
 
     if not existing_key:
 
-        print(f"No {pconfig.name} API key configured.")
+        print(_("No {pconfig_name} API key configured.").format(pconfig_name=pconfig.name))
 
         if key_env:
 
@@ -7234,7 +7235,7 @@ def _model_flow_stepfun(config, current_model=""):
 
             if not new_key:
 
-                print("Cancelled.")
+                print(_("Cancelled."))
 
                 return
 
@@ -7242,13 +7243,13 @@ def _model_flow_stepfun(config, current_model=""):
 
             existing_key = new_key
 
-            print("API key saved.")
+            print(_("API key saved."))
 
             print()
 
     else:
 
-        print(f"  {pconfig.name} API key: {existing_key[:8]}... [成功]")
+        print(_("  {pconfig_name} API key: {existing_key}... [成功]").format(pconfig_name=pconfig.name, existing_key=existing_key[:8]))
 
         print()
 
@@ -7300,7 +7301,7 @@ def _model_flow_stepfun(config, current_model=""):
 
     if region_idx is None or ordered_regions[region_idx][0] == "cancel":
 
-        print("No change.")
+        print(_("No change."))
 
         return
 
@@ -7322,7 +7323,7 @@ def _model_flow_stepfun(config, current_model=""):
 
         model_list = live_models
 
-        print(f"  Found {len(model_list)} model(s) from {pconfig.name} API")
+        print(_("  Found {len} model(s) from {pconfig_name} API").format(len=len(model_list), pconfig_name=pconfig.name))
 
     else:
 
@@ -7348,7 +7349,7 @@ def _model_flow_stepfun(config, current_model=""):
 
         try:
 
-            selected = input("Model name: ").strip()
+            selected = input(_("Model name: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -7386,11 +7387,11 @@ def _model_flow_stepfun(config, current_model=""):
 
         config["model"] = dict(model)
 
-        print(f"Default model set to: {selected} (via {pconfig.name})")
+        print(_("Default model set to: {selected} (via {pconfig_name})").format(selected=selected, pconfig_name=pconfig.name))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -7444,11 +7445,11 @@ def _model_flow_bedrock_api_key(config, region, current_model=""):
 
     if existing_key:
 
-        print(f"  Bedrock API Key: {existing_key[:12]}... [成功]")
+        print(_("  Bedrock API Key: {existing_key}... [成功]").format(existing_key=existing_key[:12]))
 
     else:
 
-        print(f"  Endpoint: {mantle_base_url}")
+        print(_("  Endpoint: {mantle_base_url}").format(mantle_base_url=mantle_base_url))
 
         print()
 
@@ -7468,7 +7469,7 @@ def _model_flow_bedrock_api_key(config, region, current_model=""):
 
         if not api_key:
 
-            print("  Cancelled.")
+            print(_("  Cancelled."))
 
             return
 
@@ -7476,7 +7477,7 @@ def _model_flow_bedrock_api_key(config, region, current_model=""):
 
         existing_key = api_key
 
-        print("  [成功] API key saved.")
+        print(_("  [成功] API key saved."))
 
     print()
 
@@ -7486,7 +7487,7 @@ def _model_flow_bedrock_api_key(config, region, current_model=""):
 
     model_list = _PROVIDER_MODELS.get("bedrock", [])
 
-    print(f"  Showing {len(model_list)} curated models")
+    print(_("  Showing {len} curated models").format(len=len(model_list)))
 
 
 
@@ -7498,7 +7499,7 @@ def _model_flow_bedrock_api_key(config, region, current_model=""):
 
         try:
 
-            selected = input("  Model ID: ").strip()
+            selected = input(_("  Model ID: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -7560,13 +7561,13 @@ def _model_flow_bedrock_api_key(config, region, current_model=""):
 
 
 
-        print(f"  Default model set to: {selected} (via Bedrock API Key, {region})")
+        print(_("  Default model set to: {selected} (via Bedrock API Key, {region})").format(selected=selected, region=region))
 
-        print(f"  Endpoint: {mantle_base_url}")
+        print(_("  Endpoint: {mantle_base_url}").format(mantle_base_url=mantle_base_url))
 
     else:
 
-        print("  No change.")
+        print(_("  No change."))
 
 
 
@@ -7620,9 +7621,9 @@ def _model_flow_bedrock(config, current_model=""):
 
     except ImportError:
 
-        print("  [失败] boto3 is not installed. Install it with:")
+        print(_("  [失败] boto3 is not installed. Install it with:"))
 
-        print("    pip install boto3")
+        print(_("    pip install boto3"))
 
         print()
 
@@ -7632,9 +7633,9 @@ def _model_flow_bedrock(config, current_model=""):
 
     if not has_aws_credentials():
 
-        print("  [警告] No AWS credentials detected via environment variables.")
+        print(_("  [警告] No AWS credentials detected via environment variables."))
 
-        print("  Bedrock will use boto3's default credential chain (IMDS, SSO, etc.)")
+        print(_("  Bedrock will use boto3's default credential chain (IMDS, SSO, etc.)"))
 
         print()
 
@@ -7644,11 +7645,11 @@ def _model_flow_bedrock(config, current_model=""):
 
     if auth_var:
 
-        print(f"  AWS credentials: {auth_var} [成功]")
+        print(_("  AWS credentials: {auth_var} [成功]").format(auth_var=auth_var))
 
     else:
 
-        print("  AWS credentials: boto3 default chain (instance role / SSO)")
+        print(_("  AWS credentials: boto3 default chain (instance role / SSO)"))
 
     print()
 
@@ -7660,7 +7661,7 @@ def _model_flow_bedrock(config, current_model=""):
 
     try:
 
-        region_input = input(f"  AWS Region [{current_region}]: ").strip()
+        region_input = input(_("  AWS Region [{current_region}]: ").format(current_region=current_region)).strip()
 
     except (KeyboardInterrupt, EOFError):
 
@@ -7674,25 +7675,25 @@ def _model_flow_bedrock(config, current_model=""):
 
     # 2b. Authentication mode
 
-    print("  Choose authentication method:")
+    print(_("  Choose authentication method:"))
 
     print()
 
-    print("    1. IAM credential chain (recommended)")
+    print(_("    1. IAM credential chain (recommended)"))
 
-    print("       Works with EC2 instance roles, SSO, env vars, aws configure")
+    print(_("       Works with EC2 instance roles, SSO, env vars, aws configure"))
 
-    print("    2. Bedrock API Key")
+    print(_("    2. Bedrock API Key"))
 
-    print("       Enter your Bedrock API Key directly — also supports")
+    print(_("       Enter your Bedrock API Key directly — also supports"))
 
-    print("       team scenarios where an admin distributes keys")
+    print(_("       team scenarios where an admin distributes keys"))
 
     print()
 
     try:
 
-        auth_choice = input("  Choice [1]: ").strip()
+        auth_choice = input(_("  Choice [1]: ")).strip()
 
     except (KeyboardInterrupt, EOFError):
 
@@ -7712,7 +7713,7 @@ def _model_flow_bedrock(config, current_model=""):
 
     # 3. Model discovery — try live API first, fall back to static list
 
-    print(f"  Discovering models in {region}...")
+    print(_("  Discovering models in {region}...").format(region=region))
 
     live_models = discover_bedrock_models(region)
 
@@ -7878,7 +7879,7 @@ def _model_flow_bedrock(config, current_model=""):
 
         try:
 
-            selected = input("  Model ID: ").strip()
+            selected = input(_("  Model ID: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -7928,11 +7929,11 @@ def _model_flow_bedrock(config, current_model=""):
 
 
 
-        print(f"  Default model set to: {selected} (via AWS Bedrock, {region})")
+        print(_("  Default model set to: {selected} (via AWS Bedrock, {region})").format(selected=selected, region=region))
 
     else:
 
-        print("  No change.")
+        print(_("  No change."))
 
 
 
@@ -8002,7 +8003,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
     if not existing_key:
 
-        print(f"No {pconfig.name} API key configured.")
+        print(_("No {pconfig_name} API key configured.").format(pconfig_name=pconfig.name))
 
         if key_env:
 
@@ -8022,7 +8023,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
             if not new_key:
 
-                print("Cancelled.")
+                print(_("Cancelled."))
 
                 return
 
@@ -8030,13 +8031,13 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
             existing_key = new_key
 
-            print("API key saved.")
+            print(_("API key saved."))
 
             print()
 
     else:
 
-        print(f"  {pconfig.name} API key: {existing_key[:8]}... [成功]")
+        print(_("  {pconfig_name} API key: {existing_key}... [成功]").format(pconfig_name=pconfig.name, existing_key=existing_key[:8]))
 
         print()
 
@@ -8062,7 +8063,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
         if probe_gemini_tier is not None:
 
-            print("  Checking Gemini API tier...")
+            print(_("  Checking Gemini API tier..."))
 
             probe_base = (
 
@@ -8104,7 +8105,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
                 )
 
-                print("   an agent session.")
+                print(_("   an agent session."))
 
                 print()
 
@@ -8136,13 +8137,13 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
                 print()
 
-                print("Not saving Gemini as the default provider.")
+                print(_("Not saving Gemini as the default provider."))
 
                 return
 
             if tier == "paid":
 
-                print("  Tier check: paid [成功]")
+                print(_("  Tier check: paid [成功]"))
 
             else:
 
@@ -8152,7 +8153,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
                 # guidance if the key turns out to be free tier.
 
-                print("  Tier check: could not verify (proceeding anyway).")
+                print(_("  Tier check: could not verify (proceeding anyway)."))
 
             print()
 
@@ -8172,7 +8173,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
     try:
 
-        override = input(f"Base URL [{effective_base}]: ").strip()
+        override = input(_("Base URL [{effective_base}]: ").format(effective_base=effective_base)).strip()
 
     except (KeyboardInterrupt, EOFError):
 
@@ -8226,7 +8227,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
         if model_list:
 
-            print(f"  Found {len(model_list)} model(s) from Ollama Cloud")
+            print(_("  Found {len} model(s) from Ollama Cloud").format(len=len(model_list)))
 
     else:
 
@@ -8278,7 +8279,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
                 model_list = mdev_models
 
-            print(f"  Found {len(model_list)} model(s) from models.dev registry")
+            print(_("  Found {len} model(s) from models.dev registry").format(len=len(model_list)))
 
         elif curated and len(curated) >= 8:
 
@@ -8306,7 +8307,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
                 model_list = live_models
 
-                print(f"  Found {len(model_list)} model(s) from {pconfig.name} API")
+                print(_("  Found {len} model(s) from {pconfig_name} API").format(len=len(model_list), pconfig_name=pconfig.name))
 
             else:
 
@@ -8346,7 +8347,7 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
         try:
 
-            selected = input("Model name: ").strip()
+            selected = input(_("Model name: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -8396,11 +8397,11 @@ def _model_flow_api_key_provider(config, provider_id, current_model=""):
 
 
 
-        print(f"Default model set to: {selected} (via {pconfig.name})")
+        print(_("Default model set to: {selected} (via {pconfig_name})").format(selected=selected, pconfig_name=pconfig.name))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -8448,7 +8449,7 @@ def _run_anthropic_oauth_flow(save_env_value):
 
             use_anthropic_claude_code_credentials(save_fn=save_env_value)
 
-            print("  [成功] Claude Code credentials linked.")
+            print(_("  [成功] Claude Code credentials linked."))
 
             from bwm_constants import display_hermes_home as _dhh_fn
 
@@ -8470,9 +8471,9 @@ def _run_anthropic_oauth_flow(save_env_value):
 
         print()
 
-        print("  Running 'claude setup-token' — follow the prompts below.")
+        print(_("  Running 'claude setup-token' — follow the prompts below."))
 
-        print("  A browser window will open for you to authorize access.")
+        print(_("  A browser window will open for you to authorize access."))
 
         print()
 
@@ -8486,7 +8487,7 @@ def _run_anthropic_oauth_flow(save_env_value):
 
             save_anthropic_oauth_token(token, save_fn=save_env_value)
 
-            print("  [成功] OAuth credentials saved.")
+            print(_("  [成功] OAuth credentials saved."))
 
             return True
 
@@ -8496,7 +8497,7 @@ def _run_anthropic_oauth_flow(save_env_value):
 
         print()
 
-        print("  If the setup-token was displayed above, paste it here:")
+        print(_("  If the setup-token was displayed above, paste it here:"))
 
         print()
 
@@ -8522,13 +8523,13 @@ def _run_anthropic_oauth_flow(save_env_value):
 
             save_anthropic_oauth_token(manual_token, save_fn=save_env_value)
 
-            print("  [成功] Setup-token saved.")
+            print(_("  [成功] Setup-token saved."))
 
             return True
 
 
 
-        print("  [警告] Could not detect saved credentials.")
+        print(_("  [警告] Could not detect saved credentials."))
 
         return False
 
@@ -8540,25 +8541,25 @@ def _run_anthropic_oauth_flow(save_env_value):
 
         print()
 
-        print("  The 'claude' CLI is required for OAuth login.")
+        print(_("  The 'claude' CLI is required for OAuth login."))
 
         print()
 
-        print("  To install and authenticate:")
+        print(_("  To install and authenticate:"))
 
         print()
 
-        print("    1. Install Claude Code:  npm install -g @anthropic-ai/claude-code")
+        print(_("    1. Install Claude Code:  npm install -g @anthropic-ai/claude-code"))
 
-        print("    2. Run:                  claude setup-token")
+        print(_("    2. Run:                  claude setup-token"))
 
-        print("    3. Follow the browser prompts to authorize")
+        print(_("    3. Follow the browser prompts to authorize"))
 
-        print("    4. Re-run:               bookworm model")
+        print(_("    4. Re-run:               bookworm model"))
 
         print()
 
-        print("  Or paste an existing setup-token now (sk-ant-oat-...):")
+        print(_("  Or paste an existing setup-token now (sk-ant-oat-...):"))
 
         print()
 
@@ -8580,11 +8581,11 @@ def _run_anthropic_oauth_flow(save_env_value):
 
             save_anthropic_oauth_token(token, save_fn=save_env_value)
 
-            print("  [成功] Setup-token saved.")
+            print(_("  [成功] Setup-token saved."))
 
             return True
 
-        print("  Cancelled — install Claude Code and try again.")
+        print(_("  Cancelled — install Claude Code and try again."))
 
         return False
 
@@ -8686,25 +8687,25 @@ def _model_flow_anthropic(config, current_model=""):
 
         if existing_key:
 
-            print(f"  Anthropic credentials: {existing_key[:12]}... [成功]")
+            print(_("  Anthropic credentials: {existing_key}... [成功]").format(existing_key=existing_key[:12]))
 
         elif cc_available:
 
-            print("  Claude Code credentials: [成功] (auto-detected)")
+            print(_("  Claude Code credentials: [成功] (auto-detected)"))
 
         print()
 
-        print("    1. Use existing credentials")
+        print(_("    1. Use existing credentials"))
 
-        print("    2. Reauthenticate (new OAuth login)")
+        print(_("    2. Reauthenticate (new OAuth login)"))
 
-        print("    3. Cancel")
+        print(_("    3. Cancel"))
 
         print()
 
         try:
 
-            choice = input("  Choice [1/2/3]: ").strip()
+            choice = input(_("  Choice [1/2/3]: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -8730,21 +8731,21 @@ def _model_flow_anthropic(config, current_model=""):
 
         print()
 
-        print("  Choose authentication method:")
+        print(_("  Choose authentication method:"))
 
         print()
 
-        print("    1. Claude Pro/Max subscription (OAuth login)")
+        print(_("    1. Claude Pro/Max subscription (OAuth login)"))
 
-        print("    2. Anthropic API key (pay-per-token)")
+        print(_("    2. Anthropic API key (pay-per-token)"))
 
-        print("    3. Cancel")
+        print(_("    3. Cancel"))
 
         print()
 
         try:
 
-            choice = input("  Choice [1/2/3]: ").strip()
+            choice = input(_("  Choice [1/2/3]: ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -8766,7 +8767,7 @@ def _model_flow_anthropic(config, current_model=""):
 
             print()
 
-            print("  Get an API key at: https://platform.claude.com/settings/keys")
+            print(_("  Get an API key at: https://platform.claude.com/settings/keys"))
 
             print()
 
@@ -8786,19 +8787,19 @@ def _model_flow_anthropic(config, current_model=""):
 
             if not api_key:
 
-                print("  Cancelled.")
+                print(_("  Cancelled."))
 
                 return
 
             save_anthropic_api_key(api_key, save_fn=save_env_value)
 
-            print("  [成功] API key saved.")
+            print(_("  [成功] API key saved."))
 
 
 
         else:
 
-            print("  No change.")
+            print(_("  No change."))
 
             return
 
@@ -8818,7 +8819,7 @@ def _model_flow_anthropic(config, current_model=""):
 
         try:
 
-            selected = input("Model name (e.g., claude-sonnet-4-20250514): ").strip()
+            selected = input(_("Model name (e.g., claude-sonnet-4-20250514): ")).strip()
 
         except (KeyboardInterrupt, EOFError):
 
@@ -8860,11 +8861,11 @@ def _model_flow_anthropic(config, current_model=""):
 
 
 
-        print(f"Default model set to: {selected} (via Anthropic)")
+        print(_("Default model set to: {selected} (via Anthropic)").format(selected=selected))
 
     else:
 
-        print("No change.")
+        print(_("No change."))
 
 
 
@@ -9091,15 +9092,15 @@ def cmd_version(args):
 
     """Show version."""
 
-    print(f"BookwormPRO v{__version__} ({__release_date__})")
+    print(_("BookwormPRO v{__version__} ({__release_date__})").format(__version__=__version__, __release_date__=__release_date__))
 
-    print(f"Project: {PROJECT_ROOT}")
+    print(_("Project: {PROJECT_ROOT}").format(PROJECT_ROOT=PROJECT_ROOT))
 
 
 
     # Show Python version
 
-    print(f"Python: {sys.version.split()[0]}")
+    print(_("Python: {sys}").format(sys=sys.version.split()[0]))
 
 
 
@@ -9111,11 +9112,11 @@ def cmd_version(args):
 
 
 
-        print(f"OpenAI SDK: {openai.__version__}")
+        print(_("OpenAI SDK: {openai___version__}").format(openai___version__=openai.__version__))
 
     except ImportError:
 
-        print("OpenAI SDK: Not installed")
+        print(_("OpenAI SDK: Not installed"))
 
 
 
@@ -9145,7 +9146,7 @@ def cmd_version(args):
 
         elif behind == 0:
 
-            print("Up to date")
+            print(_("Up to date"))
 
     except Exception:
 
@@ -9319,7 +9320,7 @@ def _gateway_prompt(prompt_text: str, default: str = "", timeout: float = 300.0)
 
     response_path.unlink(missing_ok=True)
 
-    print(f"  (no response after {int(timeout)}s, using default: {default!r})")
+    print(_("  (no response after {timeout}s, using default: {default})").format(timeout=int(timeout), default=repr(default)))
 
     return default
 
@@ -9359,13 +9360,13 @@ def _build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
 
         if fatal:
 
-            print("Web UI frontend not built and npm is not available.")
+            print(_("Web UI frontend not built and npm is not available."))
 
-            print("Install Node.js, then run:  cd web && npm install && npm run build")
+            print(_("Install Node.js, then run:  cd web && npm install && npm run build"))
 
         return not fatal
 
-    print("→ Building web UI...")
+    print(_("→ Building web UI..."))
 
     r1 = subprocess.run([npm, "install", "--silent"], cwd=web_dir, capture_output=True)
 
@@ -9381,7 +9382,7 @@ def _build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
 
         if fatal:
 
-            print("  Run manually:  cd web && npm install && npm run build")
+            print(_("  Run manually:  cd web && npm install && npm run build"))
 
         return False
 
@@ -9399,11 +9400,11 @@ def _build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
 
         if fatal:
 
-            print("  Run manually:  cd web && npm install && npm run build")
+            print(_("  Run manually:  cd web && npm install && npm run build"))
 
         return False
 
-    print("  [成功] Web UI built")
+    print(_("  [成功] Web UI built"))
 
     return True
 
@@ -9441,7 +9442,7 @@ def _update_via_zip(args):
 
 
 
-    print("→ Downloading latest version...")
+    print(_("→ Downloading latest version..."))
 
     try:
 
@@ -9453,7 +9454,7 @@ def _update_via_zip(args):
 
 
 
-        print("→ Extracting...")
+        print(_("→ Extracting..."))
 
         with zipfile.ZipFile(zip_path, "r") as zf:
 
@@ -9535,7 +9536,7 @@ def _update_via_zip(args):
 
 
 
-        print(f"[成功] Updated {update_count} items from ZIP")
+        print(_("[成功] Updated {update_count} items from ZIP").format(update_count=update_count))
 
 
 
@@ -9547,7 +9548,7 @@ def _update_via_zip(args):
 
     except Exception as e:
 
-        print(f"[失败] ZIP update failed: {e}")
+        print(_("[失败] ZIP update failed: {e}").format(e=e))
 
         sys.exit(1)
 
@@ -9573,7 +9574,7 @@ def _update_via_zip(args):
 
     # individually so update does not silently strip working capabilities.
 
-    print("→ Updating Python dependencies...")
+    print(_("→ Updating Python dependencies..."))
 
 
 
@@ -9641,13 +9642,13 @@ def _update_via_zip(args):
 
 
 
-        print("→ Syncing bundled skills...")
+        print(_("→ Syncing bundled skills..."))
 
         result = sync_skills(quiet=True)
 
         if result["copied"]:
 
-            print(f"  + {len(result['copied'])} new: {', '.join(result['copied'])}")
+            print(_("  + {len} new: {join_copied}").format(len=len(result['copied']), join_copied=', '.join(result['copied'])))
 
         if result.get("updated"):
 
@@ -9659,15 +9660,15 @@ def _update_via_zip(args):
 
         if result.get("user_modified"):
 
-            print(f"  ~ {len(result['user_modified'])} user-modified (kept)")
+            print(_("  ~ {len} user-modified (kept)").format(len=len(result['user_modified'])))
 
         if result.get("cleaned"):
 
-            print(f"  − {len(result['cleaned'])} removed from manifest")
+            print(_("  − {len} removed from manifest").format(len=len(result['cleaned'])))
 
         if not result["copied"] and not result.get("updated"):
 
-            print("  [成功] Skills are up to date")
+            print(_("  [成功] Skills are up to date"))
 
     except Exception:
 
@@ -9677,7 +9678,7 @@ def _update_via_zip(args):
 
     print()
 
-    print("[成功] Update complete!")
+    print(_("[成功] Update complete!"))
 
 
 
@@ -9727,7 +9728,7 @@ def _stash_local_changes_if_needed(git_cmd: list[str], cwd: Path) -> Optional[st
 
     if unmerged.stdout.strip():
 
-        print("→ Clearing unmerged index entries from a previous conflict...")
+        print(_("→ Clearing unmerged index entries from a previous conflict..."))
 
         subprocess.run(git_cmd + ["reset"], cwd=cwd, capture_output=True)
 
@@ -9743,7 +9744,7 @@ def _stash_local_changes_if_needed(git_cmd: list[str], cwd: Path) -> Optional[st
 
     )
 
-    print("→ Local changes detected — stashing before update...")
+    print(_("→ Local changes detected — stashing before update..."))
 
     subprocess.run(
 
@@ -9821,11 +9822,11 @@ def _print_stash_cleanup_guidance(
 
     )
 
-    print("  Find the saved entry with: git stash list --format='%gd %H %s'")
+    print(_("  Find the saved entry with: git stash list --format='%gd %H %s'"))
 
     if stash_selector:
 
-        print(f"  Remove it with: git stash drop {stash_selector}")
+        print(_("  Remove it with: git stash drop {stash_selector}").format(stash_selector=stash_selector))
 
     else:
 
@@ -9857,7 +9858,7 @@ def _restore_stashed_changes(
 
         print()
 
-        print("[警告] Local changes were stashed before updating.")
+        print(_("[警告] Local changes were stashed before updating."))
 
         print(
 
@@ -9865,9 +9866,9 @@ def _restore_stashed_changes(
 
         )
 
-        print("  Review the result afterward if BookwormPRO behaves unexpectedly.")
+        print(_("  Review the result afterward if BookwormPRO behaves unexpectedly."))
 
-        print("Restore local changes now? [Y/n]")
+        print(_("Restore local changes now? [Y/n]"))
 
         if input_fn is not None:
 
@@ -9879,17 +9880,17 @@ def _restore_stashed_changes(
 
         if response not in ("", "y", "yes"):
 
-            print("Skipped restoring local changes.")
+            print(_("Skipped restoring local changes."))
 
-            print("Your changes are still preserved in git stash.")
+            print(_("Your changes are still preserved in git stash."))
 
-            print(f"Restore manually with: git stash apply {stash_ref}")
+            print(_("Restore manually with: git stash apply {stash_ref}").format(stash_ref=stash_ref))
 
             return False
 
 
 
-    print("→ Restoring local changes...")
+    print(_("→ Restoring local changes..."))
 
     restore = subprocess.run(
 
@@ -9925,7 +9926,7 @@ def _restore_stashed_changes(
 
     if restore.returncode != 0 or has_conflicts:
 
-        print("[失败] Update pulled new code, but restoring local changes hit conflicts.")
+        print(_("[失败] Update pulled new code, but restoring local changes hit conflicts."))
 
         if restore.stdout.strip():
 
@@ -9943,7 +9944,7 @@ def _restore_stashed_changes(
 
         if conflicted_files:
 
-            print("\nConflicted files:")
+            print(_("\nConflicted files:"))
 
             for f in conflicted_files.splitlines():
 
@@ -9951,9 +9952,9 @@ def _restore_stashed_changes(
 
 
 
-        print("\nYour stashed changes are preserved — nothing is lost.")
+        print(_("\nYour stashed changes are preserved — nothing is lost."))
 
-        print(f"  Stash ref: {stash_ref}")
+        print(_("  Stash ref: {stash_ref}").format(stash_ref=stash_ref))
 
 
 
@@ -9973,9 +9974,9 @@ def _restore_stashed_changes(
 
         )
 
-        print("Working tree reset to clean state.")
+        print(_("Working tree reset to clean state."))
 
-        print(f"Restore your changes later with: git stash apply {stash_ref}")
+        print(_("Restore your changes later with: git stash apply {stash_ref}").format(stash_ref=stash_ref))
 
         # Don't sys.exit — the code update itself succeeded, only the stash
 
@@ -10045,9 +10046,9 @@ def _restore_stashed_changes(
 
 
 
-    print("[警告] Local changes were restored on top of the updated codebase.")
+    print(_("[警告] Local changes were restored on top of the updated codebase."))
 
-    print("  Review `git diff` / `git status` if BookwormPRO behaves unexpectedly.")
+    print(_("  Review `git diff` / `git status` if BookwormPRO behaves unexpectedly."))
 
     return True
 
@@ -10341,9 +10342,9 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
         print()
 
-        print("ℹ Your fork is not tracking the official BookwormPRO repository.")
+        print(_("ℹ Your fork is not tracking the official BookwormPRO repository."))
 
-        print("  This means you may miss updates from huakoh/BookwormPRO.")
+        print(_("  This means you may miss updates from huakoh/BookwormPRO."))
 
         print()
 
@@ -10351,7 +10352,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
             response = (
 
-                input("Add official repo as 'upstream' remote? [Y/n]: ").strip().lower()
+                input(_("Add official repo as 'upstream' remote? [Y/n]: ")).strip().lower()
 
             )
 
@@ -10365,7 +10366,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
         if response in ("", "y", "yes"):
 
-            print("→ Adding upstream remote...")
+            print(_("→ Adding upstream remote..."))
 
             if _add_upstream_remote(git_cmd, cwd):
 
@@ -10379,7 +10380,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
             else:
 
-                print("  [失败] Failed to add upstream remote. Skipping upstream sync.")
+                print(_("  [失败] Failed to add upstream remote. Skipping upstream sync."))
 
                 return
 
@@ -10401,7 +10402,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
     print()
 
-    print("→ Fetching upstream...")
+    print(_("→ Fetching upstream..."))
 
     try:
 
@@ -10419,7 +10420,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
     except subprocess.CalledProcessError:
 
-        print("  [失败] Failed to fetch upstream. Skipping upstream sync.")
+        print(_("  [失败] Failed to fetch upstream. Skipping upstream sync."))
 
         return
 
@@ -10439,7 +10440,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
     if origin_ahead < 0 or upstream_ahead < 0:
 
-        print("  [失败] Could not compare branches. Skipping upstream sync.")
+        print(_("  [失败] Could not compare branches. Skipping upstream sync."))
 
         return
 
@@ -10451,13 +10452,13 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
         print()
 
-        print(f"ℹ Your fork has {origin_ahead} commit(s) not on upstream.")
+        print(_("ℹ Your fork has {origin_ahead} commit(s) not on upstream.").format(origin_ahead=origin_ahead))
 
-        print("  Skipping upstream sync to preserve your changes.")
+        print(_("  Skipping upstream sync to preserve your changes."))
 
-        print("  If you want to merge upstream changes, run:")
+        print(_("  If you want to merge upstream changes, run:"))
 
-        print("    git pull upstream main")
+        print(_("    git pull upstream main"))
 
         return
 
@@ -10467,7 +10468,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
     if upstream_ahead == 0:
 
-        print("  [成功] Fork is up to date with upstream")
+        print(_("  [成功] Fork is up to date with upstream"))
 
         return
 
@@ -10477,9 +10478,9 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
     print()
 
-    print(f"→ Fork is {upstream_ahead} commit(s) behind upstream")
+    print(_("→ Fork is {upstream_ahead} commit(s) behind upstream").format(upstream_ahead=upstream_ahead))
 
-    print("→ Pulling from upstream...")
+    print(_("→ Pulling from upstream..."))
 
 
 
@@ -10507,17 +10508,17 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
 
 
-    print("  [成功] Updated from upstream")
+    print(_("  [成功] Updated from upstream"))
 
 
 
     # Try to sync fork back to origin
 
-    print("→ Syncing fork...")
+    print(_("→ Syncing fork..."))
 
     if _sync_fork_with_upstream(git_cmd, cwd):
 
-        print("  [成功] Fork synced with upstream")
+        print(_("  [成功] Fork synced with upstream"))
 
     else:
 
@@ -10527,7 +10528,7 @@ def _sync_with_upstream_if_needed(git_cmd: list[str], cwd: Path) -> None:
 
         )
 
-        print("    Your local repo is updated, but your fork on GitHub may be behind.")
+        print(_("    Your local repo is updated, but your fork on GitHub may be behind."))
 
 
 
@@ -10779,7 +10780,7 @@ def _update_node_dependencies() -> None:
 
 
 
-    print("→ Updating Node.js dependencies...")
+    print(_("→ Updating Node.js dependencies..."))
 
     for label, path in paths:
 
@@ -10805,13 +10806,13 @@ def _update_node_dependencies() -> None:
 
         if result.returncode == 0:
 
-            print(f"  [成功] {label}")
+            print(_("  [成功] {label}").format(label=label))
 
             continue
 
 
 
-        print(f"  [警告] npm install failed in {label}")
+        print(_("  [警告] npm install failed in {label}").format(label=label))
 
         stderr = (result.stderr or "").strip()
 
@@ -11245,7 +11246,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
 
 
-    print("[BWM] Updating BookwormPRO...")
+    print(_("[BWM] Updating BookwormPRO..."))
 
     print()
 
@@ -11269,7 +11270,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         else:
 
-            print("[失败] Not a git repository. Please reinstall:")
+            print(_("[失败] Not a git repository. Please reinstall:"))
 
             print(
 
@@ -11335,7 +11336,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
     if is_fork:
 
-        print("[警告] Updating from fork:")
+        print(_("[警告] Updating from fork:"))
 
         print(f"  {origin_url}")
 
@@ -11359,7 +11360,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
 
 
-        print("→ Fetching updates...")
+        print(_("→ Fetching updates..."))
 
         fetch_result = subprocess.run(
 
@@ -11379,7 +11380,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             if "Could not resolve host" in stderr or "unable to access" in stderr:
 
-                print("[失败] Network error — cannot reach the remote repository.")
+                print(_("[失败] Network error — cannot reach the remote repository."))
 
                 print(f"  {stderr.splitlines()[0]}" if stderr else "")
 
@@ -11397,7 +11398,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             else:
 
-                print(f"[失败] Failed to fetch updates from origin.")
+                print(_("[失败] Failed to fetch updates from origin."))
 
                 if stderr:
 
@@ -11447,7 +11448,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             )
 
-            print(f"  [警告] Currently on {label} — switching to main for update...")
+            print(_("  [警告] Currently on {label} — switching to main for update...").format(label=label))
 
             # Stash before checkout so uncommitted work isn't lost
 
@@ -11539,17 +11540,17 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                 )
 
-            print("[成功] Already up to date!")
+            print(_("[成功] Already up to date!"))
 
             return
 
 
 
-        print(f"→ Found {commit_count} new commit(s)")
+        print(_("→ Found {commit_count} new commit(s)").format(commit_count=commit_count))
 
 
 
-        print("→ Pulling updates...")
+        print(_("→ Pulling updates..."))
 
         update_succeeded = False
 
@@ -11595,7 +11596,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                 if reset_result.returncode != 0:
 
-                    print(f"[失败] Failed to reset to origin/{branch}.")
+                    print(_("[失败] Failed to reset to origin/{branch}.").format(branch=branch))
 
                     if reset_result.stderr.strip():
 
@@ -11627,7 +11628,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                     )
 
-                    print(f"  Restore manually with: git stash apply")
+                    print(_("  Restore manually with: git stash apply"))
 
                 else:
 
@@ -11683,7 +11684,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         # individually so update does not silently strip working capabilities.
 
-        print("→ Updating Python dependencies...")
+        print(_("→ Updating Python dependencies..."))
 
         uv_bin = shutil.which("uv")
 
@@ -11747,7 +11748,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         print()
 
-        print("[成功] Code updated!")
+        print(_("[成功] Code updated!"))
 
 
 
@@ -11785,13 +11786,13 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             print()
 
-            print("→ Syncing bundled skills...")
+            print(_("→ Syncing bundled skills..."))
 
             result = sync_skills(quiet=True)
 
             if result["copied"]:
 
-                print(f"  + {len(result['copied'])} new: {', '.join(result['copied'])}")
+                print(_("  + {len} new: {join_copied}").format(len=len(result['copied']), join_copied=', '.join(result['copied'])))
 
             if result.get("updated"):
 
@@ -11803,15 +11804,15 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             if result.get("user_modified"):
 
-                print(f"  ~ {len(result['user_modified'])} user-modified (kept)")
+                print(_("  ~ {len} user-modified (kept)").format(len=len(result['user_modified'])))
 
             if result.get("cleaned"):
 
-                print(f"  − {len(result['cleaned'])} removed from manifest")
+                print(_("  − {len} removed from manifest").format(len=len(result['cleaned'])))
 
             if not result["copied"] and not result.get("updated"):
 
-                print("  [成功] Skills are up to date")
+                print(_("  [成功] Skills are up to date"))
 
         except Exception as e:
 
@@ -11843,7 +11844,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                 print()
 
-                print("→ Syncing bundled skills to other profiles...")
+                print(_("→ Syncing bundled skills to other profiles..."))
 
                 for p in other_profiles:
 
@@ -11883,7 +11884,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                     except Exception as pe:
 
-                        print(f"  {p.name}: error ({pe})")
+                        print(_("  {p_name}: error ({pe})").format(p_name=p.name, pe=pe))
 
         except Exception:
 
@@ -11903,7 +11904,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             if synced:
 
-                print(f"\n-> Honcho: synced {synced} profile(s)")
+                print(_("\n-> Honcho: synced {synced} profile(s)").format(synced=synced))
 
         except Exception:
 
@@ -11915,7 +11916,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         print()
 
-        print("→ Checking configuration for new options...")
+        print(_("→ Checking configuration for new options..."))
 
 
 
@@ -11959,7 +11960,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             if missing_config:
 
-                print(f"  ℹ️  {len(missing_config)} new config option(s) available")
+                print(_("  ℹ️  {len} new config option(s) available").format(len=len(missing_config)))
 
 
 
@@ -11983,7 +11984,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
             elif not (sys.stdin.isatty() and sys.stdout.isatty()):
 
-                print("  ℹ Non-interactive session — skipping config migration prompt.")
+                print(_("  ℹ Non-interactive session — skipping config migration prompt."))
 
                 print(
 
@@ -11999,7 +12000,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                     response = (
 
-                        input("Would you like to configure them now? [Y/n]: ")
+                        input(_("Would you like to configure them now? [Y/n]: "))
 
                         .strip()
 
@@ -12029,27 +12030,27 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                     print()
 
-                    print("[成功] Configuration updated!")
+                    print(_("[成功] Configuration updated!"))
 
                 if gateway_mode and missing_env:
 
-                    print("  ℹ API keys require manual entry: bookworm config migrate")
+                    print(_("  ℹ API keys require manual entry: bookworm config migrate"))
 
             else:
 
                 print()
 
-                print("Skipped. Run 'bookworm config migrate' later to configure.")
+                print(_("Skipped. Run 'bookworm config migrate' later to configure."))
 
         else:
 
-            print("  [成功] Configuration is up to date")
+            print(_("  [成功] Configuration is up to date"))
 
 
 
         print()
 
-        print("[成功] Update complete!")
+        print(_("[成功] Update complete!"))
 
 
 
@@ -12467,7 +12468,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                                         restarted_services.append(svc_name)
 
-                                        print(f"  [成功] {svc_name} recovered on retry")
+                                        print(_("  [成功] {svc_name} recovered on retry").format(svc_name=svc_name))
 
                                     else:
 
@@ -12541,7 +12542,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                                 stderr = (getattr(e, "stderr", "") or "").strip()
 
-                                print(f"  [警告] Gateway restart failed: {stderr}")
+                                print(_("  [警告] Gateway restart failed: {stderr}").format(stderr=stderr))
 
                 except (FileNotFoundError, subprocess.TimeoutExpired, ImportError):
 
@@ -12585,13 +12586,13 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                 for svc in restarted_services:
 
-                    print(f"  [成功] Restarted {svc}")
+                    print(_("  [成功] Restarted {svc}").format(svc=svc))
 
                 if killed_pids:
 
-                    print(f"  → Stopped {len(killed_pids)} manual gateway process(es)")
+                    print(_("  → Stopped {len} manual gateway process(es)").format(len=len(killed_pids)))
 
-                    print("    Restart manually: bookworm gateway run")
+                    print(_("    Restart manually: bookworm gateway run"))
 
                     # Also restart for each profile if needed
 
@@ -12647,29 +12648,29 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
                 print()
 
-                print("[警告] Legacy BookwormPRO gateway unit(s) detected:")
+                print(_("[警告] Legacy BookwormPRO gateway unit(s) detected:"))
 
                 for name, path, is_sys in _find_legacy_hermes_units():
 
                     scope = "system" if is_sys else "user"
 
-                    print(f"    {path}  ({scope} scope)")
+                    print(_("    {path}  ({scope} scope)").format(path=path, scope=scope))
 
                 print()
 
-                print("  These pre-rename units (bookworm.service) fight the current")
+                print(_("  These pre-rename units (bookworm.service) fight the current"))
 
-                print("  bookworm-gateway.service for the bot token and cause SIGTERM")
+                print(_("  bookworm-gateway.service for the bot token and cause SIGTERM"))
 
-                print("  flap loops. Remove them with:")
-
-                print()
-
-                print("    bookworm gateway migrate-legacy")
+                print(_("  flap loops. Remove them with:"))
 
                 print()
 
-                print("  (add `sudo` if any are in system scope)")
+                print(_("    bookworm gateway migrate-legacy"))
+
+                print()
+
+                print(_("  (add `sudo` if any are in system scope)"))
 
         except Exception as e:
 
@@ -12679,9 +12680,9 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         print()
 
-        print("Tip: You can now select a provider and model:")
+        print(_("Tip: You can now select a provider and model:"))
 
-        print("  bookworm model              # Select provider and model")
+        print(_("  bookworm model              # Select provider and model"))
 
 
 
@@ -12689,9 +12690,9 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         if sys.platform == "win32":
 
-            print(f"[警告] Git update failed: {e}")
+            print(_("[警告] Git update failed: {e}").format(e=e))
 
-            print("→ Falling back to ZIP download...")
+            print(_("→ Falling back to ZIP download..."))
 
             print()
 
@@ -12699,7 +12700,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
 
         else:
 
-            print(f"[失败] Update failed: {e}")
+            print(_("[失败] Update failed: {e}").format(e=e))
 
             sys.exit(1)
 
@@ -12901,9 +12902,9 @@ def cmd_profile(args):
 
         dhh = display_hermes_home()
 
-        print(f"\nActive profile: {profile_name}")
+        print(_("\nActive profile: {profile_name}").format(profile_name=profile_name))
 
-        print(f"Path:           {dhh}")
+        print(_("Path:           {dhh}").format(dhh=dhh))
 
 
 
@@ -12929,11 +12930,11 @@ def cmd_profile(args):
 
                 )
 
-                print(f"Skills:         {p.skill_count} installed")
+                print(_("Skills:         {p_skill_count} installed").format(p_skill_count=p.skill_count))
 
                 if p.alias_path:
 
-                    print(f"Alias:          {p.name} → bookworm -p {p.name}")
+                    print(_("Alias:          {p_name} → bookworm -p {p_name}").format(p_name=p.name))
 
                 break
 
@@ -12953,7 +12954,7 @@ def cmd_profile(args):
 
         if not profiles:
 
-            print("No profiles found.")
+            print(_("No profiles found."))
 
             return
 
@@ -12961,7 +12962,7 @@ def cmd_profile(args):
 
         # Header
 
-        print(f"\n {'Profile':<16} {'Model':<28} {'Gateway':<12} {'Alias'}")
+        print(_("\n {'Profile':<16} {'Model':<28} {'Gateway':<12} {'Alias'}"))
 
         print(f" {'─' * 15}    {'─' * 27}    {'─' * 11}    {'─' * 12}")
 
@@ -13007,15 +13008,15 @@ def cmd_profile(args):
 
             if name == "default":
 
-                print(f"Switched to: default (~/.bookwormpro)")
+                print(_("Switched to: default (~/.bookwormpro)"))
 
             else:
 
-                print(f"Switched to: {name}")
+                print(_("Switched to: {name}").format(name=name))
 
         except (ValueError, FileNotFoundError) as e:
 
-            print(f"Error: {e}")
+            print(_("Error: {e}").format(e=e))
 
             sys.exit(1)
 
@@ -13053,7 +13054,7 @@ def cmd_profile(args):
 
             )
 
-            print(f"\nProfile '{name}' created at {profile_dir}")
+            print(_("\nProfile '{name}' created at {profile_dir}").format(name=name, profile_dir=profile_dir))
 
 
 
@@ -13067,11 +13068,11 @@ def cmd_profile(args):
 
                 if clone_all:
 
-                    print(f"Full copy from {source_label}.")
+                    print(_("Full copy from {source_label}.").format(source_label=source_label))
 
                 else:
 
-                    print(f"Cloned config, .env, SOUL.md from {source_label}.")
+                    print(_("Cloned config, .env, SOUL.md from {source_label}.").format(source_label=source_label))
 
 
 
@@ -13087,7 +13088,7 @@ def cmd_profile(args):
 
                     if clone_honcho_for_profile(name):
 
-                        print(f"Honcho config cloned (peer: {name})")
+                        print(_("Honcho config cloned (peer: {name})").format(name=name))
 
                 except Exception:
 
@@ -13105,7 +13106,7 @@ def cmd_profile(args):
 
                     copied = len(result.get("copied", []))
 
-                    print(f"{copied} bundled skills synced.")
+                    print(_("{copied} bundled skills synced.").format(copied=copied))
 
                 else:
 
@@ -13129,7 +13130,7 @@ def cmd_profile(args):
 
                 if collision:
 
-                    print(f"\n[警告] Cannot create alias '{name}' — {collision}")
+                    print(_("\n[警告] Cannot create alias '{name}' — {collision}").format(name=name, collision=collision))
 
                     print(
 
@@ -13137,7 +13138,7 @@ def cmd_profile(args):
 
                     )
 
-                    print(f"  Or access via flag:     bookworm -p {name} chat")
+                    print(_("  Or access via flag:     bookworm -p {name} chat").format(name=name))
 
                 else:
 
@@ -13145,11 +13146,11 @@ def cmd_profile(args):
 
                     if wrapper_path:
 
-                        print(f"Wrapper created: {wrapper_path}")
+                        print(_("Wrapper created: {wrapper_path}").format(wrapper_path=wrapper_path))
 
                         if not _is_wrapper_dir_in_path():
 
-                            print(f"\n[警告] {_get_wrapper_dir()} is not in your PATH.")
+                            print(_("\n[警告] {_get_wrapper_dir} is not in your PATH.").format(_get_wrapper_dir=_get_wrapper_dir()))
 
                             print(
 
@@ -13157,7 +13158,7 @@ def cmd_profile(args):
 
                             )
 
-                            print(f'    export PATH="$HOME/.local/bin:$PATH"')
+                            print(_("    export PATH=\"$HOME/.local/bin:$PATH\""))
 
 
 
@@ -13175,19 +13176,19 @@ def cmd_profile(args):
 
             # Next steps
 
-            print(f"\nNext steps:")
+            print(_("\nNext steps:"))
 
-            print(f"  {name} setup              Configure API keys and model")
+            print(_("  {name} setup              Configure API keys and model").format(name=name))
 
-            print(f"  {name} chat               Start chatting")
+            print(_("  {name} chat               Start chatting").format(name=name))
 
-            print(f"  {name} gateway start      Start the messaging gateway")
+            print(_("  {name} gateway start      Start the messaging gateway").format(name=name))
 
             if clone or clone_all:
 
-                print(f"\n  Edit {profile_dir_display}/.env for different API keys")
+                print(_("\n  Edit {profile_dir_display}/.env for different API keys").format(profile_dir_display=profile_dir_display))
 
-                print(f"  Edit {profile_dir_display}/SOUL.md for different personality")
+                print(_("  Edit {profile_dir_display}/SOUL.md for different personality").format(profile_dir_display=profile_dir_display))
 
             else:
 
@@ -13197,9 +13198,9 @@ def cmd_profile(args):
 
                 )
 
-                print(f"    or it will inherit keys from your shell environment.")
+                print(_("    or it will inherit keys from your shell environment."))
 
-                print(f"  Edit {profile_dir_display}/SOUL.md to customize personality")
+                print(_("  Edit {profile_dir_display}/SOUL.md to customize personality").format(profile_dir_display=profile_dir_display))
 
             print()
 
@@ -13207,7 +13208,7 @@ def cmd_profile(args):
 
         except (ValueError, FileExistsError, FileNotFoundError) as e:
 
-            print(f"Error: {e}")
+            print(_("Error: {e}").format(e=e))
 
             sys.exit(1)
 
@@ -13225,7 +13226,7 @@ def cmd_profile(args):
 
         except (ValueError, FileNotFoundError) as e:
 
-            print(f"Error: {e}")
+            print(_("Error: {e}").format(e=e))
 
             sys.exit(1)
 
@@ -13253,7 +13254,7 @@ def cmd_profile(args):
 
         if not profile_exists(name):
 
-            print(f"Error: Profile '{name}' does not exist.")
+            print(_("Error: Profile '{name}' does not exist.").format(name=name))
 
             sys.exit(1)
 
@@ -13269,17 +13270,18 @@ def cmd_profile(args):
 
 
 
-        print(f"\nProfile: {name}")
+        print(_("\nProfile: {name}").format(name=name))
 
-        print(f"Path:    {profile_dir}")
+        print(_("Path:    {profile_dir}").format(profile_dir=profile_dir))
 
         if model:
 
-            print(f"Model:   {model}" + (f" ({provider})" if provider else ""))
+            print(_("Model:   {model}").format(model=model) + (f" ({provider})" if provider else ""))
 
-        print(f"Gateway: {'running' if gw else 'stopped'}")
+        _gw_state = '运行中' if gw else '已停止'
+        print(f"Gateway: {_gw_state}")
 
-        print(f"Skills:  {skills}")
+        print(_("Skills:  {skills}").format(skills=skills))
 
         print(
 
@@ -13295,7 +13297,7 @@ def cmd_profile(args):
 
         if wrapper.exists():
 
-            print(f"Alias:   {wrapper}")
+            print(_("Alias:   {wrapper}").format(wrapper=wrapper))
 
         print()
 
@@ -13317,7 +13319,7 @@ def cmd_profile(args):
 
         if not profile_exists(name):
 
-            print(f"Error: Profile '{name}' does not exist.")
+            print(_("Error: Profile '{name}' does not exist.").format(name=name))
 
             sys.exit(1)
 
@@ -13331,11 +13333,11 @@ def cmd_profile(args):
 
             if remove_wrapper_script(alias_name):
 
-                print(f"[成功] Removed alias '{alias_name}'")
+                print(_("[成功] Removed alias '{alias_name}'").format(alias_name=alias_name))
 
             else:
 
-                print(f"No alias '{alias_name}' found to remove.")
+                print(_("No alias '{alias_name}' found to remove.").format(alias_name=alias_name))
 
         else:
 
@@ -13343,7 +13345,7 @@ def cmd_profile(args):
 
             if collision:
 
-                print(f"Error: {collision}")
+                print(_("Error: {collision}").format(collision=collision))
 
                 sys.exit(1)
 
@@ -13357,11 +13359,11 @@ def cmd_profile(args):
 
                     wrapper_path.write_text(f'#!/bin/sh\nexec bookworm -p {name} "$@"\n')
 
-                print(f"[成功] Alias created: {wrapper_path}")
+                print(_("[成功] Alias created: {wrapper_path}").format(wrapper_path=wrapper_path))
 
                 if not _is_wrapper_dir_in_path():
 
-                    print(f"[警告] {_get_wrapper_dir()} is not in your PATH.")
+                    print(_("[警告] {_get_wrapper_dir} is not in your PATH.").format(_get_wrapper_dir=_get_wrapper_dir()))
 
 
 
@@ -13375,13 +13377,13 @@ def cmd_profile(args):
 
             new_dir = rename_profile(args.old_name, args.new_name)
 
-            print(f"\nProfile renamed: {args.old_name} → {args.new_name}")
+            print(_("\nProfile renamed: {args_old_name} → {args_new_name}").format(args_old_name=args.old_name, args_new_name=args.new_name))
 
-            print(f"Path: {new_dir}\n")
+            print(_("Path: {new_dir}\n").format(new_dir=new_dir))
 
         except (ValueError, FileExistsError, FileNotFoundError) as e:
 
-            print(f"Error: {e}")
+            print(_("Error: {e}").format(e=e))
 
             sys.exit(1)
 
@@ -13401,11 +13403,11 @@ def cmd_profile(args):
 
             result_path = export_profile(name, output)
 
-            print(f"[成功] Exported '{name}' to {result_path}")
+            print(_("[成功] Exported '{name}' to {result_path}").format(name=name, result_path=result_path))
 
         except (ValueError, FileNotFoundError) as e:
 
-            print(f"Error: {e}")
+            print(_("Error: {e}").format(e=e))
 
             sys.exit(1)
 
@@ -13427,7 +13429,7 @@ def cmd_profile(args):
 
             name = profile_dir.name
 
-            print(f"[成功] Imported profile '{name}' at {profile_dir}")
+            print(_("[成功] Imported profile '{name}' at {profile_dir}").format(name=name, profile_dir=profile_dir))
 
 
 
@@ -13441,13 +13443,13 @@ def cmd_profile(args):
 
                 if wrapper_path:
 
-                    print(f"  Wrapper created: {wrapper_path}")
+                    print(_("  Wrapper created: {wrapper_path}").format(wrapper_path=wrapper_path))
 
             print()
 
         except (ValueError, FileExistsError, FileNotFoundError) as e:
 
-            print(f"Error: {e}")
+            print(_("Error: {e}").format(e=e))
 
             sys.exit(1)
 
@@ -13467,7 +13469,7 @@ def cmd_dashboard(args):
 
     except ImportError as e:
 
-        print("Web UI dependencies not installed (need fastapi + uvicorn).")
+        print(_("Web UI dependencies not installed (need fastapi + uvicorn)."))
 
         print(
 
@@ -13481,7 +13483,7 @@ def cmd_dashboard(args):
 
         )
 
-        print(f"Import error: {e}")
+        print(_("Import error: {e}").format(e=e))
 
         sys.exit(1)
 
@@ -15703,13 +15705,13 @@ Examples:
         from bwm_cli.skill_navigator import navigate, get_learning_path
         if args.learn:
             skills = get_learning_path(f"level{args.learn}")
-            print(f"Level {args.learn}:" + ' -> '.join(skills))
+            print(_("Level {args_learn}:").format(args_learn=args.learn) + ' -> '.join(skills))
         elif args.intent:
             r = navigate(args.intent)
-            print(f"Scenario: {r['scenario']}")
-            print(f"Skills ({len(r['skills'])}):" + ' -> '.join(r['skills']))
+            print(_("Scenario: {r}").format(r=r['scenario']))
+            print(_("Skills ({len}):").format(len=len(r['skills'])) + ' -> '.join(r['skills']))
         else:
-            print("Usage: bookworm navigate '<your intent>'" + ' --learn 1|2|3')
+            print(_("Usage: bookworm navigate '<your intent>'") + ' --learn 1|2|3')
     nav_parser.set_defaults(func=cmd_navigate)
 
     # =========================================================================
@@ -15726,17 +15728,17 @@ Examples:
         skills_dir = Path.home() / ".bookwormpro/skills"
         if args.skill:
             r = scan_skill_safety(skills_dir / args.skill)
-            print(f"{args.skill}: Level={r.level} Findings={len(r.findings)}")
+            print(_("{args_skill}: Level={r_level} Findings={len}").format(args_skill=args.skill, r_level=r.level, len=len(r.findings)))
             for f in r.findings:
                 print(f"  {f}")
         else:
-            print("Scanning all skills...")
+            print(_("Scanning all skills..."))
             for d in sorted(skills_dir.iterdir()):
                 if d.is_dir() and (d / "SKILL.md").exists():
                     r = scan_skill_safety(d)
                     if r.level != "SAFE":
                         print(f"  {d.name}: {r.level}")
-            print("Scan complete.")
+            print(_("Scan complete."))
     guard_parser.set_defaults(func=cmd_guardian)
 
 
@@ -16571,9 +16573,9 @@ Examples:
 
             save_config(config)
 
-            print("\n  [成功] Memory provider: built-in only")
+            print(_("\n  [成功] Memory provider: built-in only"))
 
-            print("  Saved to config.yaml\n")
+            print(_("  Saved to config.yaml\n"))
 
         elif sub == "reset":
 
@@ -16617,7 +16619,7 @@ Examples:
 
 
 
-            print(f"\n  This will permanently erase the following memory files:")
+            print(_("\n  This will permanently erase the following memory files:"))
 
             for f, desc in existing:
 
@@ -16625,7 +16627,7 @@ Examples:
 
                 size = path.stat().st_size
 
-                print(f"    ◆ {f} ({desc}) — {size:,} bytes")
+                print(_("    ◆ {f} ({desc}) — {size:,} bytes").format(f=f, desc=desc, size=size))
 
 
 
@@ -16633,17 +16635,17 @@ Examples:
 
                 try:
 
-                    answer = input("\n  Type 'yes' to confirm: ").strip().lower()
+                    answer = input(_("\n  Type 'yes' to confirm: ")).strip().lower()
 
                 except (EOFError, KeyboardInterrupt):
 
-                    print("\n  Cancelled.\n")
+                    print(_("\n  Cancelled.\n"))
 
                     return
 
                 if answer != "yes":
 
-                    print("  Cancelled.\n")
+                    print(_("  Cancelled.\n"))
 
                     return
 
@@ -16653,7 +16655,7 @@ Examples:
 
                 (mem_dir / f).unlink()
 
-                print(f"  [成功] Deleted {f} ({desc})")
+                print(_("  [成功] Deleted {f} ({desc})").format(f=f, desc=desc))
 
 
 
@@ -16663,7 +16665,7 @@ Examples:
 
             )
 
-            print(f"  Files were in: {display_hermes_home()}/memories/\n")
+            print(_("  Files were in: {display_hermes_home}/memories/\n").format(display_hermes_home=display_hermes_home()))
 
         else:
 
@@ -17143,7 +17145,7 @@ Examples:
 
         except Exception as e:
 
-            print(f"Error: Could not open session database: {e}")
+            print(_("Error: Could not open session database: {e}").format(e=e))
 
             return
 
@@ -17171,7 +17173,7 @@ Examples:
 
             if not sessions:
 
-                print("No sessions found.")
+                print(_("No sessions found."))
 
                 return
 
@@ -17179,13 +17181,13 @@ Examples:
 
             if has_titles:
 
-                print(f"{'Title':<32} {'Preview':<40} {'Last Active':<13} {'ID'}")
+                print(f"{_('Title'):<32} {_('Preview'):<40} {_('Last Active'):<13} {_('ID')}")
 
                 print("─" * 110)
 
             else:
 
-                print(f"{'Preview':<50} {'Last Active':<13} {'Src':<6} {'ID'}")
+                print(f"{_('Preview'):<50} {_('Last Active'):<13} {_('Src'):<6} {_('ID')}")
 
                 print("─" * 95)
 
@@ -17227,7 +17229,7 @@ Examples:
 
                 if not resolved_session_id:
 
-                    print(f"Session '{args.session_id}' not found.")
+                    print(_("Session '{args_session_id}' not found.").format(args_session_id=args.session_id))
 
                     return
 
@@ -17235,7 +17237,7 @@ Examples:
 
                 if not data:
 
-                    print(f"Session '{args.session_id}' not found.")
+                    print(_("Session '{args_session_id}' not found.").format(args_session_id=args.session_id))
 
                     return
 
@@ -17253,7 +17255,7 @@ Examples:
 
                         f.write(line)
 
-                    print(f"Exported 1 session to {args.output}")
+                    print(_("Exported 1 session to {args_output}").format(args_output=args.output))
 
             else:
 
@@ -17275,7 +17277,7 @@ Examples:
 
                             f.write(_json.dumps(s, ensure_ascii=False) + "\n")
 
-                    print(f"Exported {len(sessions)} sessions to {args.output}")
+                    print(_("Exported {len} sessions to {args_output}").format(len=len(sessions), args_output=args.output))
 
 
 
@@ -17285,7 +17287,7 @@ Examples:
 
             if not resolved_session_id:
 
-                print(f"Session '{args.session_id}' not found.")
+                print(_("Session '{args_session_id}' not found.").format(args_session_id=args.session_id))
 
                 return
 
@@ -17297,17 +17299,17 @@ Examples:
 
                 ):
 
-                    print("Cancelled.")
+                    print(_("Cancelled."))
 
                     return
 
             if db.delete_session(resolved_session_id):
 
-                print(f"Deleted session '{resolved_session_id}'.")
+                print(_("Deleted session '{resolved_session_id}'.").format(resolved_session_id=resolved_session_id))
 
             else:
 
-                print(f"Session '{args.session_id}' not found.")
+                print(_("Session '{args_session_id}' not found.").format(args_session_id=args.session_id))
 
 
 
@@ -17325,13 +17327,13 @@ Examples:
 
                 ):
 
-                    print("Cancelled.")
+                    print(_("Cancelled."))
 
                     return
 
             count = db.prune_sessions(older_than_days=days, source=args.source)
 
-            print(f"Pruned {count} session(s).")
+            print(_("Pruned {count} session(s).").format(count=count))
 
 
 
@@ -17341,7 +17343,7 @@ Examples:
 
             if not resolved_session_id:
 
-                print(f"Session '{args.session_id}' not found.")
+                print(_("Session '{args_session_id}' not found.").format(args_session_id=args.session_id))
 
                 return
 
@@ -17351,15 +17353,15 @@ Examples:
 
                 if db.set_session_title(resolved_session_id, title):
 
-                    print(f"Session '{resolved_session_id}' renamed to: {title}")
+                    print(_("Session '{resolved_session_id}' renamed to: {title}").format(resolved_session_id=resolved_session_id, title=title))
 
                 else:
 
-                    print(f"Session '{args.session_id}' not found.")
+                    print(_("Session '{args_session_id}' not found.").format(args_session_id=args.session_id))
 
             except ValueError as e:
 
-                print(f"Error: {e}")
+                print(_("Error: {e}").format(e=e))
 
 
 
@@ -17381,7 +17383,7 @@ Examples:
 
             if not sessions:
 
-                print("No sessions found.")
+                print(_("No sessions found."))
 
                 return
 
@@ -17391,7 +17393,7 @@ Examples:
 
             if not selected_id:
 
-                print("Cancelled.")
+                print(_("Cancelled."))
 
                 return
 
@@ -17399,7 +17401,7 @@ Examples:
 
             # Launch bookworm --resume <id> by replacing the current process
 
-            print(f"Resuming session: {selected_id}")
+            print(_("Resuming session: {selected_id}").format(selected_id=selected_id))
 
             hermes_bin = shutil.which("bookworm")
 
@@ -17429,9 +17431,9 @@ Examples:
 
             msgs = db.message_count()
 
-            print(f"Total sessions: {total}")
+            print(_("Total sessions: {total}").format(total=total))
 
-            print(f"Total messages: {msgs}")
+            print(_("Total messages: {msgs}").format(msgs=msgs))
 
             for src in ["cli", "telegram", "discord", "whatsapp", "slack"]:
 
@@ -17439,7 +17441,7 @@ Examples:
 
                 if c > 0:
 
-                    print(f"  {src}: {c} sessions")
+                    print(_("  {src}: {c} sessions").format(src=src, c=c))
 
             db_path = db.db_path
 
@@ -17447,7 +17449,7 @@ Examples:
 
                 size_mb = os.path.getsize(db_path) / (1024 * 1024)
 
-                print(f"Database size: {size_mb:.1f} MB")
+                print(_("Database size: {size_mb:.1f} MB").format(size_mb=size_mb))
 
 
 
@@ -17517,7 +17519,7 @@ Examples:
 
         except Exception as e:
 
-            print(f"Error generating insights: {e}")
+            print(_("Error generating insights: {e}").format(e=e))
 
 
 
@@ -17799,9 +17801,9 @@ Examples:
 
         except ImportError:
 
-            print("ACP dependencies not installed.")
+            print(_("ACP dependencies not installed."))
 
-            print("Install them with:  pip install -e '.[acp]'")
+            print(_("Install them with:  pip install -e '.[acp]'"))
 
             sys.exit(1)
 

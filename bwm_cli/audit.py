@@ -24,6 +24,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from bwm_constants import get_hermes_home, display_hermes_home
+from bwm_cli.i18n import _
+
 
 logger = logging.getLogger(__name__)
 
@@ -268,16 +270,16 @@ def audit_show(args) -> None:
 
     events = query_audit(since=since, event_types=etypes, limit=limit)
     if not events:
-        print("\n  [信息] 暂无审计事件记录\n")
+        print("\n  " + _("[信息] 暂无审计事件记录") + "\n")
         return
 
-    print(f"\n  === 审计事件 (最近 {len(events)} 条) ===\n")
+    print(_("\n  === 审计事件 (最近 {len} 条) ===\n").format(len=len(events)))
     for evt in events:
         ts = evt["timestamp"][:19].replace("T", " ")
         etype = evt["event_type"]
         summary = evt["summary"] or ""
         print(f"  [{ts}] {etype:16s} | {summary[:100]}")
-    print(f"\n  共 {len(events)} 条记录\n")
+    print(_("\n  共 {len} 条记录\n").format(len=len(events)))
 
 
 def audit_search(args) -> None:
@@ -285,10 +287,10 @@ def audit_search(args) -> None:
     query = args.query
     events = query_audit(search=query, limit=getattr(args, "limit", 50) or 50)
     if not events:
-        print(f"\n  [信息] 未找到匹配 '{query}' 的审计事件\n")
+        print(_("\n  [信息] 未找到匹配 '{query}' 的审计事件\n").format(query=query))
         return
 
-    print(f"\n  === 搜索: '{query}' ({len(events)} 条) ===\n")
+    print(_("\n  === 搜索: '{query}' ({len} 条) ===\n").format(query=query, len=len(events)))
     for evt in events:
         ts = evt["timestamp"][:19].replace("T", " ")
         print(f"  [{ts}] {evt['event_type']:16s} | {evt.get('summary', '')[:120]}")
@@ -300,14 +302,14 @@ def audit_stats(args) -> None:
     days = getattr(args, "days", 30) or 30
     stats = get_stats(days)
 
-    print(f"\n  === 审计统计 ({days}天) ===\n")
-    print(f"  总事件数:    {stats.get('total_events', 0):,}")
-    print(f"  数据库:      {stats.get('db_path', '?')}")
-    print(f"  数据库大小:  {stats.get('db_size_bytes', 0) / 1024:.1f} KB")
+    print(_("\n  === 审计统计 ({days}天) ===\n").format(days=days))
+    print(_("  总事件数:    {stats:,}").format(stats=stats.get('total_events', 0)))
+    print(_("  数据库:      {stats}").format(stats=stats.get('db_path', '?')))
+    print(_("  数据库大小:  {stats:.1f} KB").format(stats=stats.get('db_size_bytes', 0) / 1024))
     print()
     by_type = stats.get("by_type", {})
     if by_type:
-        print("  按类型分布:")
+        print(_("  按类型分布:"))
         for etype, cnt in by_type.items():
             bar = "█" * min(cnt // max(1, max(by_type.values()) // 30), 30)
             print(f"    {etype:20s} {cnt:>6d}  {bar}")
@@ -321,7 +323,7 @@ def audit_export(args) -> None:
 
     events = query_audit(since=since, limit=100000)
     if not events:
-        print("\n  [信息] 无审计事件可导出\n")
+        print(_("\n  [信息] 无审计事件可导出\n"))
         return
 
     outpath = Path(output).expanduser()
@@ -329,14 +331,14 @@ def audit_export(args) -> None:
         for evt in events:
             f.write(json.dumps(evt, ensure_ascii=False) + "\n")
 
-    print(f"\n  [完成] 导出 {len(events)} 条审计事件到 {outpath}\n")
+    print(_("\n  [完成] 导出 {len} 条审计事件到 {outpath}\n").format(len=len(events), outpath=outpath))
 
 
 def audit_cleanup(args) -> None:
     """手动清理过期事件。"""
     days = getattr(args, "days", _RETENTION_DAYS) or _RETENTION_DAYS
     deleted = cleanup_old_events(days)
-    print(f"\n  [完成] 清理 {deleted} 条过期事件 (保留 {days} 天)\n")
+    print(_("\n  [完成] 清理 {deleted} 条过期事件 (保留 {days} 天)\n").format(deleted=deleted, days=days))
 
 
 # ---------------------------------------------------------------------------
