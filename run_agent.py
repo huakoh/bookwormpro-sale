@@ -7671,16 +7671,15 @@ class AIAgent:
             "finish_reason": finish_reason,
         }
 
-        if hasattr(assistant_message, "reasoning_content"):
-            raw_reasoning_content = getattr(assistant_message, "reasoning_content", None)
-            if raw_reasoning_content is not None:
+        raw_reasoning_content = getattr(assistant_message, "reasoning_content", None)
+        if raw_reasoning_content is not None:
                 msg["reasoning_content"] = _sanitize_surrogates(raw_reasoning_content)
-            elif self._needs_deepseek_tool_reasoning():
+        elif self._needs_deepseek_tool_reasoning():
                 # DeepSeek thinking mode requires reasoning_content on
                 # every assistant message (tool-call or not). Pin "" at
                 # creation time so nothing gets persisted poisoned (#15250).
                 msg["reasoning_content"] = ""
-            elif assistant_message.tool_calls and self._needs_kimi_tool_reasoning():
+        elif assistant_message.tool_calls and self._needs_kimi_tool_reasoning():
                 # Kimi thinking mode requires reasoning_content on
                 # every assistant tool-call message.
                 msg["reasoning_content"] = ""
