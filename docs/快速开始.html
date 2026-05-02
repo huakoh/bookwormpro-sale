@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookwormPRO · 30 秒上手</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+    --success: #3fb950; --warn: #d2991d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.8;
+    max-width: 780px; margin: 0 auto; padding: 40px 20px;
+  }
+  h1 { font-size: 2em; color: #fff; text-align: center; margin-bottom: 4px; }
+  h1 .sub { display:block; font-size: 0.4em; color: var(--muted); font-weight: 400; margin-top: 4px; }
+  h2 { font-size: 1.3em; margin: 48px 0 16px; color: #e6edf3; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+  .hero {
+    text-align: center; padding: 48px 20px;
+    background: linear-gradient(135deg, #1a2332 0%, #0d1b2a 100%);
+    border: 1px solid var(--border); border-radius: 16px; margin-bottom: 40px;
+  }
+  .hero .logo {
+    font-size: 3.5em; font-weight: 900; letter-spacing: -1px;
+    background: linear-gradient(135deg, #58a6ff, #a371f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .step-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px 24px; margin: 20px 0;
+    display: flex; gap: 20px; align-items: flex-start;
+  }
+  .step-num {
+    background: var(--accent); color: #fff; font-size: 1.5em; font-weight: 900;
+    width: 48px; height: 48px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-body h3 { color: #e6edf3; margin-bottom: 6px; }
+  .step-body p { color: var(--muted); font-size: 0.95em; }
+
+  pre {
+    background: #0d1117; border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 18px; overflow-x: auto; font-family: "JetBrains Mono", monospace;
+    font-size: 0.9em; margin: 12px 0;
+  }
+  code {
+    font-family: "JetBrains Mono", monospace; font-size: 0.9em;
+    background: #0d1117; padding: 3px 7px; border-radius: 4px; border: 1px solid var(--border);
+  }
+
+  .tip { background: rgba(63,185,80,0.08); border-left: 3px solid var(--success); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .tip::before { content: "💡 "; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; text-align: center;
+  }
+  .card .emoji { font-size: 2em; margin-bottom: 8px; }
+  .card h4 { color: #e6edf3; margin-bottom: 4px; }
+  .card p { color: var(--muted); font-size: 0.9em; }
+
+  .what-next {
+    background: linear-gradient(135deg, rgba(88,166,255,0.08) 0%, rgba(163,113,247,0.08) 100%);
+    border: 1px solid var(--border); border-radius: 16px; padding: 32px;
+    margin: 40px 0; text-align: center;
+  }
+
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-size: 0.85em; }
+
+  @media (max-width: 600px) {
+    .step-box { flex-direction: column; align-items: center; text-align: center; }
+    .grid2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo">BookwormPRO</div>
+  <p style="color:var(--muted); font-size:1.1em; margin-top:12px">让 AI 助手变专业的 305 技能包</p>
+  <p style="color:var(--muted); font-size:0.85em; margin-top:8px">⏱ 30 秒安装 · 零门槛 · 双击即用</p>
+</div>
+
+<h2>📦 三步上手</h2>
+
+<div class="step-box">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <h3>下载 &amp; 解压</h3>
+    <p>从 GitHub Releases 下载 <code>bookwormpro-sale.zip</code>，解压到任意文件夹。</p>
+    <p style="color:var(--muted);font-size:0.85em">推荐放到桌面或文档目录，方便找到。</p>
+  </div>
+</div>
+
+<div class="step-box">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <h3>双击安装</h3>
+    <p>双击文件夹里的 <code style="font-size:1.1em; background:var(--accent); color:#fff; border:none; padding:6px 14px">install.bat</code></p>
+    <p>跟着屏幕提示填入 API Key，全程 2 分钟。</p>
+    <div class="tip">没有 API Key？去 <a href="https://platform.deepseek.com" target="_blank" style="color:var(--accent)">platform.deepseek.com</a> 免费注册（支持支付宝充值，最低 1 元起）</div>
+  </div>
+</div>
+
+<div class="step-box">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <h3>重启 AI 助手</h3>
+    <p>关闭并重新打开你的 AI 编程助手。输入：</p>
+    <pre>bookworm自检</pre>
+    <p>看到绿色体检报告 → 安装成功 ✅</p>
+  </div>
+</div>
+
+<h2>🔑 需要什么</h2>
+<div class="grid2">
+  <div class="card">
+    <div class="emoji">🐍</div>
+    <h4>Python 3.10+</h4>
+    <p>没有？<a href="https://www.python.org/downloads/" target="_blank" style="color:var(--accent)">点此下载</a>，安装时勾选 Add to PATH</p>
+  </div>
+  <div class="card">
+    <div class="emoji">🔑</div>
+    <h4>一个 API Key</h4>
+    <p>推荐 DeepSeek，注册即送额度，支持支付宝</p>
+  </div>
+  <div class="card">
+    <div class="emoji">🤖</div>
+    <h4>AI 编程助手</h4>
+    <p>Claude Code / Cursor / Windsurf 等</p>
+  </div>
+  <div class="card">
+    <div class="emoji">💻</div>
+    <h4>Windows / Mac / Linux</h4>
+    <p>全平台支持</p>
+  </div>
+</div>
+
+<h2>✨ 装完能做什么</h2>
+<div class="grid2">
+  <div class="card">
+    <div class="emoji">🛡</div>
+    <h4>安全审查</h4>
+    <p>说"审查这个项目安全性"，AI 自动调用 10+ 安全技能</p>
+  </div>
+  <div class="card">
+    <div class="emoji">🎨</div>
+    <h4>前端设计</h4>
+    <p>说"设计一个登录页"，AI 出高质量 UI 代码</p>
+  </div>
+  <div class="card">
+    <div class="emoji">📊</div>
+    <h4>数据分析</h4>
+    <p>说"分析这份数据"，AI 跑 Python 出图表</p>
+  </div>
+  <div class="card">
+    <div class="emoji">💰</div>
+    <h4>商业策划</h4>
+    <p>说"写份商业计划书"，AI 出完整 BP</p>
+  </div>
+  <div class="card">
+    <div class="emoji">🔧</div>
+    <h4>系统自检</h4>
+    <p>说"bookworm自检"，AI 全量诊断系统健康</p>
+  </div>
+  <div class="card">
+    <div class="emoji">➕</div>
+    <h4>还有 300+ 技能...</h4>
+    <p>覆盖开发/设计/安全/AI/产品/营销/法律</p>
+  </div>
+</div>
+
+<div class="what-next">
+  <h3 style="color:#e6edf3; font-size:1.3em; margin-bottom:12px">🚀 安装后试试这些</h3>
+  <pre style="text-align:left; max-width:500px; margin:0 auto">bookworm自检                 # 系统体检
+bookworm自检 修复            # 自动修复问题
+bookworm自检 只看env         # 只看配置
+/见山大叔                    # 切换老派工程师人格</pre>
+</div>
+
+<h2>❓ 常见问题</h2>
+
+<div class="step-box" style="gap:12px">
+  <div class="step-body">
+    <h3>双击 install.bat 没反应？</h3>
+    <p>右键 → 以管理员身份运行。或者打开终端，cd 到文件夹，输入 <code>python scripts/setup_wizard.py</code></p>
+    <h3 style="margin-top:12px">提示"未检测到 Python"？</h3>
+    <p>去 <a href="https://www.python.org/downloads/" style="color:var(--accent)">python.org</a> 下载安装。安装时<b>一定要勾选 "Add Python to PATH"</b>，然后重新双击 install.bat。</p>
+    <h3 style="margin-top:12px">哪里获取 API Key？</h3>
+    <p>推荐 <a href="https://platform.deepseek.com" style="color:var(--accent)">DeepSeek 开放平台</a> → 注册 → API Keys → 创建。支持支付宝充值，1 元起。</p>
+    <h3 style="margin-top:12px">怎么知道装成功了？</h3>
+    <p>双击 <code>check.bat</code> 看诊断报告。或者打开 AI 助手输入 <code>bookworm自检</code>。</p>
+  </div>
+</div>
+
+<footer>
+  <p>BookwormPRO · AI 智能助手技能包</p>
+  <p style="margin-top:12px">善读者，必善造。</p>
+</footer>
+
+</body>
+</html>
