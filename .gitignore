@@ -9,6 +9,14 @@ memories/
 state.db*
 audit.db*
 *.lock
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+
+# IDE
 .DS_Store
+.vscode/
+.idea/
