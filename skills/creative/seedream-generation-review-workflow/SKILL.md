@@ -27,7 +27,7 @@ dependencies:
 ### 1. ARK Key 完整格式 (记忆截断陷阱)
 
 ```
-❌ 记忆截断:  ark-a7d4c36a                         (只有首段，导致 401)
+❌ 记忆截断:  ark-XXXX                         (只有首段，导致 401)
 ✅ 完整 key:  ark-YOUR-KEY-HERE  (5段 UUID)
 ```
 

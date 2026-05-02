@@ -100,7 +100,7 @@ $env:DASHSCOPE_API_KEY="sk-xxx"
 
 3. **ARK Key 格式: 5段UUID，共50+字符** ⚠️
    格式: `ark-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-xxxxx`
-   记忆可能截断(如只存首段`ark-a7d4c36a`)。如遇 401 `AuthenticationError: The API key format is incorrect`，
+   记忆可能截断(如只存首段`ark-XXXX`)。如遇 401 `AuthenticationError: The API key format is incorrect`，
    从 session 历史恢复完整 key: `session_search("SEEDREAM_API_KEY")`，在 `request_dump` 中查找。
 
 4. DashScope 返回**url**非b64_json — `result.output.results[0].url` (OSS签名URL,需requests下载)

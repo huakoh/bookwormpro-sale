@@ -105,9 +105,9 @@ ssh_exec("readlink -f /proc/$(pgrep -f 'nginx: master')/exe")
 ### 1.1 创建数据库
 
 ```sql
-CREATE DATABASE IF NOT EXISTS mingyuan_wp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS wordpress_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS 'wp_user'@'localhost' IDENTIFIED BY 'StrongPass!@#';
-GRANT ALL PRIVILEGES ON mingyuan_wp.* TO 'wp_user'@'localhost'; FLUSH PRIVILEGES;
+GRANT ALL PRIVILEGES ON wordpress_db.* TO 'wp_user'@'localhost'; FLUSH PRIVILEGES;
 ```
 
 MySQL socket 必须是 `/tmp/mysql.sock`（宝塔路径）。
@@ -116,8 +116,8 @@ MySQL socket 必须是 `/tmp/mysql.sock`（宝塔路径）。
 
 ```bash
 cd /tmp && wget -q https://wordpress.org/latest.tar.gz
-tar xzf latest.tar.gz -C /var/www/mybiobb --strip-components=1
-chown -R www:www /var/www/mybiobb
+tar xzf latest.tar.gz -C /var/www/YOUR_SITE --strip-components=1
+chown -R www:www /var/www/YOUR_SITE
 ```
 
 ### 1.3 wp-config.php（关键：避免 shell 转义陷阱）
@@ -132,8 +132,8 @@ chown -R www:www /var/www/mybiobb
 ```python
 salts = ssh_exec("curl -s https://api.wordpress.org/secret-key/1.1/salt/")[0]
 config = f"""<?php
-define('DB_NAME', 'mingyuan_wp');
-define('DB_USER', 'mingyuan_wp');
+define('DB_NAME', 'wordpress_db');
+define('DB_USER', 'wordpress_db');
 define('DB_PASSWORD', 'pass');
 define('DB_HOST', 'localhost:/tmp/mysql.sock');
 define('DB_CHARSET', 'utf8mb4');
@@ -146,7 +146,7 @@ if (!defined('ABSPATH')) define('ABSPATH', __DIR__ . '/');
 require_once ABSPATH . 'wp-settings.php';
 """
 # 通过 Python 写入
-write_script = f"config = '''{config}'''\nwith open('/var/www/mybiobb/wp-config.php', 'w') as f:\n    f.write(config)"
+write_script = f"config = '''{config}'''\nwith open('/var/www/YOUR_SITE/wp-config.php', 'w') as f:\n    f.write(config)"
 ssh_exec("cat > /tmp/write_config.py << 'PYEOF'\n" + write_script + "\nPYEOF")
 ssh_exec("python3 /tmp/write_config.py")
 ```
@@ -174,8 +174,8 @@ location ~ \.php$ {
 ```php
 <?php
 define('WP_INSTALLING', true);
-require_once '/var/www/mybiobb/wp-load.php';
-require_once '/var/www/mybiobb/wp-admin/includes/upgrade.php';
+require_once '/var/www/YOUR_SITE/wp-load.php';
+require_once '/var/www/YOUR_SITE/wp-admin/includes/upgrade.php';
 $result = wp_install('网站标题', 'admin_user', 'admin@domain.com', 1, '', 'StrongPass!@#');
 echo is_wp_error($result) ? 'ERROR: ' . $result->get_error_message() : 'SUCCESS';
 ```
@@ -195,7 +195,7 @@ rm /tmp/install-wp.php
 
 ```php
 <?php
-require_once '/var/www/mybiobb/wp-load.php';
+require_once '/var/www/YOUR_SITE/wp-load.php';
 require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
 require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -214,7 +214,7 @@ activate_plugin('wordpress-seo/wp-seo.php');
 ### 2.1 主题文件清单（企业官网标准18文件）
 
 ```
-mingyuan-bio/
+YOUR_THEME/
 ├── style.css              # 主题头 + CSS变量 + 全部样式
 ├── functions.php          # 主题设置、菜单注册、资源加载
 ├── header.php             # 页头 + 导航（移动端汉堡菜单）
@@ -373,7 +373,7 @@ location ~* /wp-content/uploads/.*\.php$ { deny all; return 404; }
 | shell 命令中的引号 | SyntaxError | 复杂命令写成 Python 脚本文件传到服务器执行 |
 | **display_errors = On** | PHP Warning 输出在 HTML 之前，破坏页面渲染（尤其是 wp-login.php 表单完全消失） | 修改 `/www/server/php/{ver}/etc/php.ini` → `display_errors = Off` → `kill -USR2 $(cat php-fpm.pid)` 重载 |
 | **安全常量重复定义** | `Warning: Constant FORCE_SSL_ADMIN already defined` 在首页和登录页显示 | 用 `if (!defined('XXX')) { define('XXX', value); }` 包裹；Phase 4 安全加固追加到 wp-config.php 时要检查是否已在前面定义 |
-| **Customizer key 命名不一致** | footer 和 contact 页显示不同地址 | 统一使用 `mingyuan_company_address`（customizer 注册名）和 `mingyuan_address`（简写别名）；在 `mingyuan_company_info()` 函数中同时设置两个 key |
+| **Customizer key 命名不一致** | footer 和 contact 页显示不同地址 | 统一使用 `theme_address`（customizer 注册名）和 `mingyuan_address`（简写别名）；在 `theme_info()` 函数中同时设置两个 key |
 | **Meta description 不渲染** | Yoast SEO 插件不输出 `<meta name="description">` | 直接在 header.php 的 `wp_head()` 前注入条件 meta 标签：`if (is_page() && !is_front_page()) { echo '<meta name="description" content="...">'; }`
 
 ## Phase 5: 代码审查与修复闭环

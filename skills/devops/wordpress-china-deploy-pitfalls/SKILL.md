@@ -229,8 +229,8 @@ done
 ```bash
 sudo -u www php -r "
 require '/var/www/站点/wp-load.php';
-echo 'Phone: ' . get_theme_mod('mingyuan_company_phone') . PHP_EOL;
-echo 'ICP: '   . get_theme_mod('mingyuan_company_icp') . PHP_EOL;
+echo 'Phone: ' . get_theme_mod('theme_phone') . PHP_EOL;
+echo 'ICP: '   . get_theme_mod('theme_icp') . PHP_EOL;
 "
 ```
 若输出与PHP源码不一致，说明数据库值在覆盖。
@@ -238,22 +238,22 @@ echo 'ICP: '   . get_theme_mod('mingyuan_company_icp') . PHP_EOL;
 **P0修复 - 双管齐下**:
 ```bash
 # 1. 修改PHP源码默认值（治本）
-sed -i "s/'400-xxx-xxxx'/'400-666-2906'/g" customizer.php functions.php
+sed -i "s/'400-xxx-xxxx'/'400-XXX-XXXX'/g" customizer.php functions.php
 
 # 2. 更新数据库已保存值（治标 + 立即生效）
 sudo -u www php -r "
 require '/var/www/站点/wp-load.php';
-set_theme_mod('mingyuan_company_phone', '400-666-2906');
-set_theme_mod('mingyuan_company_address', '广州市天河区御富科贸园');
+set_theme_mod('theme_phone', '400-XXX-XXXX');
+set_theme_mod('theme_address', 'YOUR_COMPANY_ADDRESS');
 "
 
 # 3. 清除缓存（WP Fastest Cache 等会缓存旧值）
 rm -rf /var/www/站点/wp-content/cache/all/*
 ```
 
-**注意**: 如果主题中同一个值用了两个不同的 key（如 `mingyuan_phone` 和 `mingyuan_company_phone`），必须同时更新两个key，或统一为一个key。
+**注意**: 如果主题中同一个值用了两个不同的 key（如 `mingyuan_phone` 和 `theme_phone`），必须同时更新两个key，或统一为一个key。
 
-**验证**: `curl -sk https://站点/ | grep '400-666-2906'` 必须返回新值。
+**验证**: `curl -sk https://站点/ | grep '400-XXX-XXXX'` 必须返回新值。
 
 ---
 
@@ -435,8 +435,8 @@ PYEOF
 ```bash
 sudo -u www php -r "
 require '/var/www/站点/wp-load.php';
-echo 'Phone: ' . get_theme_mod('mingyuan_company_phone') . PHP_EOL;
-echo 'ICP: '   . get_theme_mod('mingyuan_company_icp') . PHP_EOL;
+echo 'Phone: ' . get_theme_mod('theme_phone') . PHP_EOL;
+echo 'ICP: '   . get_theme_mod('theme_icp') . PHP_EOL;
 "
 ```
 若输出与PHP源码不一致，说明数据库值在覆盖。
@@ -444,22 +444,22 @@ echo 'ICP: '   . get_theme_mod('mingyuan_company_icp') . PHP_EOL;
 **P0修复 - 双管齐下**:
 ```bash
 # 1. 修改PHP源码默认值（治本）
-sed -i "s/'400-xxx-xxxx'/'400-666-2906'/g" customizer.php functions.php
+sed -i "s/'400-xxx-xxxx'/'400-XXX-XXXX'/g" customizer.php functions.php
 
 # 2. 更新数据库已保存值（治标 + 立即生效）
 sudo -u www php -r "
 require '/var/www/站点/wp-load.php';
-set_theme_mod('mingyuan_company_phone', '400-666-2906');
-set_theme_mod('mingyuan_company_address', '广州市天河区御富科贸园');
+set_theme_mod('theme_phone', '400-XXX-XXXX');
+set_theme_mod('theme_address', 'YOUR_COMPANY_ADDRESS');
 "
 
 # 3. 清除缓存（WP Fastest Cache 等会缓存旧值）
 rm -rf /var/www/站点/wp-content/cache/all/*
 ```
 
-**注意**: 如果主题中同一个值用了两个不同的 key（如 `mingyuan_phone` 和 `mingyuan_company_phone`），必须同时更新两个key，或统一为一个key。
+**注意**: 如果主题中同一个值用了两个不同的 key（如 `mingyuan_phone` 和 `theme_phone`），必须同时更新两个key，或统一为一个key。
 
-**验证**: `curl -sk https://站点/ | grep '400-666-2906'` 必须返回新值。
+**验证**: `curl -sk https://站点/ | grep '400-XXX-XXXX'` 必须返回新值。
 
 ---
 
@@ -628,8 +628,8 @@ scp "D:\原始\企业微信二维码.jpg" root@服务器:/var/www/.../assets/ima
 ```bash
 sudo -u www php -r "
 require '/var/www/站点/wp-load.php';
-echo 'Phone: ' . get_theme_mod('mingyuan_company_phone') . PHP_EOL;
-echo 'ICP: '   . get_theme_mod('mingyuan_company_icp') . PHP_EOL;
+echo 'Phone: ' . get_theme_mod('theme_phone') . PHP_EOL;
+echo 'ICP: '   . get_theme_mod('theme_icp') . PHP_EOL;
 "
 ```
 若输出与PHP源码不一致，说明数据库值在覆盖。
@@ -637,22 +637,22 @@ echo 'ICP: '   . get_theme_mod('mingyuan_company_icp') . PHP_EOL;
 **P0修复 - 双管齐下**:
 ```bash
 # 1. 修改PHP源码默认值（治本）
-sed -i "s/'400-xxx-xxxx'/'400-666-2906'/g" customizer.php functions.php
+sed -i "s/'400-xxx-xxxx'/'400-XXX-XXXX'/g" customizer.php functions.php
 
 # 2. 更新数据库已保存值（治标 + 立即生效）
 sudo -u www php -r "
 require '/var/www/站点/wp-load.php';
-set_theme_mod('mingyuan_company_phone', '400-666-2906');
-set_theme_mod('mingyuan_company_address', '广州市天河区御富科贸园');
+set_theme_mod('theme_phone', '400-XXX-XXXX');
+set_theme_mod('theme_address', 'YOUR_COMPANY_ADDRESS');
 "
 
 # 3. 清除缓存（WP Fastest Cache 等会缓存旧值）
 rm -rf /var/www/站点/wp-content/cache/all/*
 ```
 
-**注意**: 如果主题中同一个值用了两个不同的 key（如 `mingyuan_phone` 和 `mingyuan_company_phone`），必须同时更新两个key，或统一为一个key。
+**注意**: 如果主题中同一个值用了两个不同的 key（如 `mingyuan_phone` 和 `theme_phone`），必须同时更新两个key，或统一为一个key。
 
-**验证**: `curl -sk https://站点/ | grep '400-666-2906'` 必须返回新值。
+**验证**: `curl -sk https://站点/ | grep '400-XXX-XXXX'` 必须返回新值。
 
 ---
 
