@@ -42,6 +42,7 @@ from toolset_distributions import (
     validate_distribution
 )
 from model_tools import TOOL_TO_TOOLSET_MAP
+from bwm_cli.i18n import _
 
 
 # Global configuration for worker processes

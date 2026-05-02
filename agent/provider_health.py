@@ -155,29 +155,52 @@ def _build_probe_url(provider: str, base_url: str) -> Optional[str]:
 def _do_http_probe(url: str, timeout: float = _PROBE_TIMEOUT) -> Tuple[bool, float, str]:
     """Perform an HTTP probe and return (success, latency_ms, error).
 
-    Issues a GET request.  2xx and 401/403 are considered 'reachable'
-    (the service is up, auth issues are separate).  Only connection
-    errors and timeouts count as failures.
-
-    Also captures x-ratelimit-remaining-* headers for capacity-aware routing.
+    Uses httpx (proxy-aware via trust_env) instead of urllib to respect
+    HTTPS_PROXY/HTTP_PROXY/ALL_PROXY env vars — critical for users behind
+    proxies (e.g. Chinese users accessing blocked API endpoints).
     """
-    import urllib.request
-    import urllib.error
+    try:
+        import httpx
+    except ImportError:
+        # Fallback to urllib if httpx unavailable
+        return _do_http_probe_urllib(url, timeout)
 
+    start = time.time()
+    try:
+        # trust_env=True (default) reads HTTPS_PROXY/HTTP_PROXY/ALL_PROXY
+        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+            resp = client.get(url, headers={"User-Agent": "BookwormPRO-HealthProbe/1.0"})
+            latency_ms = (time.time() - start) * 1000
+            _capture_rate_limit_headers(dict(resp.headers))
+            return True, latency_ms, ""
+    except httpx.HTTPStatusError as e:
+        latency_ms = (time.time() - start) * 1000
+        if e.response.status_code in (401, 403, 404, 405):
+            _capture_rate_limit_headers(dict(e.response.headers))
+            return True, latency_ms, ""
+        return False, latency_ms, f"HTTP {e.response.status_code}"
+    except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout) as e:
+        latency_ms = (time.time() - start) * 1000
+        return False, latency_ms, str(e)
+    except Exception as e:
+        latency_ms = (time.time() - start) * 1000
+        return False, latency_ms, str(e)
+
+
+def _do_http_probe_urllib(url: str, timeout: float = _PROBE_TIMEOUT) -> Tuple[bool, float, str]:
+    """Fallback HTTP probe using urllib (not proxy-aware)."""
+    import urllib.request, urllib.error
     start = time.time()
     try:
         req = urllib.request.Request(url, method="GET")
         req.add_header("User-Agent", "BookwormPRO-HealthProbe/1.0")
         resp = urllib.request.urlopen(req, timeout=timeout)
         latency_ms = (time.time() - start) * 1000
-        # Capture rate limit headers for capacity scoring
         _capture_rate_limit_headers(dict(resp.headers))
         return True, latency_ms, ""
     except urllib.error.HTTPError as e:
         latency_ms = (time.time() - start) * 1000
-        # HTTP-level response (e.g. 401, 403, 404) — service IS reachable
         if e.code in (401, 403, 404, 405):
-            _capture_rate_limit_headers(dict(e.headers) if hasattr(e, 'headers') else {})
             return True, latency_ms, ""
         return False, latency_ms, f"HTTP {e.code}"
     except urllib.error.URLError as e:

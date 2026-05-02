@@ -76,6 +76,7 @@ except ImportError:  # pragma: no cover
     fcntl = None  # type: ignore[assignment]
 
 from bwm_constants import get_hermes_home
+from bwm_cli.i18n import _
 
 logger = logging.getLogger(__name__)
 

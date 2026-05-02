@@ -4331,6 +4331,8 @@ def get_async_text_auxiliary_client(task: str = "", *, main_runtime: Optional[Di
 
 _VISION_AUTO_PROVIDER_ORDER = (
 
+    "alibaba",
+
     "openrouter",
 
     "bookwormpro",
@@ -4347,6 +4349,14 @@ def _normalize_vision_provider(provider: Optional[str]) -> str:
 
 
 
+
+
+def _try_alibaba_vision(model_override: Optional[str] = None) -> Tuple[Optional[Any], Optional[str]]:
+    _model = (model_override or "qwen-vl-max").replace("alibaba/", "")
+    client, model = resolve_provider_client("alibaba", _model)
+    if client is None:
+        return None, None
+    return client, model or _model
 
 
 def _resolve_strict_vision_backend(provider: str) -> Tuple[Optional[Any], Optional[str]]:
@@ -4368,6 +4378,10 @@ def _resolve_strict_vision_backend(provider: str) -> Tuple[Optional[Any], Option
     if provider == "anthropic":
 
         return _try_anthropic()
+
+    if provider == "alibaba":
+
+        return _try_alibaba_vision()
 
     if provider == "custom":
 
@@ -4483,7 +4497,7 @@ def resolve_vision_provider_client(
 
             return resolved_provider, None, None
 
-        final_model = resolved_model or default_model
+        final_model = default_model or resolved_model
 
         if async_mode:
 

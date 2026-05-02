@@ -69,6 +69,15 @@ class DNSResolver:
         self._misses: int = 0
         self._refreshes: int = 0
 
+    @staticmethod
+    def _proxy_active() -> bool:
+        """Check if an HTTP/HTTPS proxy is configured in env vars."""
+        import os as _os
+        for key in ("HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "ALL_PROXY", "all_proxy"):
+            if _os.getenv(key, "").strip():
+                return True
+        return False
+
     def resolve(
         self,
         hostname: str,
@@ -78,15 +87,23 @@ class DNSResolver:
     ) -> List[Tuple[str, int]]:
         """Resolve a hostname to (ip, port) tuples.
 
+        When a proxy is active, DNS resolution is SKIPPED — the proxy
+        handles DNS on its own.  Calling socket.getaddrinfo() would leak
+        the user's IP via system DNS.
+
         Args:
-            hostname: The hostname to resolve (e.g. 'api.openai.com').
+            hostname: The hostname to resolve.
             port: The port number.
-            force: If True, bypass cache and force a fresh resolution.
+            force: If True, bypass cache.
 
         Returns:
-            List of (ip_address, port) tuples, sorted IPv4 first then IPv6.
+            List of (ip, port) tuples, or empty list when proxy is active.
         """
         if not hostname:
+            return []
+
+        # Proxy is active: skip DNS to avoid IP leak. The proxy resolves.
+        if self._proxy_active():
             return []
 
         key = f"{hostname}:{port}"
