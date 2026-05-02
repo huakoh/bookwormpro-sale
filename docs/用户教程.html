@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookwormPRO 用户教程 · AI 智能助手技能包</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --success: #3fb950;
+    --warn: #d2991d;
+    --danger: #f85149;
+    --code-bg: #1c2128;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  h1 { font-size: 2.2em; margin-bottom: 8px; color: #fff; }
+  h1 .sub { display:block; font-size: 0.45em; color: var(--muted); font-weight: 400; margin-top: 4px; }
+  h2 {
+    font-size: 1.5em;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: #e6edf3;
+  }
+  h3 { font-size: 1.15em; margin: 24px 0 8px; color: #d2d9e0; }
+  p, li { margin: 8px 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul, ol { padding-left: 24px; }
+  li { margin: 4px 0; }
+
+  .banner {
+    background: linear-gradient(135deg, #1a2332 0%, #0d1b2a 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 32px;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  .banner .logo {
+    font-size: 3em;
+    font-weight: 900;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #58a6ff, #a371f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .banner .tagline {
+    color: var(--muted);
+    font-size: 1.1em;
+    margin-top: 8px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat .num { font-size: 2em; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 0.85em; color: var(--muted); margin-top: 4px; }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin: 12px 0;
+  }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.9em;
+  }
+  :not(pre) > code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .step .num {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    width: 28px; height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.9em;
+    margin-right: 8px;
+  }
+  .step .title { font-weight: 600; color: #e6edf3; }
+
+  .tip, .warn, .danger {
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-left: 3px solid;
+  }
+  .tip { background: rgba(63,185,80,0.1); border-color: var(--success); }
+  .warn { background: rgba(210,153,29,0.1); border-color: var(--warn); }
+  .danger { background: rgba(248,81,73,0.1); border-color: var(--danger); }
+  .tip::before { content: "💡 "; }
+  .warn::before { content: "⚠️ "; }
+  .danger::before { content: "🚫 "; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+  th { background: var(--surface); font-weight: 600; color: #e6edf3; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .cat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .cat .name { font-weight: 600; font-size: 0.95em; color: #e6edf3; }
+  .cat .count { font-size: 0.8em; color: var(--muted); }
+
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .toc a { display: block; padding: 3px 0; }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85em;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 20px 12px; }
+    .banner { padding: 24px 16px; }
+    .banner .logo { font-size: 2em; }
+    pre { font-size: 0.8em; padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <div class="logo">BookwormPRO</div>
+  <div class="tagline">让 AI 助手从"能用"变成"专业"的 305 技能生态包</div>
+</div>
+
+<div class="toc">
+  <strong style="color:#e6edf3">📑 目录</strong>
+  <a href="#what">一、这是什么</a>
+  <a href="#require">二、前置条件</a>
+  <a href="#install">三、安装步骤</a>
+  <a href="#config">四、配置 API Key</a>
+  <a href="#usage">五、使用方式</a>
+  <a href="#skills">六、技能分类一览</a>
+  <a href="#personality">七、人格系统</a>
+  <a href="#self-audit">八、系统自检</a>
+  <a href="#update">九、更新与卸载</a>
+  <a href="#faq">十、常见问题</a>
+</div>
+
+<h2 id="what">一、这是什么</h2>
+
+<p>BookwormPRO 是一套为 AI 编程助手设计的<strong>技能生态系统</strong>。它不改变你的 AI 工具——而是让你的 AI 工具在遇到特定任务时，自动加载对应的专业领域知识和工作流程。</p>
+
+<div class="stats">
+  <div class="stat"><div class="num">305</div><div class="label">专业技能</div></div>
+  <div class="stat"><div class="num">100+</div><div class="label">领域分类</div></div>
+  <div class="stat"><div class="num">1</div><div class="label">人格系统</div></div>
+  <div class="stat"><div class="num">2</div><div class="label">灵魂文件</div></div>
+</div>
+
+<p><strong>核心理念：</strong>路由引擎推荐了专家，专家就必须上场。每次对话中，AI 自动识别你的意图，匹配最合适的技能，加载完整专业指导——你不需要记住 305 个技能的名字。</p>
+
+<div class="tip">BookwormPRO 是<strong>配置和技能包</strong>，不是独立应用。它需要配合支持 Skills 的 AI 编程助手使用（如 Claude Code、Bookworm Agent 等）。</div>
+
+<h2 id="require">二、前置条件</h2>
+
+<table>
+  <tr><th>项目</th><th>要求</th></tr>
+  <tr><td>Python</td><td>3.10+</td></tr>
+  <tr><td>Git</td><td>任意版本</td></tr>
+  <tr><td>AI 助手</td><td>支持 Skills 的编程助手（Claude Code / Bookworm Agent 等）</td></tr>
+  <tr><td>API Key</td><td>至少一个 LLM 服务商的 Key（推荐 DeepSeek）</td></tr>
+</table>
+
+<h2 id="install">三、安装步骤</h2>
+
+<div class="step">
+  <span class="num">1</span>
+  <span class="title">克隆仓库</span>
+  <pre>git clone https://github.com/huakoh/bookwormpro-sale.git /tmp/bookwormpro-sale</pre>
+</div>
+
+<div class="step">
+  <span class="num">2</span>
+  <span class="title">运行安装脚本</span>
+  <pre>cd /tmp/bookwormpro-sale
+python scripts/setup.py</pre>
+  <p>脚本会引导你填入 API Key。选"快速模式"跳过交互：</p>
+  <pre>python scripts/setup.py --quick</pre>
+</div>
+
+<div class="step">
+  <span class="num">3</span>
+  <span class="title">验证安装</span>
+  <p>重启 AI 助手后输入：</p>
+  <pre>bookworm自检</pre>
+  <p>如果看到 6 环节体检报告，安装成功 ✅</p>
+</div>
+
+<h3>手动安装（脚本不可用时）</h3>
+<pre>mkdir -p ~/.bookwormpro
+
+# 复制技能（核心）
+cp -r skills/ ~/.bookwormpro/skills/
+
+# 复制灵魂文件
+cp soul/SOUL.md ~/.bookwormpro/
+cp soul/SOUL.md ~/.claude/
+
+# 复制配置模板
+cp config/.env.template ~/.bookwormpro/.env
+cp config/config.yaml ~/.bookwormpro/config.yaml
+
+# 编辑 .env 填入你的 API Key
+nano ~/.bookwormpro/.env</pre>
+
+<h2 id="config">四、配置 API Key</h2>
+
+<p>打开 <code>~/.bookwormpro/.env</code>，最少需要配置一个 Provider：</p>
+
+<h3>推荐配置（DeepSeek，性价比最高）</h3>
+<pre>DEEPSEEK_API_KEY=sk-your-deepseek-key-here
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1</pre>
+
+<h3>完整配置示例</h3>
+<pre># ── 必选（至少配一个）──
+DEEPSEEK_API_KEY=sk-your-key-here
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+
+# ── 可选：解锁更多能力 ──
+DASHSCOPE_API_KEY=sk-your-key          # 通义千问 + 图片生成 + 视觉
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+AUXILIARY_VISION_MODEL=qwen-vl-max     # 视觉识别模型
+
+GOOGLE_API_KEY=your-key                # Gemini
+
+# 豆包视觉（国内方案）
+DOUBAO_API_KEY=ark-your-key
+DOUBAO_BASE_URL=https://ark.cn-beijing.volces.com/api/v3</pre>
+
+<h3>切换主 Provider</h3>
+<p>编辑 <code>~/.bookwormpro/config.yaml</code>：</p>
+<pre>model:
+  provider: deepseek       # 改为 openai / anthropic
+  default: deepseek-v4-pro # 改为你用的模型</pre>
+
+<div class="tip">获取 DeepSeek API Key：访问 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> 注册并充值（支持支付宝）。</div>
+
+<h2 id="usage">五、使用方式</h2>
+
+<p>安装完成后，你的 AI 助手会自动加载所有技能。<strong>无需手动指定</strong>——直接正常对话即可：</p>
+
+<h3>自动路由示例</h3>
+<table>
+  <tr><th>你说</th><th>AI 自动调用</th></tr>
+  <tr><td>"帮我审查这个项目的安全性"</td><td><code>security-expert</code> 技能</td></tr>
+  <tr><td>"设计一个 SaaS 定价方案"</td><td><code>pricing-strategist</code> 技能</td></tr>
+  <tr><td>"给这页面做个前端设计"</td><td><code>frontend-design</code> 技能</td></tr>
+  <tr><td>"部署 WordPress 到中国服务器"</td><td><code>wordpress-deploy-bt-panel-china</code> 技能</td></tr>
+  <tr><td>"写一份商业计划书"</td><td><code>business-plan-skill</code> 技能</td></tr>
+  <tr><td>"帮我调试这个 bug"</td><td><code>systematic-debugging</code> 技能</td></tr>
+  <tr><td>"审查这份合同"</td><td><code>legal-review-skill</code> 技能</td></tr>
+</table>
+
+<h3>手动指定技能</h3>
+<p>你也可以直接用 <code>/技能名</code> 显式调用：</p>
+<pre>/bookworm自检          # 运行系统自检
+/见山大叔              # 切换人格
+/security-expert       # 强制安全审查</pre>
+
+<h2 id="skills">六、技能分类一览</h2>
+
+<div class="category-grid">
+  <div class="cat"><div class="name">🖥 软件开发</div><div class="count">40+ 技能</div></div>
+  <div class="cat"><div class="name">🛡 安全审计</div><div class="count">10+ 技能</div></div>
+  <div class="cat"><div class="name">🚀 DevOps</div><div class="count">30+ 技能</div></div>
+  <div class="cat"><div class="name">🎨 创意设计</div><div class="count">20+ 技能</div></div>
+  <div class="cat"><div class="name">📊 数据科学</div><div class="count">15+ 技能</div></div>
+  <div class="cat"><div class="name">🤖 AI/ML</div><div class="count">20+ 技能</div></div>
+  <div class="cat"><div class="name">📱 移动开发</div><div class="count">10+ 技能</div></div>
+  <div class="cat"><div class="name">🏗 架构设计</div><div class="count">8+ 技能</div></div>
+  <div class="cat"><div class="name">📝 技术写作</div><div class="count">5+ 技能</div></div>
+  <div class="cat"><div class="name">💰 商业财经</div><div class="count">8+ 技能</div></div>
+  <div class="cat"><div class="name">📈 产品运营</div><div class="count">15+ 技能</div></div>
+  <div class="cat"><div class="name">🇨🇳 中文特色</div><div class="count">20+ 技能</div></div>
+  <div class="cat"><div class="name">🔧 系统工具</div><div class="count">10+ 技能</div></div>
+  <div class="cat"><div class="name">🎮 游戏</div><div class="count">5+ 技能</div></div>
+  <div class="cat"><div class="name">📋 项目管理</div><div class="count">6+ 技能</div></div>
+  <div class="cat"><div class="name">🔬 学术研究</div><div class="count">10+ 技能</div></div>
+</div>
+
+<h3>代表技能</h3>
+<table>
+  <tr><th>技能名</th><th>触发场景</th></tr>
+  <tr><td><code>developer-expert</code></td><td>通用开发任务</td></tr>
+  <tr><td><code>debugger-expert</code></td><td>调试 bug、错误排查</td></tr>
+  <tr><td><code>security-expert</code></td><td>安全审计、漏洞扫描</td></tr>
+  <tr><td><code>architect-expert</code></td><td>系统架构设计</td></tr>
+  <tr><td><code>frontend-design</code></td><td>前端界面设计（防 AI 同质化）</td></tr>
+  <tr><td><code>api-designer</code></td><td>RESTful API 设计</td></tr>
+  <tr><td><code>bookwormpro-custom-personality</code></td><td>自定义 AI 人格</td></tr>
+  <tr><td><code>wordpress-deploy-bt-panel-china</code></td><td>宝塔面板部署 WordPress</td></tr>
+  <tr><td><code>ssl-behind-l4-proxy</code></td><td>L4 代理后 SSL 证书配置</td></tr>
+  <tr><td><code>pricing-strategist</code></td><td>SaaS 定价策略设计</td></tr>
+  <tr><td><code>seedream-generation-review-workflow</code></td><td>AI 图片生成 + 自动评审</td></tr>
+  <tr><td><code>subagent-driven-development</code></td><td>多 Agent 并行开发</td></tr>
+</table>
+
+<h2 id="personality">七、人格系统</h2>
+
+<p>BookwormPRO 默认激活"<strong>见山大叔</strong>"人格——敲过二十年代码的老派工程师：</p>
+
+<ul>
+  <li>中文回复，技术名词保留英文</li>
+  <li>先分析后动手，给方案列编号</li>
+  <li>改代码必附 diff——改了什么、为什么、影响什么</li>
+  <li>不留 TODO，不交半成品，质量过四关才出手</li>
+  <li>专业但不端着，务实但有温度</li>
+</ul>
+
+<p>编辑 <code>~/.bookwormpro/config.yaml</code> 可自定义人格或禁用它（设置 <code>display.personality</code> 为空）。</p>
+
+<p>创建自定义人格：</p>
+<pre># 使用 bookwormpro-custom-personality 技能
+# AI 会引导你一步步创建专属人格</pre>
+
+<h2 id="self-audit">八、系统自检</h2>
+
+<p>BookwormPRO 内置了 6 环节自检管线，随时诊断系统健康：</p>
+
+<table>
+  <tr><th>命令</th><th>执行内容</th></tr>
+  <tr><td><code>bookworm自检</code></td><td>全量 6 环节体检</td></tr>
+  <tr><td><code>bookworm自检 修复</code></td><td>全量体检 + 自动修复已知问题</td></tr>
+  <tr><td><code>bookworm自检 只看cron</code></td><td>仅检查定时任务</td></tr>
+  <tr><td><code>bookworm自检 只看env</code></td><td>仅审查 .env 配置</td></tr>
+  <tr><td><code>bookworm自检 只看日志</code></td><td>仅分析日志噪音</td></tr>
+  <tr><td><code>bookworm自检 只看凭证</code></td><td>仅查凭证冲突</td></tr>
+  <tr><td><code>bookworm自检 只看连通</code></td><td>仅测 Provider 连通性</td></tr>
+</table>
+
+<div class="tip">建议每周跑一次 <code>bookworm自检</code>，及时发现配置漂移或 API Key 过期。</div>
+
+<h2 id="update">九、更新与卸载</h2>
+
+<h3>更新</h3>
+<pre>cd /tmp/bookwormpro-sale && git pull
+python scripts/setup.py --quick</pre>
+
+<h3>卸载</h3>
+<pre>rm -rf ~/.bookwormpro/skills
+rm -rf ~/.bookwormpro/SOUL.md
+rm -rf ~/.bookwormpro/soul</pre>
+
+<h2 id="faq">十、常见问题</h2>
+
+<h3>Q: 提示 "skill not found"</h3>
+<p>确认 <code>~/.bookwormpro/skills/</code> 目录存在且有 SKILL.md 文件。运行 <code>python scripts/setup.py</code> 重新安装。</p>
+
+<h3>Q: API 调用返回 401/403</h3>
+<p>检查 <code>~/.bookwormpro/.env</code> 中 API Key 是否正确，确认账户余额充足。API Key 不要加引号。</p>
+
+<h3>Q: 怎么知道 AI 用了哪个技能</h3>
+<p>对话中会出现 <code>[BWR:xxx]</code> 路由标识，标明置信度和匹配的技能。或者直接用 <code>/技能名</code> 强制指定。</p>
+
+<h3>Q: 想增加新技能怎么办</h3>
+<p>把 SKILL.md 文件放到 <code>~/.bookwormpro/skills/你的分类/</code> 目录下即可。AI 会自动发现新技能。</p>
+
+<h3>Q: 支持哪些 AI 工具</h3>
+<p>支持所有兼容 Skills 协议的 AI 编程助手，包括 Claude Code、Cursor、Windsurf、Bookworm Agent 等。</p>
+
+<h3>Q: 安装后要重启吗</h3>
+<p>需要重启你的 AI 助手，让它重新扫描 skills 目录。</p>
+
+<h3>Q: API Key 安全吗</h3>
+<p>Key 存储在本地 <code>~/.bookwormpro/.env</code>，不会被上传到任何服务器。BookwormPRO 遵守<strong>退化安全网</strong>原则：绝不暴露凭证明文于代码/日志/响应中。</p>
+
+<div class="danger">不要将 <code>.env</code> 文件提交到 Git 仓库。<code>.gitignore</code> 已默认排除它。</div>
+
+<footer>
+  <p>BookwormPRO · AI 智能助手技能包</p>
+  <p><a href="https://github.com/huakoh/bookwormpro-sale">github.com/huakoh/bookwormpro-sale</a></p>
+  <p style="margin-top:12px">善读者，必善造。</p>
+</footer>
+
+</body>
+</html>
