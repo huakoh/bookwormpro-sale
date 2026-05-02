@@ -1,0 +1,44 @@
+[
+  {
+    "icon": "main-logo",
+    "files": {
+      "512": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\main-logo_512x512.png",
+      "256": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\main-logo_256x256.png",
+      "128": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\main-logo_128x128.png",
+      "64": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\main-logo_64x64.png",
+      "48": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\main-logo_48x48.png",
+      "32": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\main-logo_32x32.png",
+      "16": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\main-logo_16x16.png",
+      "original": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\main-logo_original.png"
+    },
+    "review": "{\"design\":8, \"brand\":8, \"scalable\":7, \"commercial\":8, \"total\":7.75, \"verdict\":\"PASS\", \"notes\":\"图标融合书（知识）、鸟（书虫意象）与量子轨道（科技感光点环）元素，色彩对比鲜明（深空黑+暖金+冷光蓝），结构简洁有层次；缩小后核心元素（书、鸟、环形轨道）仍可辨识，风格现代且主题契合“书虫+量子科技”，适配知识科技类软件的品牌定位。\"}"
+  },
+  {
+    "icon": "app-icon-simple",
+    "files": {
+      "512": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\app-icon-simple_512x512.png",
+      "256": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\app-icon-simple_256x256.png",
+      "128": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\app-icon-simple_128x128.png",
+      "64": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\app-icon-simple_64x64.png",
+      "48": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\app-icon-simple_48x48.png",
+      "32": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\app-icon-simple_32x32.png",
+      "16": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\app-icon-simple_16x16.png",
+      "original": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\app-icon-simple_original.png"
+    },
+    "review": "{\"design\":8, \"brand\":6, \"scalable\":7, \"commercial\":7, \"total\":7, \"verdict\":\"PASS\", \"notes\":\"图标以霓虹渐变曲线营造科技感，构图简洁流畅；虽“书虫”具象意象稍弱，但量子科技的抽象线条感与现代商业风格适配，缩小后核心形态仍清晰，适合科技类应用场景。\"}"
+  },
+  {
+    "icon": "favicon",
+    "files": {
+      "512": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\favicon_512x512.png",
+      "256": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\favicon_256x256.png",
+      "128": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\favicon_128x128.png",
+      "64": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\favicon_64x64.png",
+      "48": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\favicon_48x48.png",
+      "32": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\favicon_32x32.png",
+      "16": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\favicon_16x16.png",
+      "original": "C:\\Users\\leesu\\bookwormpro-sale\\assets\\icons\\favicon_original.png"
+    },
+    "review": "{\"design\":7, \"brand\":6, \"scalable\":7, \"commercial\":7, \"total\":7, \"verdict\":\"PASS\", \"notes\":\"设计简洁具科技感（量子轨道/粒子视觉），缩放后核心元素清晰；但“书虫”主题关联较弱，整体适配科技类软件图标。\"}"
+  }
+]
