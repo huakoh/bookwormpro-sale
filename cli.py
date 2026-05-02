@@ -6083,6 +6083,8 @@ class HermesCLI:
             self._show_usage()
         elif canonical == "cost":
             self._show_cost()
+        elif canonical == "metrics":
+            self._handle_metrics_command(cmd_original)
         elif canonical == "insights":
             self._show_insights(cmd_original)
         elif canonical == "copy":
@@ -7191,6 +7193,18 @@ class HermesCLI:
             logging.getLogger().setLevel(logging.INFO)
             for quiet_logger in ('tools', 'run_agent', 'trajectory_compressor', 'cron', 'bwm_cli'):
                 logging.getLogger(quiet_logger).setLevel(logging.ERROR)
+
+    def _handle_metrics_command(self, cmd_original: str):
+        """Handle /metrics command — show Gateway hardening metrics."""
+        try:
+            from bwm_cli.commands import handle_metrics_command
+            args = cmd_original.split(maxsplit=1)[1] if len(cmd_original.split()) > 1 else ""
+            output = handle_metrics_command(args)
+            self._console_print(output)
+        except ImportError as e:
+            self._console_print(f"[错误] Metrics modules not available: {e}")
+        except Exception as e:
+            self._console_print(f"[错误] Failed to get metrics: {e}")
 
     def _show_cost(self):
         """Compact 3-line rollup: session / today / month tokens + cost.

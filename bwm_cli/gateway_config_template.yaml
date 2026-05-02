@@ -1,0 +1,30 @@
+# ── Gateway Hardening ──────────────────────────────────────────────────
+# Configuration for the gateway robustness modules.
+# All values have sensible defaults; uncomment to override.
+#
+# gateway:
+#   circuit_breaker:
+#     failure_threshold: 5       # consecutive failures to trip (default: 5)
+#     recovery_seconds: 60       # base recovery time before HALF_OPEN (default: 60)
+#     max_recovery_seconds: 300  # cap for exponential backoff (default: 300)
+#
+#   health_probe:
+#     cooldown_seconds: 30       # minimum interval between probes (default: 30)
+#     probe_timeout: 5           # HTTP request timeout per probe (default: 5)
+#     dead_threshold: 3          # consecutive failures to mark DEAD (default: 3)
+#
+#   connection_pool:
+#     max_connections: 20        # global max connections (default: 20)
+#     max_keepalive: 10          # max idle keep-alive connections (default: 10)
+#     keepalive_expiry: 30       # idle connection timeout in seconds (default: 30)
+#
+#   memory_backpressure:
+#     max_response_bytes: 524288 # response accumulation cap (default: 512KB)
+#
+#   graceful_drain:
+#     max_wait_seconds: 25       # max time to wait for in-flight requests (default: 25)
+#
+#   dns_cache:
+#     default_ttl: 300           # default TTL for DNS cache (default: 300)
+#     min_ttl: 30                # minimum enforced TTL (default: 30)
+#     max_ttl: 600               # maximum enforced TTL (default: 600)

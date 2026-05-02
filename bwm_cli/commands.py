@@ -156,6 +156,8 @@ COMMAND_REGISTRY: list[CommandDef] = [
     # Info
     CommandDef("commands", "Browse all commands and skills (paginated)", "Info",
                gateway_only=True, args_hint="[page]"),
+    CommandDef("metrics", "Show Gateway metrics (latency, availability, circuit trips)", "Info",
+               cli_only=True, args_hint="[json|watch]"),
     CommandDef("help", "Show available commands", "Info"),
     CommandDef("restart", "Gracefully restart the gateway after draining active runs", "Session",
                gateway_only=True),
@@ -1423,3 +1425,64 @@ def _file_size_label(path: str) -> str:
     if size < 1024 * 1024 * 1024:
         return f"{size / (1024 * 1024):.1f}M"
     return f"{size / (1024 * 1024 * 1024):.1f}G"
+
+
+# ── /metrics handler ────────────────────────────────────────────────────
+
+def handle_metrics_command(args: str = "") -> str:
+    """Handle /metrics command — return Gateway metrics snapshot."""
+    try:
+        from agent.metrics_store import get_store
+        from agent.circuit_breaker import status as _cb_status
+        from agent.provider_health import status as _health_status
+        from agent.dns_resolver import get_resolver as _get_dns
+    except ImportError as e:
+        return f"[错误] Metrics modules not available: {e}"
+
+    store = get_store()
+    all_metrics = store.get_all_metrics()
+
+    if args.strip() == "json":
+        import json
+        return json.dumps(all_metrics, indent=2)
+
+    lines = []
+    lines.append("Gateway Metrics")
+    lines.append("=" * 50)
+    lines.append(f"Uptime: {all_metrics['uptime_s']:.0f}s")
+    lines.append(f"SSE leaks: {all_metrics['sse_leaks_detected']}")
+    lines.append("")
+
+    for provider, m in sorted(all_metrics.get("providers", {}).items()):
+        success_rate = m.get("success_rate", 0)
+        icon = "🟢" if success_rate >= 95 else ("🟡" if success_rate >= 80 else "🔴")
+        lines.append(f"{icon} {provider}")
+        lines.append(f"   Calls: {m['api_calls']} ({m['api_successes']} ok, {m['api_failures']} fail)")
+        lines.append(f"   Success rate: {success_rate}%")
+        lat = m.get("latency", {})
+        if lat.get("total", 0) > 0:
+            lines.append(f"   Latency: avg={lat['avg_ms']}ms p50={lat['p50_s']}s p99={lat['p99_s']}s")
+        if m.get("circuit_trips", 0) > 0:
+            lines.append(f"   Circuit trips: {m['circuit_trips']}")
+        if m.get("dns_refreshes", 0) > 0:
+            lines.append(f"   DNS refreshes: {m['dns_refreshes']}")
+        lines.append("")
+
+    # Add circuit breaker status
+    lines.append("Circuit Breaker Status")
+    lines.append("-" * 30)
+    for provider in all_metrics.get("providers", {}):
+        try:
+            cb_rec = _cb_status(provider)
+            state_icon = {"closed": "✅", "open": "🔴", "half_open": "🟡"}.get(
+                cb_rec.state.value if hasattr(cb_rec.state, 'value') else str(cb_rec.state),
+                "⚪"
+            )
+            lines.append(
+                f"{state_icon} {provider}: {cb_rec.state.value if hasattr(cb_rec.state, 'value') else cb_rec.state} "
+                f"(failures={cb_rec.consecutive_failures}, trips={cb_rec.trip_count})"
+            )
+        except Exception:
+            pass
+
+    return chr(10).join(lines)
