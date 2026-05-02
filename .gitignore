@@ -1,0 +1,14 @@
+# 不需要纳入版本控制的文件
+.env
+auth.json
+*.log
+logs/
+sessions/
+cache/
+memories/
+state.db*
+audit.db*
+*.lock
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,114 @@
+# 广告图设计反模式库 (P2-2 · D2)
+# Stage 2 注入 + Stage 4 量化检查
+# 格式: id / 规则(中文) / 量化条件 / 严重性
+
+anti_patterns:
+  # ── 文字 ──
+  - id: "AP-TXT-01"
+    rule: "禁止文字颜色超过 2 种"
+    check: "extract_text_colors(image) > 2"
+    severity: "medium"
+
+  - id: "AP-TXT-02"
+    rule: "标题/副标题/CTA 字号比至少 1.5:1"
+    check: "max_font_size / min_font_size < 1.5"
+    severity: "low"
+
+  - id: "AP-TXT-03"
+    rule: "文字区域不超过画面 40%"
+    check: "text_area / total_area > 0.4"
+    severity: "medium"
+
+  - id: "AP-TXT-04"
+    rule: "避免文字在复杂纹理背景上(无清晰对比)"
+    check: "text_background_stddev > 50"
+    severity: "high"
+
+  # ── 色彩 ──
+  - id: "AP-CLR-01"
+    rule: "CTA 按钮色与背景色色相距离 ≥ 60°"
+    check: "hue_distance(cta_color, bg_color) < 60"
+    severity: "high"
+
+  - id: "AP-CLR-02"
+    rule: "主文字与背景对比度 ≥ 4.5:1"
+    check: "contrast_ratio(text, bg) < 4.5"
+    severity: "critical"
+
+  - id: "AP-CLR-03"
+    rule: "避免红绿配色(色盲不可区分)"
+    check: "is_red_green_pair(primary, secondary)"
+    severity: "medium"
+
+  - id: "AP-CLR-04"
+    rule: "饱和度不超过 85% (刺眼)"
+    check: "avg_saturation > 0.85"
+    severity: "low"
+
+  # ── 构图 ──
+  - id: "AP-CMP-01"
+    rule: "主体不在画面正中心(大小适中)"
+    check: "subject_center_offset < 5%"
+    severity: "low"
+
+  - id: "AP-CMP-02"
+    rule: "避免画面被均分(50/50 割裂感)"
+    check: "horizontal_split_ratio in [0.45, 0.55]"
+    severity: "low"
+
+  - id: "AP-CMP-03"
+    rule: "留白区域 ≥ 15% (拥挤感)"
+    check: "whitespace_ratio < 0.15"
+    severity: "medium"
+
+  # ── 品牌 ──
+  - id: "AP-BRD-01"
+    rule: "主色与品牌色色差 ΔE ≤ 15"
+    check: "delta_e(dominant_color, brand_color) > 15"
+    severity: "high"
+
+  - id: "AP-BRD-02"
+    rule: "Logo 区域不被遮挡/裁切"
+    check: "logo_occlusion_ratio > 0"
+    severity: "critical"
+
+  - id: "AP-BRD-03"
+    rule: "禁止使用竞品色系(如可乐红 vs 百事蓝场景)"
+    check: "false"  # 需人工配置竞品色
+    severity: "medium"
+
+  # ── AI 通病 ──
+  - id: "AP-AI-01"
+    rule: "无 AI 常见畸变(手指/文字扭曲/奇异光影)"
+    check: "ai_artifact_score > 0.3"
+    severity: "high"
+
+  - id: "AP-AI-02"
+    rule: "中文文字清晰可辨(无乱码/假字)"
+    check: "chinese_char_recognition_rate < 0.9"
+    severity: "critical"
+
+  - id: "AP-AI-03"
+    rule: "避免塑料质感/过度光滑(AI感)"
+    check: "plastic_texture_score > 0.5"
+    severity: "medium"
+
+# ── 平台特殊规则 ──
+platform_rules:
+  wechat_moment:
+    - id: "AP-WX-01"
+      rule: "微信朋友圈广告文字不得超过总面积的 20%"
+      severity: "high"
+    - id: "AP-WX-02"
+      rule: "避免使用'第一''最''唯一'等广告法违禁词"
+      severity: "critical"
+
+  instagram_story:
+    - id: "AP-IG-01"
+      rule: "顶部/底部 250px 为安全区域(UI遮挡)"
+      severity: "high"
+
+  google_display:
+    - id: "AP-GD-01"
+      rule: "文件大小 < 150KB (推荐)"
+      severity: "medium"

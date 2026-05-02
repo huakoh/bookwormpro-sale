@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "pipeline_id": {"type": "string", "pattern": "^acp_[a-f0-9]{16}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["init", "ideation", "design", "awaiting_approval_1", "generating", "refining", "awaiting_approval_2", "exporting", "completed", "failed"]},
+    "input": {
+      "type": "object",
+      "properties": {
+        "brand_name": {"type": "string"},
+        "brand_url": {"type": "string", "format": "uri"},
+        "product_description": {"type": "string"},
+        "target_audience": {"type": "string"},
+        "platforms": {"type": "array", "items": {"enum": ["google_display", "facebook_feed", "instagram_feed", "instagram_story", "linkedin", "twitter", "wechat_moment", "douyin"]}},
+        "brand_colors": {"type": "array", "items": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"}},
+        "tone": {"enum": ["professional", "playful", "luxury", "minimal", "bold", "warm"]},
+        "language": {"type": "string", "default": "zh-CN"}
+      },
+      "required": ["brand_name", "product_description", "platforms"]
+    },
+    "stage1": {
+      "concepts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "angle": {"type": "string"},
+            "headline": {"type": "string"},
+            "subheadline": {"type": "string"},
+            "visual_description": {"type": "string"},
+            "cta": {"type": "string"},
+            "rationale": {"type": "string"},
+            "status": {"enum": ["pending", "approved", "rejected"]}
+          }
+        }
+      }
+    },
+    "stage2": {
+      "design_directions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "concept_id": {"type": "string"},
+            "color_palette": {"type": "object"},
+            "typography": {"type": "object"},
+            "composition": {"type": "string"},
+            "composition_desc": {"type": "string"},
+            "style": {"type": "string"},
+            "mood_board_keywords": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      },
+      "human_approved": {"type": "boolean", "default": false}
+    },
+    "stage3": {
+      "images": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "concept_id": {"type": "string"},
+            "path": {"type": "string"},
+            "prompt_used": {"type": "string"},
+            "model": {"type": "string"},
+            "size": {"type": "string"},
+            "cost_yuan": {"type": "number"},
+            "duration_s": {"type": "number"},
+            "status": {"enum": ["pending", "generating", "completed", "failed"]},
+            "retry_count": {"type": "integer", "default": 0}
+          }
+        }
+      }
+    },
+    "stage4": {
+      "reviews": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "image_id": {"type": "string"},
+            "overall_score": {"type": "number", "minimum": 0, "maximum": 10},
+            "pass": {"type": "boolean"},
+            "needs_regeneration": {"type": "boolean"},
+            "needs_fix": {"type": "boolean"},
+            "fixed_image_path": {"type": "string"},
+            "fixes_applied": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      },
+      "human_approved": {"type": "boolean", "default": false}
+    },
+    "stage5": {
+      "exports": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "image_id": {"type": "string"},
+            "platform": {"type": "string"},
+            "path": {"type": "string"},
+            "dimensions": {"type": "string"},
+            "format": {"type": "string"},
+            "file_size_kb": {"type": "number"}
+          }
+        }
+      }
+    },
+    "provider": {"type": "string", "default": "dashscope"},
+    "budget_yuan": {"type": "number", "default": 5.0},
+    "output_dir": {"type": "string"},
+    "errors": {"type": "array", "items": {"type": "object"}}
+  }
+}

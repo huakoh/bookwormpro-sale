@@ -1,0 +1,47 @@
+# AdCreativePipeline — Provider 统一配置
+# 用法: from image_provider import get_provider; p = get_provider()  # 默认
+# 切换: AD_PROVIDER=seedream python ...
+
+default: seedream
+
+providers:
+  seedream:
+    key_env: SEEDREAM_API_KEY
+    model: doubao-seedream-5-0-260128
+    base_url: https://ark.cn-beijing.volces.com/api/v3
+    size: "1920x1920"
+    cost_per_image_yuan: 0.02
+    max_concurrent: 3
+    supports_url: true
+    supports_b64: true
+
+  dashscope:
+    key_env: DASHSCOPE_API_KEY
+    model: qwen-image-plus
+    size: "1024*1024"
+    cost_per_image_yuan: 0.04
+    max_concurrent: 1
+    supports_url: true
+    supports_b64: false
+    prompt_limit_chars: 800
+
+  gemini:
+    key_env: GOOGLE_API_KEY
+    model: gemini-2.5-flash-image
+    size: "1024x1024"
+    cost_per_image_yuan: 0.0
+    max_concurrent: 1
+    api_style: gemini_native
+
+  gpt-image-2:
+    key_env: GPT_IMAGE_API_KEY
+    base_url_env: GPT_IMAGE_BASE_URL
+    model: gpt-image-2
+    size: "1024x1024"
+    cost_per_image_yuan: 0.15
+    max_concurrent: 3
+
+critic:
+  model: doubao-seed-1-6-vision-250815
+  base_url: https://ark.cn-beijing.volces.com/api/v3
+  key_env: SEEDREAM_API_KEY

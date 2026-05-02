@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "installed": {
+    "brainstorming": {
+      "source": "clawhub",
+      "identifier": "brainstorming",
+      "trust_level": "community",
+      "scan_verdict": "safe",
+      "content_hash": "sha256:ffbbfcf2f60b8877",
+      "install_path": "brainstorming",
+      "files": [
+        "SKILL.md",
+        "_meta.json"
+      ],
+      "metadata": {},
+      "installed_at": "2026-04-30T16:53:00.487263+00:00",
+      "updated_at": "2026-04-30T16:53:00.487263+00:00"
+    }
+  }
+}

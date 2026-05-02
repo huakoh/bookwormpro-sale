@@ -1,0 +1,58 @@
+{
+  "default": {
+    "colors": {
+      "primary": "#0052D9",
+      "secondary": "#366EF4",
+      "accent": "#E37318",
+      "background_light": "#FFFFFF",
+      "background_dark": "#1D2129",
+      "text_primary": "#1D2129",
+      "text_secondary": "#4E5969",
+      "text_on_dark": "#FFFFFF"
+    },
+    "typography": {
+      "display_font": "思源黑体 Bold",
+      "body_font": "思源黑体 Regular",
+      "display_size_px": 48,
+      "subhead_size_px": 24,
+      "cta_size_px": 20,
+      "caption_size_px": 12
+    },
+    "spacing": {
+      "base_unit_px": 8,
+      "safe_margin_px": 40,
+      "text_padding_px": 24,
+      "cta_padding_px": 16
+    },
+    "radius": {
+      "cta_button_px": 8,
+      "card_px": 12
+    }
+  },
+  "tones": {
+    "professional": {
+      "colors": {"primary": "#0052D9", "secondary": "#366EF4", "accent": "#E37318"},
+      "typography": {"display_font": "思源黑体 Bold"}
+    },
+    "playful": {
+      "colors": {"primary": "#FF6B35", "secondary": "#FFB088", "accent": "#2E86AB"},
+      "typography": {"display_font": "思源黑体 Bold"}
+    },
+    "luxury": {
+      "colors": {"primary": "#1A1A1A", "secondary": "#C9A96E", "accent": "#D4AF37"},
+      "typography": {"display_font": "思源宋体 Bold"}
+    },
+    "minimal": {
+      "colors": {"primary": "#2C2C2C", "secondary": "#757575", "accent": "#2196F3"},
+      "typography": {"display_font": "思源黑体 Light"}
+    },
+    "bold": {
+      "colors": {"primary": "#FF0000", "secondary": "#FF4444", "accent": "#FFD700"},
+      "typography": {"display_font": "思源黑体 Heavy"}
+    },
+    "warm": {
+      "colors": {"primary": "#FF7B42", "secondary": "#FFB088", "accent": "#2E86AB"},
+      "typography": {"display_font": "思源黑体 Medium"}
+    }
+  }
+}

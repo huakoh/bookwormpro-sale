@@ -1,0 +1,35 @@
+{
+  "google_display": [
+    {"name": "leaderboard", "width": 728, "height": 90, "max_size_kb": 150},
+    {"name": "medium_rectangle", "width": 300, "height": 250, "max_size_kb": 150},
+    {"name": "large_rectangle", "width": 336, "height": 280, "max_size_kb": 150},
+    {"name": "wide_skyscraper", "width": 160, "height": 600, "max_size_kb": 150}
+  ],
+  "facebook_feed": [
+    {"name": "feed_square", "width": 1080, "height": 1080, "max_size_kb": 30000},
+    {"name": "feed_vertical", "width": 1080, "height": 1350, "max_size_kb": 30000},
+    {"name": "feed_horizontal", "width": 1200, "height": 628, "max_size_kb": 30000}
+  ],
+  "instagram_feed": [
+    {"name": "feed_square", "width": 1080, "height": 1080, "max_size_kb": 30000},
+    {"name": "feed_portrait", "width": 1080, "height": 1350, "max_size_kb": 30000}
+  ],
+  "instagram_story": [
+    {"name": "story", "width": 1080, "height": 1920, "max_size_kb": 30000, "safe_top_px": 250, "safe_bottom_px": 250}
+  ],
+  "linkedin": [
+    {"name": "sponsored_content", "width": 1200, "height": 627, "max_size_kb": 5000},
+    {"name": "sponsored_messaging", "width": 800, "height": 400, "max_size_kb": 5000}
+  ],
+  "twitter": [
+    {"name": "feed_single", "width": 1200, "height": 675, "max_size_kb": 5000},
+    {"name": "feed_multi", "width": 800, "height": 418, "max_size_kb": 5000}
+  ],
+  "wechat_moment": [
+    {"name": "moment_feed", "width": 1080, "height": 1080, "max_size_kb": 5000},
+    {"name": "moment_banner", "width": 1080, "height": 568, "max_size_kb": 5000}
+  ],
+  "douyin": [
+    {"name": "feed_video_cover", "width": 1080, "height": 1920, "max_size_kb": 5000}
+  ]
+}

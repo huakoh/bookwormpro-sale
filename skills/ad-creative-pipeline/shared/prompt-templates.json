@@ -1,0 +1,30 @@
+{
+  "stage1": {
+    "system": "你是资深广告创意总监，拥有10+年品牌策划经验。基于品牌、产品、受众信息，生成3-5个广告创意概念，每个包含角度、标题、视觉描述、CTA和策略理由。",
+    "user_template": "品牌: {brand_name}\n产品: {product_description}\n目标受众: {target_audience}\n投放平台: {platforms}\n品牌调性: {tone}\n语言: {language}\n\n请生成 {concept_count} 个广告创意概念。确保角度多样、视觉描述具体、CTA简洁有力。\n\n输出严格的JSON格式。"
+  },
+  "stage2": {
+    "system": "你是资深广告美术指导(Art Director)，拥有10+年品牌视觉设计经验。为每个广告创意概念生成具体的美术方案：配色、字体、构图、风格描述、mood board关键词。",
+    "user_template": "品牌色: {brand_colors}\n调性: {tone}\n平台: {platforms}\n\n为以下概念生成设计方向:\n{concepts_json}\n\n每个设计方向必须: 色彩策略明确、构图含位置描述、字体大小合理、风格描述具体、mood board关键词为英文。\n\n确保不同概念的设计有足够的视觉差异度。"
+  },
+  "stage3": {
+    "system_prompt_template": "你是一个专业的商业广告图设计师。\n风格方向: {style}\n品牌调性: {tone}\n主色调: {primary_color}\n强调色: {accent_color}\n禁止: 水印、低分辨率、非商业元素、NSFW内容、塑料质感、AI常见畸变(扭曲手指/文字变形/奇异光影)",
+    "user_prompt_template": "{visual_description}。构图: {composition_desc}。{text_elements}。{critic_feedback}。4K分辨率, 商业广告摄影质感, 自然光影, 专业布光",
+    "negative_prompt_template": "watermark, text, signature, low quality, blurry, deformed, distorted, ugly, bad anatomy, extra limbs, plastic texture, cartoon, 3d render, nsfw, nude, gore, violent"
+  },
+  "stage4": {
+    "contrast_prompt": "评估这张广告图片的对比度（0-10分）：文字与背景对比度是否足够（至少4.5:1）；主体与背景是否有清晰的视觉层次；CTA按钮/行动号召是否视觉突出；暗部细节是否丢失。返回JSON: {score, issues, fix_suggestions}",
+    "readability_prompt": "评估这张广告图片的文字可读性（0-10分）：主标题是否清晰可读；文字是否被遮挡或与背景融合；字体大小是否合适；中文无显示问题（无乱码/无截断/无错位）。返回JSON: {score, issues, fix_suggestions}",
+    "brand_consistency_prompt": "评估这张广告图片的品牌一致性（0-10分）：整体色调与品牌色是否匹配（品牌色: {brand_colors}）；风格是否符合品牌调性({tone})；视觉元素是否专业统一。返回JSON: {score, issues, fix_suggestions}",
+    "aesthetic_prompt": "评估这张广告图片的美学质量（0-10分）：构图是否平衡；有无AI生成常见瑕疵（畸形/扭曲/怪异光影）；视觉焦点是否清晰；整体是否达到商业广告质量标准。返回JSON: {score, issues, fix_suggestions}"
+  },
+  "stage5": {
+    "export_message": "Pipeline 完成。\n📁 输出: {output_dir}\n📊 统计: 概念 {concept_count} | 初稿 {total_images} | 通过 {passed} | 导出 {exported_files} 个文件\n💰 费用: ¥{cost}\n⏱️ 耗时: {duration}"
+  },
+  "critic_feedback_augmentation": {
+    "contrast_low": "高对比度, 深色背景配亮色文字, 文字与背景层次分明",
+    "readability_low": "文字清晰可读, 避免文字与背景图案重叠",
+    "brand_consistency_low": "严格使用指定品牌色, 主色调突出",
+    "aesthetic_low": "专业商业摄影质感, 避免AI感, 自然光影, 真实材质"
+  }
+}

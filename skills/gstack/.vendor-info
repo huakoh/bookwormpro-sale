@@ -1,0 +1,5 @@
+vendor: gstack (third-party skill pack)
+source: git clone
+note: Sub-directories duplicate top-level imported skills. Top-level copies are authoritative.
+      gstack/ itself is registered as a composite skill (1 of 92).
+      Sub-skill directories are NOT independently indexed - no routing conflict.
