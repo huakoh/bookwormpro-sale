@@ -1,10 +1,11 @@
 {
   "_meta": {
-    "version": "v1.9",
+    "version": "v2.2",
     "description": "消歧规则外部化 — v6.5.1 扩展至 93 条，R81-R83 新增路由精准度修复 (bookworm自检→self-auditor, 自动修复→self-healer, 裸字自动 BAE penalty) | v1.5 (2026-04-24): R84-R88 Bookworm 元词路由修复 | L1d (2026-04-25): R84/R86 追加无 bookworm 短词分支 (路由分析/钩子管线/系统自检 等) | L1d (2026-04-25): R84/R86 追加无 bookworm 短词分支 (路由分析/钩子管线/系统自检 等) | v1.5.1 (2026-04-25): R89 路由自愈场景修复 (D1 Q7) | v1.5.2 (2026-04-25): R87 penalty 清理 + R84 L1d 业务前缀扩展",
     "generatedFrom": "route-analyzer.js DISAMBIGUATION_RULES (v6.5.1 消歧 83 条)",
-    "ruleCount": 125,
+    "ruleCount": 133,
     "changelog": [
+      "v2.2 (3 new rules): R130-R132 — v6.6.1 feedback transplant (handoff + devops/sre + context-inherit)",
       "v1.6 (16 new rules): R94-R109 — golden-set accuracy fixes (api-designer, golang-pro, nextjs, python-pro, typescript-pro, legal, data-analyst, planning, ultimate-code, devops-vpn, flutter, vue, k8s, terraform, regex, mcp-probe)",
       "R01: 添加 mutual_exclusion 注解，memory leak 场景排除 performance-expert 误触",
       "R05: 添加 mutual_exclusion 注解，memory leak 由 R01 优先处理",
@@ -65,7 +66,10 @@
       "R90: 新增 — SRE 专属场景 sre-expert (postmortem/on-call/runbook等)",
       "R91: 新增 — 变更影响分析 impact-analyst (爆炸半径/依赖分析等)",
       "R92: 新增 — Google Sheets 数据分析 data-analyst-expert (preferred_mcp: google-drive)",
-      "R93: 新增 — 浏览器MCP统一路由 browser-automation-expert (preferred_mcp: playwright)"
+      "R93: 新增 — 浏览器MCP统一路由 browser-automation-expert (preferred_mcp: playwright)",
+      "v2.0 (4 new rules): R126-R129 — accuracy edge-case fixes (Excel数据, MCP认证, 上下文上限, config裸词)",
+      "v2.0.1: R127 trigger fixed ([^]* for newline crossing), R126 +impact-analyst penalty",
+      "v2.1: R127 weight→1.0 + broad penalty net for /mcp auth error → debugger-expert (100% accuracy)"
     ],
     "l1d_implicit_meta_applied": true,
     "l1d_patched_at": "2026-04-25T02:11:52.010Z",
@@ -1516,6 +1520,103 @@
         "project-audit-expert"
       ],
       "weight": 0.4
+    },
+    {
+      "id": "R126",
+      "note": "Excel数据修改 → data-analyst-expert",
+      "trigger": "xlsx.*修[改正]|Excel.*数据.*修[改正]|.xlsx.*数据",
+      "boost": "data-analyst-expert",
+      "penalty": [
+        "tester-expert",
+        "impact-analyst",
+        "product-manager-expert"
+      ],
+      "weight": 0.5
+    },
+    {
+      "id": "R127",
+      "note": "MCP认证/重连错误 → debugger-expert (高权重)",
+      "trigger": "/mcp[^]*Authentication.*reconnection.*failed|/mcp.*认证.*重新连接.*失败|mcp.*重连.*失败",
+      "boost": "debugger-expert",
+      "penalty": [
+        "websocket-engineer",
+        "planning-with-files",
+        "review",
+        "browse",
+        "security-expert",
+        "workflow-automation-expert",
+        "flutter-expert",
+        "miniprogram-expert",
+        "cloud-native-expert",
+        "backend-builder"
+      ],
+      "weight": 1
+    },
+    {
+      "id": "R128",
+      "note": "上下文设置/上限 → planning-with-files",
+      "trigger": "上下文.*上限|上下文.*设置.*最高|context.*[Ww]indow.*up|上下文.*拉到",
+      "boost": "planning-with-files",
+      "penalty": [
+        "debugger-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R129",
+      "note": "裸config查询 → planning-with-files",
+      "trigger": "^config$|^配置$",
+      "boost": "planning-with-files",
+      "penalty": [
+        "typescript-pro",
+        "vue-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R130",
+      "note": "[v6.6.1反馈 #1] HANDOFF识别 — 15/26次手动纠正为handoff。路由未能识别上下文交接请求，误路由到canvas-ui-designer/ultimate-code-expert/devops-expert。修复: handoff关键词→handoff技能",
+      "trigger": "(?:/handoff|handoff|hand\\s*off|交接|上下文.*(?:切换|转交|移交|传递)|换手|hand\\s*over|会话.*(?:转交|移交给)|task.*handover)",
+      "boost": "handoff",
+      "penalty": [
+        "canvas-ui-designer",
+        "ultimate-code-expert",
+        "devops-expert",
+        "architect-expert"
+      ],
+      "weight": 0.4,
+      "source": "v6.6.1-feedback-analysis"
+    },
+    {
+      "id": "R131",
+      "note": "[v6.6.1反馈 #2] DevOps优先于SRE — 2次手动纠正 sre-expert→devops-expert。部署/安装/服务管理类查询误路由到SRE。修复: 运维操作关键词→devops-expert",
+      "trigger": "部署|安装.*(?:环境|依赖|包)|配置.*(?:环境|服务器)|setup|server\\s*restart|restart\\s*service|nginx.*reload|systemctl|服务.*(?:重启|启动|停止)|镜像.*(?:构建|拉取|推送)|docker.*(?:build|compose|run)|容器.*(?:启动|部署|编排)",
+      "boost": "devops-expert",
+      "penalty": [
+        "sre-expert",
+        "kubernetes-specialist"
+      ],
+      "weight": 0.3,
+      "source": "v6.6.1-feedback-analysis"
+    },
+    {
+      "id": "R132",
+      "note": "[v6.6.1反馈 #3] 上下文继承增强 — 134次路由失败(cf=0)，多为短查询('执行'/'继续'/'好的')。当查询长度<5字且上一轮有明确路由时，应继承而非归零。此规则降低误boost风险，仅对极短确认词添加继承权重。路由引擎需配合上下文状态实现继承逻辑",
+      "trigger": "^(?:执行|继续|下一步|好的|OK|yes|嗯|对|可以|行|好|go|next|确认|是的|OK\\s*go|go\\s*ahead)\\s*$",
+      "boost": "developer-expert",
+      "penalty": [],
+      "weight": 0.15,
+      "note_context": "此规则为辅助标记。路由引擎检测到此模式时应优先从会话历史继承上一轮的primary_skill，而非创建新的路由决策。如果无法获取历史，则路由到developer-expert作为安全回退。",
+      "source": "v6.6.1-feedback-analysis"
+    },
+    {
+      "id": "R133",
+      "note": "视频编辑/剪辑/FFmpeg/转码 → video-agent-expert (区分 browser-automation 视频下载和 mobile-expert 视频播放)",
+      "trigger": "视频编辑|视频剪辑|FFmpeg|ffmpeg|转码|剪片|视频Agent|DSL.*时间线|concat.*视频|video\\s*edit|video\\s*agent|transcode|subtitle.*burn|字幕.*烧录|视频拼接|帧提取|frame.*extract",
+      "boost": "video-agent-expert",
+      "penalty": ["browser-automation-expert", "mobile-expert", "ai-ml-expert"],
+      "weight": 0.3,
+      "source": "v7.0.0-video-agent-integration"
     }
   ]
 }

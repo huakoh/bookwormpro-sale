@@ -3,7 +3,7 @@
   "_version": "6.5.1",
   "domains": {
     "ai-data": [
-      "ai-ml-expert", "data-analyst-expert", "data-engineer-expert"
+      "ai-ml-expert", "data-analyst-expert", "data-engineer-expert", "video-agent-expert"
     ],
     "development": [
       "frontend-expert", "backend-builder", "mobile-expert", "miniprogram-expert",
