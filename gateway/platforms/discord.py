@@ -2238,8 +2238,8 @@ class DiscordAdapter(BasePlatformAdapter):
         async def slash_title(interaction: discord.Interaction, name: str = ""):
             await self._run_simple_slash(interaction, f"/title {name}".strip())
 
-        @tree.command(name="resume", description="Resume a previously-named session")
-        @discord.app_commands.describe(name="Session name to resume. Leave empty to list sessions.")
+        @tree.command(name="resume", description="List and resume a previous conversation")
+        @discord.app_commands.describe(name="Number, session title, or ID. Leave empty to browse.")
         async def slash_resume(interaction: discord.Interaction, name: str = ""):
             await self._run_simple_slash(interaction, f"/resume {name}".strip())
 

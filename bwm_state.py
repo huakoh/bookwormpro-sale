@@ -794,6 +794,7 @@ class SessionDB:
         self,
         source: str = None,
         exclude_sources: List[str] = None,
+        user_id: str = None,
         limit: int = 20,
         offset: int = 0,
         include_children: bool = False,
@@ -827,6 +828,9 @@ class SessionDB:
         if source:
             where_clauses.append("s.source = ?")
             params.append(source)
+        if user_id:
+            where_clauses.append("s.user_id = ?")
+            params.append(user_id)
         if exclude_sources:
             placeholders = ",".join("?" for _ in exclude_sources)
             where_clauses.append(f"s.source NOT IN ({placeholders})")

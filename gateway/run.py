@@ -96,6 +96,7 @@ _hermes_home = get_hermes_home()
 # User-managed env files should override stale shell exports on restart.
 from dotenv import load_dotenv  # backward-compat for tests that monkeypatch this symbol
 from bwm_cli.env_loader import load_hermes_dotenv
+from bwm_cli import i18n  # use i18n._() to avoid Discord italic markdown conflict
 _env_path = _hermes_home / '.env'
 load_hermes_dotenv(hermes_home=_hermes_home, project_env=Path(__file__).resolve().parents[1] / '.env')
 
@@ -597,7 +598,7 @@ def _format_gateway_process_notification(evt: dict) -> "str | None":
     _cmd = evt.get("command", "unknown")
 
     if evt_type == "watch_disabled":
-        return f"[SYSTEM: {evt.get('message', '')}]"
+        return i18n._("[SYSTEM: {msg}]").format(msg=evt.get('message', ''))
 
     if evt_type == "watch_match":
         _pat = evt.get("pattern", "?")
@@ -683,6 +684,7 @@ class GatewayRunner:
         self._pending_messages: Dict[str, str] = {}  # Queued messages during interrupt
         self._busy_ack_ts: Dict[str, float] = {}  # last busy-ack timestamp per session (debounce)
         self._session_run_generation: Dict[str, int] = {}
+        self._resume_session_cache: Dict[str, list] = {}  # /resume numbered list cache
 
         # Cache AIAgent instances per session to preserve prompt caching.
         # Without this, a new AIAgent is created per message, rebuilding the
@@ -1702,14 +1704,14 @@ class GatewayRunner:
         if not active:
             return
 
-        action = "restarting" if self._restart_requested else "shutting down"
+        action = i18n._("restarting") if self._restart_requested else i18n._("shutting down")
         hint = (
-            "Your current task will be interrupted. "
-            "Send any message after restart and I'll try to resume where you left off."
+            i18n._("Your current task will be interrupted. "
+            "Send any message after restart and I'll try to resume where you left off.")
             if self._restart_requested
-            else "Your current task will be interrupted."
+            else i18n._("Your current task will be interrupted.")
         )
-        msg = f"[警告] Gateway {action} — {hint}"
+        msg = i18n._("[警告] Gateway {action} — {hint}").format(action=action, hint=hint)
 
         notified: set = set()
         for session_key in active:
@@ -2394,7 +2396,7 @@ class GatewayRunner:
 
                 if _expired_entries:
                     _flushed = sum(
-                        1 for _, e in _expired_entries if e.memory_flushed
+                        1 for _unused, e in _expired_entries if e.memory_flushed
                     )
                     _failed = len(_expired_entries) - _flushed
                     if _failed:
@@ -2447,7 +2449,7 @@ class GatewayRunner:
             except Exception as e:
                 logger.debug("Session expiry watcher error: %s", e)
             # Sleep in small increments so we can stop quickly
-            for _ in range(interval):
+            for _i in range(interval):
                 if not self._running:
                     break
                 await asyncio.sleep(1)
@@ -2466,7 +2468,7 @@ class GatewayRunner:
         while self._running:
             if not self._failed_platforms:
                 # Nothing to reconnect — sleep and check again
-                for _ in range(30):
+                for _i in range(30):
                     if not self._running:
                         return
                     await asyncio.sleep(1)
@@ -2574,7 +2576,7 @@ class GatewayRunner:
                     )
 
             # Check every 10 seconds for platforms that need reconnection
-            for _ in range(10):
+            for _i in range(10):
                 if not self._running:
                     return
                 await asyncio.sleep(1)
@@ -3250,18 +3252,14 @@ class GatewayRunner:
                     if adapter:
                         await adapter.send(
                             source.chat_id,
-                            f"Hi~ I don't recognize you yet!\n\n"
-                            f"Here's your pairing code: `{code}`\n\n"
-                            f"Ask the bot owner to run:\n"
-                            f"`bookworm pairing approve {platform_name} {code}`"
+                            i18n._("Hi~ I don't recognize you yet!\n\nHere's your pairing code: `{code}`\n\nAsk the bot owner to run:\n`bookworm pairing approve {platform_name} {code}`").format(code=code, platform_name=platform_name),
                         )
                 else:
                     adapter = self.adapters.get(source.platform)
                     if adapter:
                         await adapter.send(
                             source.chat_id,
-                            "Too many pairing requests right now~ "
-                            "Please try again later!"
+                            i18n._("Too many pairing requests right now~ Please try again later!"),
                         )
                     # Record rate limit so subsequent messages are silently ignored
                     self.pairing_store._record_rate_limit(platform_name, source.user_id)
@@ -3291,10 +3289,10 @@ class GatewayRunner:
                     tmp.replace(response_path)
                 except OSError as e:
                     logger.warning("Failed to write update response: %s", e)
-                    return f"[失败] Failed to send response to update process: {e}"
+                    return i18n._("[失败] Failed to send response to update process: {e}").format(e=e)
                 _update_prompts.pop(_quick_key, None)
                 label = response_text if len(response_text) <= 20 else response_text[:20] + "…"
-                return f"[成功] Sent `{label}` to the update process."
+                return i18n._("[成功] Sent `{label}` to the update process.").format(label=label)
 
         # PRIORITY handling when an agent is already running for this session.
         # Default behavior is to interrupt immediately so user text/stop messages
@@ -3384,7 +3382,7 @@ class GatewayRunner:
                     invalidation_reason="stop_command",
                 )
                 logger.info("STOP for session %s — agent interrupted, session lock released", _quick_key[:20])
-                return "* Stopped. You can continue this session."
+                return i18n._("* Stopped. You can continue this session.")
 
             # /reset and /new must bypass the running-agent guard so they
             # actually dispatch as commands instead of being queued as user
@@ -3409,7 +3407,7 @@ class GatewayRunner:
             if event.get_command() in ("queue", "q"):
                 queued_text = event.get_command_args().strip()
                 if not queued_text:
-                    return "Usage: /queue <prompt>"
+                    return i18n._("Usage: /queue <prompt>")
                 adapter = self.adapters.get(source.platform)
                 if adapter:
                     queued_event = MessageEvent(
@@ -3420,7 +3418,7 @@ class GatewayRunner:
                         channel_prompt=event.channel_prompt,
                     )
                     adapter._pending_messages[_quick_key] = queued_event
-                return "Queued for the next turn."
+                return i18n._("Queued for the next turn.")
 
             # /steer <prompt> — inject mid-run after the next tool call.
             # Unlike /queue (turn boundary), /steer lands BETWEEN tool-call
@@ -3430,7 +3428,7 @@ class GatewayRunner:
             if _cmd_def_inner and _cmd_def_inner.name == "steer":
                 steer_text = event.get_command_args().strip()
                 if not steer_text:
-                    return "Usage: /steer <prompt>"
+                    return i18n._("Usage: /steer <prompt>")
                 running_agent = self._running_agents.get(_quick_key)
                 if running_agent is _AGENT_PENDING_SENTINEL:
                     # Agent hasn't started yet — queue as turn-boundary fallback.
@@ -3444,17 +3442,17 @@ class GatewayRunner:
                             channel_prompt=event.channel_prompt,
                         )
                         adapter._pending_messages[_quick_key] = queued_event
-                    return "Agent still starting — /steer queued for the next turn."
+                    return i18n._("Agent still starting — /steer queued for the next turn.")
                 if running_agent and hasattr(running_agent, "steer"):
                     try:
                         accepted = running_agent.steer(steer_text)
                     except Exception as exc:
                         logger.warning("Steer failed for session %s: %s", _quick_key[:20], exc)
-                        return f"[警告] Steer failed: {exc}"
+                        return i18n._("[警告] Steer failed: {exc}").format(exc=exc)
                     if accepted:
                         preview = steer_text[:60] + ("..." if len(steer_text) > 60 else "")
-                        return f"⏩ Steer queued — arrives after the next tool call: '{preview}'"
-                    return "Steer rejected (empty payload)."
+                        return i18n._("⏩ Steer queued — arrives after the next tool call: '{preview}'").format(preview=preview)
+                    return i18n._("Steer rejected (empty payload).")
                 # Running agent is missing or lacks steer() — fall back to queue.
                 adapter = self.adapters.get(source.platform)
                 if adapter:
@@ -3466,11 +3464,11 @@ class GatewayRunner:
                         channel_prompt=event.channel_prompt,
                     )
                     adapter._pending_messages[_quick_key] = queued_event
-                return "No active agent — /steer queued for the next turn."
+                return i18n._("No active agent — /steer queued for the next turn.")
 
             # /model must not be used while the agent is running.
             if _cmd_def_inner and _cmd_def_inner.name == "model":
-                return "Agent is running — wait or /stop first, then switch models."
+                return i18n._("Agent is running — wait or /stop first, then switch models.")
 
             # /approve and /deny must bypass the running-agent interrupt path.
             # The agent thread is blocked on a threading.Event inside
@@ -3571,7 +3569,7 @@ class GatewayRunner:
                     # Force-clean the sentinel so the session is unlocked.
                     self._release_running_agent_state(_quick_key)
                     logger.info("HARD STOP (pending) for session %s — sentinel cleared", _quick_key[:20])
-                    return "* Force-stopped. The agent was still starting — session unlocked."
+                    return i18n._("* Force-stopped. The agent was still starting — session unlocked.")
                 # Queue the message so it will be picked up after the
                 # agent starts.
                 adapter = self.adapters.get(source.platform)
@@ -3655,7 +3653,7 @@ class GatewayRunner:
                     message = hook_result.get("message")
                     if isinstance(message, str) and message:
                         return message
-                    return f"Command `/{command}` was blocked by a hook."
+                    return i18n._("Command `/{command}` was blocked by a hook.").format(command=command)
                 if decision == "handled":
                     message = hook_result.get("message")
                     return message if isinstance(message, str) and message else None
@@ -3771,7 +3769,7 @@ class GatewayRunner:
             # message. If the payload is empty, surface the usage hint.
             steer_payload = event.get_command_args().strip()
             if not steer_payload:
-                return "Usage: /steer <prompt>  (no agent is running; sending as a normal message)"
+                return i18n._("Usage: /steer <prompt>  (no agent is running; sending as a normal message)")
             try:
                 event.text = steer_payload
             except Exception:
@@ -3784,7 +3782,7 @@ class GatewayRunner:
             return await self._handle_voice_command(event)
 
         if self._draining:
-            return f"[等待] Gateway is {self._status_action_gerund()} and is not accepting new work right now."
+            return i18n._("[等待] Gateway is {action} and is not accepting new work right now.").format(action=self._status_action_gerund())
 
         # User-defined quick commands (bypass agent loop, no LLM call)
         if command:
@@ -3809,11 +3807,11 @@ class GatewayRunner:
                             output = (stdout or stderr).decode().strip()
                             return output if output else "Command returned no output."
                         except asyncio.TimeoutError:
-                            return "Quick command timed out (30s)."
+                            return i18n._("Quick command timed out (30s).")
                         except Exception as e:
-                            return f"Quick command error: {e}"
+                            return i18n._("Quick command error: {e}").format(e=e)
                     else:
-                        return f"Quick command '/{command}' has no command defined."
+                        return i18n._("Quick command '/{command}' has no command defined.").format(command=command)
                 elif qcmd.get("type") == "alias":
                     target = qcmd.get("target", "").strip()
                     if target:
@@ -3824,9 +3822,9 @@ class GatewayRunner:
                         command = target_command
                         # Fall through to normal command dispatch below
                     else:
-                        return f"Quick command '/{command}' has no target defined."
+                        return i18n._("Quick command '/{command}' has no target defined.").format(command=command)
                 else:
-                    return f"Quick command '/{command}' has unsupported type (supported: 'exec', 'alias')."
+                    return i18n._("Quick command '/{command}' has unsupported type (supported: 'exec', 'alias').").format(command=command)
 
         # Plugin-registered slash commands
         if command:
@@ -3996,7 +3994,7 @@ class GatewayRunner:
                     _stt_meta = {"thread_id": source.thread_id} if source.thread_id else None
                     if _stt_adapter:
                         try:
-                            _stt_msg = (
+                            _stt_msg = i18n._(
                                 "[语音] I received your voice message but can't transcribe it — "
                                 "no speech-to-text provider is configured.\n\n"
                                 "To enable voice: install faster-whisper "
@@ -4005,7 +4003,7 @@ class GatewayRunner:
                                 "then /restart the gateway."
                             )
                             if self._has_setup_skill():
-                                _stt_msg += "\n\nFor full setup instructions, type: `/skill bookwormpro-setup`"
+                                _stt_msg += i18n._("\n\nFor full setup instructions, type: `/skill bookwormpro-setup`")
                             await _stt_adapter.send(
                                 source.chat_id,
                                 _stt_msg,
@@ -4025,7 +4023,7 @@ class GatewayRunner:
                     if _ext in _TEXT_EXTENSIONS:
                         mtype = "text/plain"
                     else:
-                        guessed, _ = _mimetypes.guess_type(path)
+                        guessed, _ign = _mimetypes.guess_type(path)
                         if guessed:
                             mtype = guessed
                 if not mtype.startswith(("application/", "text/")):
@@ -4083,7 +4081,7 @@ class GatewayRunner:
                     if _adapter:
                         await _adapter.send(
                             source.chat_id,
-                            "\n".join(_ctx_result.warnings) or "Context injection refused.",
+                            "\n".join(_ctx_result.warnings) or i18n._("Context injection refused."),
                         )
                     return None
                 if _ctx_result.expanded:
@@ -4174,20 +4172,20 @@ class GatewayRunner:
                     adapter = self.adapters.get(source.platform)
                     if adapter:
                         if reset_reason == "suspended":
-                            reason_text = "previous session was stopped or interrupted"
+                            reason_text = i18n._("previous session was stopped or interrupted")
                         elif reset_reason == "daily":
-                            reason_text = f"daily schedule at {policy.at_hour}:00"
+                            reason_text = i18n._("daily schedule at {at_hour}:00").format(at_hour=policy.at_hour)
                         else:
                             hours = policy.idle_minutes // 60
                             mins = policy.idle_minutes % 60
                             duration = f"{hours}h" if not mins else f"{hours}h {mins}m" if hours else f"{mins}m"
-                            reason_text = f"inactive for {duration}"
-                        notice = (
-                            f"◐ Session automatically reset ({reason_text}). "
-                            f"Conversation history cleared.\n"
-                            f"Use /resume to browse and restore a previous session.\n"
-                            f"Adjust reset timing in config.yaml under session_reset."
-                        )
+                            reason_text = i18n._("inactive for {duration}").format(duration=duration)
+                        notice = i18n._(
+                            "◐ Session automatically reset ({reason_text}). "
+                            "Conversation history cleared.\n"
+                            "Use /resume to browse and restore a previous session.\n"
+                            "Adjust reset timing in config.yaml under session_reset."
+                        ).format(reason_text=reason_text)
                         try:
                             session_info = self._format_session_info()
                             if session_info:
@@ -4443,7 +4441,7 @@ class GatewayRunner:
                                     _hyg_agent._print_fn = lambda *a, **kw: None
 
                                     loop = asyncio.get_running_loop()
-                                    _compressed, _ = await loop.run_in_executor(
+                                    _compressed, _ign = await loop.run_in_executor(
                                         None,
                                         lambda: _hyg_agent._compress_context(
                                             _hyg_msgs, "",
@@ -4510,11 +4508,7 @@ class GatewayRunner:
                 if adapter:
                     await adapter.send(
                         source.chat_id,
-                        f"📬 No home channel is set for {platform_name.title()}. "
-                        f"A home channel is where BookwormPRO delivers cron job results "
-                        f"and cross-platform messages.\n\n"
-                        f"Type /sethome to make this chat your home channel, "
-                        f"or ignore to skip."
+                        i18n._("📬 No home channel is set for {platform}. A home channel is where BookwormPRO delivers cron job results and cross-platform messages.\n\nType /sethome to make this chat your home channel, or ignore to skip.").format(platform=platform_name.title()),
                     )
         
         # -----------------------------------------------------------------
@@ -4614,7 +4608,7 @@ class GatewayRunner:
             # prefill, empty-retry, fallback).  Sending the raw sentinel
             # looks like a bug; a short explanation is more helpful.
             if response == "(empty)":
-                response = (
+                response = i18n._(
                     "[警告] The model returned no response after processing tool "
                     "results. This can happen with some models — try again or "
                     "rephrase your question."
@@ -4664,16 +4658,16 @@ class GatewayRunner:
                 )
 
                 if _is_ctx_fail:
-                    response = (
+                    response = i18n._(
                         "[警告] Session too large for the model's context window.\n"
                         "Use /compact to compress the conversation, or "
                         "/reset to start fresh."
                     )
                 else:
-                    response = (
-                        f"The request failed: {str(error_detail)[:300]}\n"
+                    response = i18n._(
+                        "The request failed: {error}\n"
                         "Try again or use /reset to start a fresh session."
-                    )
+                    ).format(error=str(error_detail)[:300])
 
             # If the agent's session_id changed during compression, update
             # session_entry so transcript writes below go to the right session.
@@ -5292,7 +5286,7 @@ class GatewayRunner:
                 invalidation_reason="stop_command_pending",
             )
             logger.info("STOP (pending) for session %s — sentinel cleared", session_key[:20])
-            return "* Stopped. The agent hadn't started yet — you can continue this session."
+            return i18n._("* Stopped. The agent hadn't started yet — you can continue this session.")
         if agent:
             # Force-clean the session lock so a truly hung agent doesn't
             # keep it locked forever.
@@ -5302,9 +5296,9 @@ class GatewayRunner:
                 interrupt_reason=_INTERRUPT_REASON_STOP,
                 invalidation_reason="stop_command_handler",
             )
-            return "* Stopped. You can continue this session."
+            return i18n._("* Stopped. You can continue this session.")
         else:
-            return "No active task to stop."
+            return i18n._("No active task to stop.")
 
     async def _handle_restart_command(self, event: MessageEvent) -> str:
         """Handle /restart command - drain active work, then restart the gateway."""
@@ -5331,8 +5325,8 @@ class GatewayRunner:
         if self._restart_requested or self._draining:
             count = self._running_agent_count()
             if count:
-                return f"[等待] Draining {count} active agent(s) before restart..."
-            return "[等待] Gateway restart already in progress..."
+                return i18n._("[等待] Draining {count} active agent(s) before restart...").format(count=count)
+            return i18n._("[等待] Gateway restart already in progress...")
 
         # Save the requester's routing info so the new gateway process can
         # notify them once it comes back online.
@@ -5379,8 +5373,8 @@ class GatewayRunner:
         else:
             self.request_restart(detached=True, via_service=False)
         if active_agents:
-            return f"[等待] Draining {active_agents} active agent(s) before restart..."
-        return "♻ Restarting gateway. If you aren't notified within 60 seconds, restart from the console with `bookworm gateway restart`."
+            return i18n._("[等待] Draining {active_agents} active agent(s) before restart...").format(active_agents=active_agents)
+        return i18n._("♻ Restarting gateway. If you aren't notified within 60 seconds, restart from the console with `bookworm gateway restart`.")
 
     def _is_stale_restart_redelivery(self, event: MessageEvent) -> bool:
         """Return True if this /restart is a Telegram re-delivery we already handled.
@@ -5463,7 +5457,7 @@ class GatewayRunner:
             try:
                 requested_page = int(raw_args)
             except ValueError:
-                return "Usage: `/commands [page]`"
+                return i18n._("Usage: `/commands [page]`")
         else:
             requested_page = 1
 
@@ -5482,7 +5476,7 @@ class GatewayRunner:
             pass
 
         if not entries:
-            return "No commands available."
+            return i18n._("No commands available.")
 
         from gateway.config import Platform
         page_size = 15 if event.source.platform == Platform.TELEGRAM else 20
@@ -5612,7 +5606,7 @@ class GatewayRunner:
                             custom_providers=custom_provs,
                         )
                         if not result.success:
-                            return f"Error: {result.error_message}"
+                            return i18n._("Error: {msg}").format(msg=result.error_message)
 
                         # Update cached agent in-place
                         cached_entry = None
@@ -5735,7 +5729,7 @@ class GatewayRunner:
         )
 
         if not result.success:
-            return f"Error: {result.error_message}"
+            return i18n._("Error: {msg}").format(msg=result.error_message)
 
         # If there's a cached agent, update it in-place
         cached_entry = None
@@ -5862,7 +5856,7 @@ class GatewayRunner:
             personalities = {}
 
         if not personalities:
-            return f"No personalities configured in `{display_hermes_home()}/config.yaml`"
+            return i18n._("No personalities configured in `{home}/config.yaml`").format(home=display_hermes_home())
 
         if not args:
             lines = ["[角色] **Available Personalities**\n"]
@@ -5893,9 +5887,9 @@ class GatewayRunner:
                 config["agent"]["system_prompt"] = ""
                 atomic_yaml_write(config_path, config)
             except Exception as e:
-                return f"[警告] Failed to save personality change: {e}"
+                return i18n._("[警告] Failed to save personality change: {e}").format(e=e)
             self._ephemeral_system_prompt = ""
-            return "[角色] Personality cleared — using base agent behavior.\n_(takes effect on next message)_"
+            return i18n._("[角色] Personality cleared — using base agent behavior.\n_(takes effect on next message)_")
         elif args in personalities:
             new_prompt = _resolve_prompt(personalities[args])
 
@@ -5906,15 +5900,15 @@ class GatewayRunner:
                 config["agent"]["system_prompt"] = new_prompt
                 atomic_yaml_write(config_path, config)
             except Exception as e:
-                return f"[警告] Failed to save personality change: {e}"
+                return i18n._("[警告] Failed to save personality change: {e}").format(e=e)
 
             # Update in-memory so it takes effect on the very next message.
             self._ephemeral_system_prompt = new_prompt
 
-            return f"[角色] Personality set to **{args}**\n_(takes effect on next message)_"
+            return i18n._("[角色] Personality set to **{args}**\n_(takes effect on next message)_").format(args=args)
 
         available = "`none`, " + ", ".join(f"`{n}`" for n in personalities)
-        return f"Unknown personality: `{args}`\n\nAvailable: {available}"
+        return i18n._("Unknown personality: `{args}`\n\nAvailable: {available}").format(args=args, available=available)
     
     async def _handle_retry_command(self, event: MessageEvent) -> str:
         """Handle /retry command - re-send the last user message."""
@@ -5932,7 +5926,7 @@ class GatewayRunner:
                 break
         
         if not last_user_msg:
-            return "No previous message to retry."
+            return i18n._("No previous message to retry.")
         
         # Truncate history to before the last user message and persist
         truncated = history[:last_user_idx]
@@ -5966,7 +5960,7 @@ class GatewayRunner:
                 break
         
         if last_user_idx is None:
-            return "Nothing to undo."
+            return i18n._("Nothing to undo.")
         
         removed_msg = history[last_user_idx].get("content", "")
         removed_count = len(history) - last_user_idx
@@ -5999,7 +5993,7 @@ class GatewayRunner:
             # Also set in the current environment so it takes effect immediately
             os.environ[env_key] = str(chat_id)
         except Exception as e:
-            return f"Failed to save home channel: {e}"
+            return i18n._("Failed to save home channel: {e}").format(e=e)
         
         return (
             f"[成功] Home channel set to **{chat_name}** (ID: {chat_id}).\n"
@@ -6044,7 +6038,7 @@ class GatewayRunner:
             self._save_voice_modes()
             if adapter:
                 self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=True)
-            return "Voice mode disabled. Text-only replies."
+            return i18n._("Voice mode disabled. Text-only replies.")
         elif args == "tts":
             self._voice_mode[voice_key] = "all"
             self._save_voice_modes()
@@ -6080,7 +6074,7 @@ class GatewayRunner:
                         status = " (speaking)" if m.get("is_speaking") else ""
                         lines.append(f"  - {m['display_name']}{status}")
                     return "\n".join(lines)
-            return f"Voice mode: {labels.get(mode, mode)}"
+            return i18n._("Voice mode: {labels}").format(labels=labels.get(mode, mode))
         else:
             # Toggle: off → on, on/all → off
             current = self._voice_mode.get(voice_key, "off")
@@ -6089,29 +6083,29 @@ class GatewayRunner:
                 self._save_voice_modes()
                 if adapter:
                     self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=False)
-                return "Voice mode enabled."
+                return i18n._("Voice mode enabled.")
             else:
                 self._voice_mode[voice_key] = "off"
                 self._save_voice_modes()
                 if adapter:
                     self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=True)
-                return "Voice mode disabled."
+                return i18n._("Voice mode disabled.")
 
     async def _handle_voice_channel_join(self, event: MessageEvent) -> str:
         """Join the user's current Discord voice channel."""
         adapter = self.adapters.get(event.source.platform)
         if not hasattr(adapter, "join_voice_channel"):
-            return "Voice channels are not supported on this platform."
+            return i18n._("Voice channels are not supported on this platform.")
 
         guild_id = self._get_guild_id(event)
         if not guild_id:
-            return "This command only works in a Discord server."
+            return i18n._("This command only works in a Discord server.")
 
         voice_channel = await adapter.get_user_voice_channel(
             guild_id, event.source.user_id
         )
         if not voice_channel:
-            return "You need to be in a voice channel first."
+            return i18n._("You need to be in a voice channel first.")
 
         # Wire callbacks BEFORE join so voice input arriving immediately
         # after connection is not lost.
@@ -6131,7 +6125,7 @@ class GatewayRunner:
                     "Voice dependencies are missing (PyNaCl / davey). "
                     f"Install with: `{sys.executable} -m pip install PyNaCl`"
                 )
-            return f"Failed to join voice channel: {e}"
+            return i18n._("Failed to join voice channel: {e}").format(e=e)
 
         if success:
             adapter._voice_text_channels[guild_id] = int(event.source.chat_id)
@@ -6146,7 +6140,7 @@ class GatewayRunner:
             )
         # Join failed — clear callback
         adapter._voice_input_callback = None
-        return "Failed to join voice channel. Check bot permissions (Connect + Speak)."
+        return i18n._("Failed to join voice channel. Check bot permissions (Connect + Speak).")
 
     async def _handle_voice_channel_leave(self, event: MessageEvent) -> str:
         """Leave the Discord voice channel."""
@@ -6154,10 +6148,10 @@ class GatewayRunner:
         guild_id = self._get_guild_id(event)
 
         if not guild_id or not hasattr(adapter, "leave_voice_channel"):
-            return "Not in a voice channel."
+            return i18n._("Not in a voice channel.")
 
         if not hasattr(adapter, "is_in_voice_channel") or not adapter.is_in_voice_channel(guild_id):
-            return "Not in a voice channel."
+            return i18n._("Not in a voice channel.")
 
         try:
             await adapter.leave_voice_channel(guild_id)
@@ -6169,7 +6163,7 @@ class GatewayRunner:
         self._set_adapter_auto_tts_disabled(adapter, event.source.chat_id, disabled=True)
         if hasattr(adapter, "_voice_input_callback"):
             adapter._voice_input_callback = None
-        return "Left voice channel."
+        return i18n._("Left voice channel.")
 
     def _handle_voice_timeout_cleanup(self, chat_id: str) -> None:
         """Called by the adapter when a voice channel times out.
@@ -6367,9 +6361,9 @@ class GatewayRunner:
         from pathlib import Path
 
         try:
-            media_files, _ = adapter.extract_media(response)
-            _, cleaned = adapter.extract_images(response)
-            local_files, _ = adapter.extract_local_files(cleaned)
+            media_files, _ign = adapter.extract_media(response)
+            _unused, cleaned = adapter.extract_images(response)
+            local_files, _ign = adapter.extract_local_files(cleaned)
 
             _thread_meta = {"thread_id": event.source.thread_id} if event.source.thread_id else None
 
@@ -6467,7 +6461,7 @@ class GatewayRunner:
         # Restore by number or hash
         checkpoints = mgr.list_checkpoints(cwd)
         if not checkpoints:
-            return f"No checkpoints found for {cwd}"
+            return i18n._("No checkpoints found for {cwd}").format(cwd=cwd)
 
         target_hash = None
         try:
@@ -6475,7 +6469,7 @@ class GatewayRunner:
             if 0 <= idx < len(checkpoints):
                 target_hash = checkpoints[idx]["hash"]
             else:
-                return f"Invalid checkpoint number. Use 1-{len(checkpoints)}."
+                return i18n._("Invalid checkpoint number. Use 1-{len}.").format(len=len(checkpoints))
         except ValueError:
             target_hash = arg
 
@@ -6485,7 +6479,7 @@ class GatewayRunner:
                 f"[成功] Restored to checkpoint {result['restored_to']}: {result['reason']}\n"
                 f"A pre-rollback snapshot was saved automatically."
             )
-        return f"[失败] {result['error']}"
+        return i18n._("[失败] {result}").format(result=result['error'])
 
     async def _handle_background_command(self, event: MessageEvent) -> str:
         """Handle /background <prompt> — run a prompt in a separate background session.
@@ -6514,7 +6508,7 @@ class GatewayRunner:
         _task.add_done_callback(self._background_tasks.discard)
 
         preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
-        return f'[调用] Background task started: "{preview}"\nTask ID: {task_id}\nYou can keep chatting — results will appear when done.'
+        return i18n._("[调用] Background task started: \"{preview}\"\nTask ID: {task_id}\nYou can keep chatting — results will appear when done.").format(preview=preview, task_id=task_id)
 
     async def _run_background_task(
         self, prompt: str, source: "SessionSource", task_id: str
@@ -6538,7 +6532,7 @@ class GatewayRunner:
             if not runtime_kwargs.get("api_key"):
                 await adapter.send(
                     source.chat_id,
-                    f"[失败] Background task {task_id} failed: no provider credentials configured.",
+                    i18n._("[失败] Background task {task_id} failed: no provider credentials configured.").format(task_id=task_id),
                     metadata=_thread_metadata,
                 )
                 return
@@ -6603,7 +6597,7 @@ class GatewayRunner:
                 images, text_content = adapter.extract_images(response)
 
                 preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
-                header = f'[成功] Background task complete\nPrompt: "{preview}"\n\n'
+                header = i18n._('[成功] Background task complete\nPrompt: "{preview}"\n\n').format(preview=preview)
 
                 if text_content:
                     await adapter.send(
@@ -6614,7 +6608,7 @@ class GatewayRunner:
                 elif not images and not media_files:
                     await adapter.send(
                         chat_id=source.chat_id,
-                        content=header + "(No response generated)",
+                        content=header + i18n._("(No response generated)"),
                         metadata=_thread_metadata,
                     )
 
@@ -6642,7 +6636,7 @@ class GatewayRunner:
                 preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
                 await adapter.send(
                     chat_id=source.chat_id,
-                    content=f'[成功] Background task complete\nPrompt: "{preview}"\n\n(No response generated)',
+                    content=i18n._('[成功] Background task complete\nPrompt: "{preview}"\n\n(No response generated)').format(preview=preview),
                     metadata=_thread_metadata,
                 )
 
@@ -6651,7 +6645,7 @@ class GatewayRunner:
             try:
                 await adapter.send(
                     chat_id=source.chat_id,
-                    content=f"[失败] Background task {task_id} failed: {e}",
+                    content=i18n._("[失败] Background task {task_id} failed: {error}").format(task_id=task_id, error=e),
                     metadata=_thread_metadata,
                 )
             except Exception:
@@ -6673,7 +6667,7 @@ class GatewayRunner:
         # Guard: one /btw at a time per session
         existing = getattr(self, "_active_btw_tasks", {}).get(session_key)
         if existing and not existing.done():
-            return "A /btw is already running for this chat. Wait for it to finish."
+            return i18n._("A /btw is already running for this chat. Wait for it to finish.")
 
         if not hasattr(self, "_active_btw_tasks"):
             self._active_btw_tasks: dict = {}
@@ -6692,7 +6686,7 @@ class GatewayRunner:
         _task.add_done_callback(_cleanup)
 
         preview = question[:60] + ("..." if len(question) > 60 else "")
-        return f'[对话] /btw: "{preview}"\nReply will appear here shortly.'
+        return i18n._("[对话] /btw: \"{preview}\"\nReply will appear here shortly.").format(preview=preview)
 
     async def _run_btw_task(
         self, question: str, source, session_key: str, task_id: str,
@@ -6717,7 +6711,7 @@ class GatewayRunner:
             if not runtime_kwargs.get("api_key"):
                 await adapter.send(
                     source.chat_id,
-                    "[失败] /btw failed: no provider credentials configured.",
+                    i18n._("[失败] /btw failed: no provider credentials configured."),
                     metadata=_thread_meta,
                 )
                 return
@@ -6787,7 +6781,7 @@ class GatewayRunner:
             media_files, response = adapter.extract_media(response)
             images, text_content = adapter.extract_images(response)
             preview = question[:60] + ("..." if len(question) > 60 else "")
-            header = f'[对话] /btw: "{preview}"\n\n'
+            header = i18n._('[对话] /btw: "{preview}"\n\n').format(preview=preview)
 
             if text_content:
                 await adapter.send(
@@ -6798,7 +6792,7 @@ class GatewayRunner:
             elif not images and not media_files:
                 await adapter.send(
                     chat_id=source.chat_id,
-                    content=header + "(No response generated)",
+                    content=header + i18n._("(No response generated)"),
                     metadata=_thread_meta,
                 )
 
@@ -6819,7 +6813,7 @@ class GatewayRunner:
             try:
                 await adapter.send(
                     chat_id=source.chat_id,
-                    content=f"[失败] /btw failed: {e}",
+                    content=i18n._("[失败] /btw failed: {error}").format(error=e),
                     metadata=_thread_meta,
                 )
             except Exception:
@@ -6891,7 +6885,7 @@ class GatewayRunner:
         if args in ("hide", "off"):
             self._show_reasoning = False
             _save_config_key(f"display.platforms.{platform_key}.show_reasoning", False)
-            return f"🧠 [成功] Reasoning display: **OFF** for **{platform_key}**"
+            return i18n._("🧠 [成功] Reasoning display: **OFF** for **{platform_key}**").format(platform_key=platform_key)
 
         # Effort level change
         effort = args.strip()
@@ -6908,9 +6902,9 @@ class GatewayRunner:
 
         self._reasoning_config = parsed
         if _save_config_key("agent.reasoning_effort", effort):
-            return f"🧠 [成功] Reasoning effort set to `{effort}` (saved to config)\n_(takes effect on next message)_"
+            return i18n._("🧠 [成功] Reasoning effort set to `{effort}` (saved to config)\n_(takes effect on next message)_").format(effort=effort)
         else:
-            return f"🧠 [成功] Reasoning effort set to `{effort}` (this session only)"
+            return i18n._("🧠 [成功] Reasoning effort set to `{effort}` (this session only)").format(effort=effort)
 
     async def _handle_fast_command(self, event: MessageEvent) -> str:
         """Handle /fast — mirror the CLI Priority Processing toggle in gateway chats."""
@@ -6924,7 +6918,7 @@ class GatewayRunner:
         user_config = _load_gateway_config()
         model = _resolve_gateway_model(user_config)
         if not model_supports_fast_mode(model):
-            return "* /fast is only available for OpenAI models that support Priority Processing."
+            return i18n._("* /fast is only available for OpenAI models that support Priority Processing.")
 
         def _save_config_key(key_path: str, value):
             """Save a dot-separated key to config.yaml."""
@@ -6969,8 +6963,8 @@ class GatewayRunner:
             )
 
         if _save_config_key("agent.service_tier", saved_value):
-            return f"* [成功] Priority Processing: **{label}** (saved to config)\n_(takes effect on next message)_"
-        return f"* [成功] Priority Processing: **{label}** (this session only)"
+            return i18n._("* [成功] Priority Processing: **{label}** (saved to config)\n_(takes effect on next message)_").format(label=label)
+        return i18n._("* [成功] Priority Processing: **{label}** (this session only)").format(label=label)
 
     async def _handle_yolo_command(self, event: MessageEvent) -> str:
         """Handle /yolo — toggle dangerous command approval bypass for this session only."""
@@ -6984,10 +6978,10 @@ class GatewayRunner:
         current = is_session_yolo_enabled(session_key)
         if current:
             disable_session_yolo(session_key)
-            return "[警告] YOLO mode **OFF** for this session — dangerous commands will require approval."
+            return i18n._("[警告] YOLO mode **OFF** for this session — dangerous commands will require approval.")
         else:
             enable_session_yolo(session_key)
-            return "* YOLO mode **ON** for this session — all commands auto-approved. Use with caution."
+            return i18n._("* YOLO mode **ON** for this session — all commands auto-approved. Use with caution.")
 
     async def _handle_verbose_command(self, event: MessageEvent) -> str:
         """Handle /verbose command — cycle tool progress display mode.
@@ -7054,7 +7048,7 @@ class GatewayRunner:
             )
         except Exception as e:
             logger.warning("Failed to save tool_progress mode: %s", e)
-            return f"{descriptions[new_mode]}\n_(could not save to config: {e})_"
+            return i18n._("{desc}\n_(could not save to config: {e})_").format(desc=descriptions[new_mode], e=e)
 
     async def _handle_compress_command(self, event: MessageEvent) -> str:
         """Handle /compress command -- manually compress conversation context.
@@ -7068,7 +7062,7 @@ class GatewayRunner:
         history = self.session_store.load_transcript(session_entry.session_id)
 
         if not history or len(history) < 4:
-            return "Not enough conversation to compress (need at least 4 messages)."
+            return i18n._("Not enough conversation to compress (need at least 4 messages).")
 
         # Extract optional focus topic from command args
         focus_topic = (event.get_command_args() or "").strip() or None
@@ -7084,7 +7078,7 @@ class GatewayRunner:
                 session_key=session_key,
             )
             if not runtime_kwargs.get("api_key"):
-                return "No provider configured -- cannot compress."
+                return i18n._("No provider configured -- cannot compress.")
 
             msgs = [
                 {"role": m.get("role"), "content": m.get("content")}
@@ -7108,10 +7102,10 @@ class GatewayRunner:
 
                 compressor = tmp_agent.context_compressor
                 if not compressor.has_content_to_compress(msgs):
-                    return "Nothing to compress yet (the transcript is still all protected context)."
+                    return i18n._("Nothing to compress yet (the transcript is still all protected context).")
 
                 loop = asyncio.get_running_loop()
-                compressed, _ = await loop.run_in_executor(
+                compressed, _ign = await loop.run_in_executor(
                     None,
                     lambda: tmp_agent._compress_context(msgs, "", approx_tokens=approx_tokens, focus_topic=focus_topic)
                 )
@@ -7148,7 +7142,7 @@ class GatewayRunner:
             return "\n".join(lines)
         except Exception as e:
             logger.warning("Manual compress failed: %s", e)
-            return f"Compression failed: {e}"
+            return i18n._("Compression failed: {e}").format(e=e)
 
     async def _handle_title_command(self, event: MessageEvent) -> str:
         """Handle /title command — set or show the current session's title."""
@@ -7157,7 +7151,7 @@ class GatewayRunner:
         session_id = session_entry.session_id
 
         if not self._session_db:
-            return "Session database not available."
+            return i18n._("Session database not available.")
 
         # Ensure session exists in SQLite DB (it may only exist in session_store
         # if this is the first command in a new session)
@@ -7179,78 +7173,176 @@ class GatewayRunner:
             try:
                 sanitized = self._session_db.sanitize_title(title_arg)
             except ValueError as e:
-                return f"[警告] {e}"
+                return i18n._("[警告] {e}").format(e=e)
             if not sanitized:
-                return "[警告] Title is empty after cleanup. Please use printable characters."
+                return i18n._("[警告] Title is empty after cleanup. Please use printable characters.")
             # Set the title
             try:
                 if self._session_db.set_session_title(session_id, sanitized):
-                    return f"[编辑] Session title set: **{sanitized}**"
+                    return i18n._("[编辑] Session title set: **{sanitized}**").format(sanitized=sanitized)
                 else:
-                    return "Session not found in database."
+                    return i18n._("Session not found in database.")
             except ValueError as e:
-                return f"[警告] {e}"
+                return i18n._("[警告] {e}").format(e=e)
         else:
             # Show the current title and session ID
             title = self._session_db.get_session_title(session_id)
             if title:
-                return f"📌 Session: `{session_id}`\nTitle: **{title}**"
+                return i18n._("📌 Session: `{session_id}`\nTitle: **{title}**").format(session_id=session_id, title=title)
             else:
-                return f"📌 Session: `{session_id}`\nNo title set. Usage: `/title My Session Name`"
+                return i18n._("📌 Session: `{session_id}`\nNo title set. Usage: `/title My Session Name`").format(session_id=session_id)
+
+    @staticmethod
+    def _relative_time_str(ts) -> str:
+        """Format an ISO/sqlite timestamp or epoch number as relative time."""
+        import time as _time
+        if not ts:
+            return ""
+        try:
+            if isinstance(ts, (int, float)):
+                epoch = ts
+            else:
+                from datetime import datetime as _dt
+                epoch = _dt.fromisoformat(str(ts).replace("Z", "+00:00")).timestamp()
+            delta = _time.time() - epoch
+            if delta < 60:
+                return "just now"
+            if delta < 3600:
+                return f"{int(delta / 60)}m ago"
+            if delta < 86400:
+                return f"{int(delta / 3600)}h ago"
+            if delta < 172800:
+                return "yesterday"
+            if delta < 604800:
+                return f"{int(delta / 86400)}d ago"
+            from datetime import datetime as _dt
+            return _dt.fromtimestamp(epoch).strftime("%Y-%m-%d")
+        except Exception:
+            return str(ts)[:10]
+
+    @staticmethod
+    def _escape_md(text: str) -> str:
+        """Escape Markdown special characters in user-supplied text."""
+        for ch in ("*", "_", "`", "[", "]", "(", ")", "~", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"):
+            text = text.replace(ch, "\\" + ch)
+        return text
+
+    _RESUME_CACHE_TTL = 60  # seconds
 
     async def _handle_resume_command(self, event: MessageEvent) -> str:
-        """Handle /resume command — switch to a previously-named session."""
+        """Handle /resume — list and resume previous conversations (Claude Code style).
+
+        No args  → list all recent sessions with numbered entries.
+        Number   → resume the Nth session from the last listing.
+        Title    → resolve by session title (backwards compatible).
+        ID/prefix→ resolve by session ID or unique prefix.
+        """
         if not self._session_db:
-            return "Session database not available."
+            return i18n._("Session database not available.")
 
         source = event.source
         session_key = self._session_key_for_source(source)
-        name = event.get_command_args().strip()
+        arg = event.get_command_args().strip()
 
-        if not name:
-            # List recent titled sessions for this user/platform
-            try:
-                user_source = source.platform.value if source.platform else None
-                sessions = self._session_db.list_sessions_rich(
-                    source=user_source, limit=10
-                )
-                titled = [s for s in sessions if s.get("title")]
-                if not titled:
-                    return (
-                        "No named sessions found.\n"
-                        "Use `/title My Session` to name your current session, "
-                        "then `/resume My Session` to return to it later."
-                    )
-                lines = ["[汇总] **Named Sessions**\n"]
-                for s in titled[:10]:
-                    title = s["title"]
-                    preview = s.get("preview", "")[:40]
-                    preview_part = f" — _{preview}_" if preview else ""
-                    lines.append(f"• **{title}**{preview_part}")
-                lines.append("\nUsage: `/resume <session name>`")
-                return "\n".join(lines)
-            except Exception as e:
-                logger.debug("Failed to list titled sessions: %s", e)
-                return f"Could not list sessions: {e}"
+        # ── No argument: list all recent sessions ────────────────────
+        if not arg:
+            return await self._resume_list_sessions(source, session_key)
 
-        # Resolve the name to a session ID.
-        target_id = self._session_db.resolve_session_by_title(name)
-        if not target_id:
-            return (
-                f"No session found matching '**{name}**'.\n"
-                "Use `/resume` with no arguments to see available sessions."
+        # ── Numeric argument: pick from the cached list ──────────────
+        try:
+            idx = int(arg)
+        except (ValueError, TypeError):
+            idx = None
+
+        if idx is not None and idx >= 1:
+            import time as _time
+            cached_entry = self._resume_session_cache.get(session_key)
+            # Invalidate stale cache (>60s)
+            if cached_entry and (_time.time() - cached_entry["ts"]) > self._RESUME_CACHE_TTL:
+                cached_entry = None
+            cached = cached_entry["sessions"] if cached_entry else []
+            if not cached:
+                listing = await self._resume_list_sessions(source, session_key)
+                return listing + i18n._("\n\nThen use `/resume <number>` to select.")
+            if idx < 1 or idx > len(cached):
+                return i18n._("Invalid number {idx}. Choose 1–{total}.").format(idx=idx, total=len(cached))
+            target_id = cached[idx - 1]["id"]
+            label = cached[idx - 1].get("title") or cached[idx - 1].get("preview") or target_id[:12]
+            return await self._resume_switch_to(source, session_key, target_id, label)
+
+        # ── Try title resolution first (backwards compatible) ────────
+        target_id = self._session_db.resolve_session_by_title(arg)
+        if target_id:
+            return await self._resume_switch_to(source, session_key, target_id, arg)
+
+        # ── Try session ID / prefix resolution ───────────────────────
+        resolved = self._session_db.resolve_session_id(arg)
+        if resolved:
+            return await self._resume_switch_to(source, session_key, resolved, arg)
+
+        safe_arg = self._escape_md(arg)
+        return (
+            f"No session found matching '{safe_arg}'.\n"
+            "Use `/resume` to see all recent sessions."
+        )
+
+    async def _resume_list_sessions(self, source, session_key: str) -> str:
+        """Build the numbered session list (Claude Code style)."""
+        import time as _time
+        try:
+            user_source = source.platform.value if source.platform else None
+            user_id = getattr(source, "user_id", None)
+            sessions = self._session_db.list_sessions_rich(
+                source=user_source, user_id=user_id, limit=15
             )
-        # Compression creates child continuations that hold the live transcript.
-        # Follow that chain so gateway /resume matches CLI behavior (#15000).
+        except Exception as e:
+            logger.debug("Failed to list sessions: %s", e)
+            return i18n._("Could not list sessions: {e}").format(e=e)
+
+        # Filter out the current session
+        current_entry = self.session_store.get_or_create_session(source)
+        sessions = [s for s in sessions if s["id"] != current_entry.session_id]
+
+        if not sessions:
+            return i18n._("No previous sessions found.")
+
+        # Cache with timestamp for subsequent `/resume <number>` calls
+        self._resume_session_cache[session_key] = {
+            "sessions": sessions,
+            "ts": _time.time(),
+        }
+
+        lines = ["**Recent Conversations**\n"]
+        for i, s in enumerate(sessions, 1):
+            title = s.get("title", "")
+            preview = s.get("preview", "")
+            msg_count = s.get("message_count") or 0
+            last_active = s.get("last_active") or s.get("started_at", "")
+            time_str = self._relative_time_str(last_active)
+
+            # title > preview > truncated ID
+            label = f"**{title}**" if title else f"_{preview}_" if preview else f"`{s['id'][:12]}`"
+            count_part = f" · {msg_count} msg" if msg_count else ""
+            time_part = f" · {time_str}" if time_str else ""
+
+            lines.append(f"`{i:>2}.` {label}{count_part}{time_part}")
+
+        lines.append("\nUsage: `/resume <number>` or `/resume <session title>`")
+        return "\n".join(lines)
+
+    async def _resume_switch_to(self, source, session_key: str,
+                                target_id: str, label: str) -> str:
+        """Execute the actual session switch (shared by all resolution paths)."""
+        # Follow compression chain
         try:
             target_id = self._session_db.resolve_resume_session_id(target_id)
         except Exception as e:
             logger.debug("Failed to resolve resume continuation for %s: %s", target_id, e)
 
-        # Check if already on that session
+        # Already on that session?
         current_entry = self.session_store.get_or_create_session(source)
         if current_entry.session_id == target_id:
-            return f"📌 Already on session **{name}**."
+            return i18n._("📌 Already on this session.")
 
         # Flush memories for current session before switching
         try:
@@ -7262,19 +7354,17 @@ class GatewayRunner:
         except Exception as e:
             logger.debug("Memory flush on resume failed: %s", e)
 
-        # Clear any running agent for this session key
+        # Clear any running agent
         self._release_running_agent_state(session_key)
 
-        # Switch the session entry to point at the old session
+        # Switch session
         new_entry = self.session_store.switch_session(session_key, target_id)
         if not new_entry:
-            return "Failed to switch session."
+            return i18n._("Failed to switch session.")
         self._clear_session_boundary_security_state(session_key)
 
-        # Get the title for confirmation
-        title = self._session_db.get_session_title(target_id) or name
-
-        # Count messages for context
+        # Build confirmation message
+        title = self._session_db.get_session_title(target_id) or label
         history = self.session_store.load_transcript(target_id)
         msg_count = len([m for m in history if m.get("role") == "user"]) if history else 0
         msg_part = f" ({msg_count} message{'s' if msg_count != 1 else ''})" if msg_count else ""
@@ -7291,7 +7381,7 @@ class GatewayRunner:
         import uuid as _uuid
 
         if not self._session_db:
-            return "Session database not available."
+            return i18n._("Session database not available.")
 
         source = event.source
         session_key = self._session_key_for_source(source)
@@ -7300,7 +7390,7 @@ class GatewayRunner:
         current_entry = self.session_store.get_or_create_session(source)
         history = self.session_store.load_transcript(current_entry.session_id)
         if not history:
-            return "No conversation to branch — send a message first."
+            return i18n._("No conversation to branch — send a message first.")
 
         branch_name = event.get_command_args().strip()
 
@@ -7331,7 +7421,7 @@ class GatewayRunner:
             )
         except Exception as e:
             logger.error("Failed to create branch session: %s", e)
-            return f"Failed to create branch: {e}"
+            return i18n._("Failed to create branch: {e}").format(e=e)
 
         # Copy conversation history to the new session
         for msg in history:
@@ -7358,7 +7448,7 @@ class GatewayRunner:
         # Switch the session store entry to the new session
         new_entry = self.session_store.switch_session(session_key, new_session_id)
         if not new_entry:
-            return "Branch created but failed to switch to it."
+            return i18n._("Branch created but failed to switch to it.")
         self._clear_session_boundary_security_state(session_key)
 
         # Evict any cached agent for this session
@@ -7508,7 +7598,7 @@ class GatewayRunner:
             return "\n".join(lines)
         if account_lines:
             return "\n".join(account_lines)
-        return "No usage data available for this session."
+        return i18n._("No usage data available for this session.")
 
     async def _handle_insights_command(self, event: MessageEvent) -> str:
         """Handle /insights command -- show usage insights and analytics."""
@@ -7529,7 +7619,7 @@ class GatewayRunner:
                     try:
                         days = int(parts[i + 1])
                     except ValueError:
-                        return f"Invalid --days value: {parts[i + 1]}"
+                        return i18n._("Invalid --days value: {parts}").format(parts=parts[i + 1])
                     i += 2
                 elif parts[i] == "--source" and i + 1 < len(parts):
                     source = parts[i + 1]
@@ -7557,7 +7647,7 @@ class GatewayRunner:
             return await loop.run_in_executor(None, _run_insights)
         except Exception as e:
             logger.error("Insights command error: %s", e, exc_info=True)
-            return f"Error generating insights: {e}"
+            return i18n._("Error generating insights: {e}").format(e=e)
 
     async def _handle_reload_mcp_command(self, event: MessageEvent) -> str:
         """Handle /reload-mcp command -- disconnect and reconnect all MCP servers."""
@@ -7624,7 +7714,7 @@ class GatewayRunner:
 
         except Exception as e:
             logger.warning("MCP reload failed: %s", e)
-            return f"[失败] MCP reload failed: {e}"
+            return i18n._("[失败] MCP reload failed: {e}").format(e=e)
 
     # ------------------------------------------------------------------
     # /approve & /deny — explicit dangerous-command approval
@@ -7662,8 +7752,8 @@ class GatewayRunner:
         if not has_blocking_approval(session_key):
             if session_key in self._pending_approvals:
                 self._pending_approvals.pop(session_key)
-                return "[警告] Approval expired (agent is no longer waiting). Ask the agent to try again."
-            return "No pending command to approve."
+                return i18n._("[警告] Approval expired (agent is no longer waiting). Ask the agent to try again.")
+            return i18n._("No pending command to approve.")
 
         # Parse args: support "all", "all session", "all always", "session", "always"
         args = event.get_command_args().strip().lower().split()
@@ -7682,7 +7772,7 @@ class GatewayRunner:
 
         count = resolve_gateway_approval(session_key, choice, resolve_all=resolve_all)
         if not count:
-            return "No pending command to approve."
+            return i18n._("No pending command to approve.")
 
         # Resume typing indicator — agent is about to continue processing.
         _adapter = self.adapters.get(source.platform)
@@ -7691,7 +7781,8 @@ class GatewayRunner:
 
         count_msg = f" ({count} commands)" if count > 1 else ""
         logger.info("User approved %d dangerous command(s) via /approve%s", count, scope_msg)
-        return f"[成功] Command{'s' if count > 1 else ''} approved{scope_msg}{count_msg}. The agent is resuming..."
+        _s = "s" if count > 1 else ""
+        return i18n._("[成功] Command{s} approved{scope_msg}{count_msg}. The agent is resuming...").format(s=_s, scope_msg=scope_msg, count_msg=count_msg)
 
     async def _handle_deny_command(self, event: MessageEvent) -> str:
         """Handle /deny command — reject pending dangerous command(s).
@@ -7711,15 +7802,15 @@ class GatewayRunner:
         if not has_blocking_approval(session_key):
             if session_key in self._pending_approvals:
                 self._pending_approvals.pop(session_key)
-                return "[失败] Command denied (approval was stale)."
-            return "No pending command to deny."
+                return i18n._("[失败] Command denied (approval was stale).")
+            return i18n._("No pending command to deny.")
 
         args = event.get_command_args().strip().lower()
         resolve_all = "all" in args
 
         count = resolve_gateway_approval(session_key, "deny", resolve_all=resolve_all)
         if not count:
-            return "No pending command to deny."
+            return i18n._("No pending command to deny.")
 
         # Resume typing indicator — agent continues (with BLOCKED result).
         _adapter = self.adapters.get(source.platform)
@@ -7728,7 +7819,8 @@ class GatewayRunner:
 
         count_msg = f" ({count} commands)" if count > 1 else ""
         logger.info("User denied %d dangerous command(s) via /deny", count)
-        return f"[失败] Command{'s' if count > 1 else ''} denied{count_msg}."
+        _s = "s" if count > 1 else ""
+        return i18n._("[失败] Command{s} denied{count_msg}.").format(s=_s, count_msg=count_msg)
 
     # Platforms where /update is allowed.  ACP, API server, and webhooks are
     # programmatic interfaces that should not trigger system updates.
@@ -7765,7 +7857,7 @@ class GatewayRunner:
             try:
                 urls["Report"] = upload_to_pastebin(report)
             except Exception as exc:
-                return f"[失败] Failed to upload debug report: {exc}"
+                return i18n._("[失败] Failed to upload debug report: {exc}").format(exc=exc)
 
             # Schedule auto-deletion after 6 hours
             _schedule_auto_delete(list(urls.values()))
@@ -7800,16 +7892,16 @@ class GatewayRunner:
         # Block non-messaging platforms (API server, webhooks, ACP)
         platform = event.source.platform
         if platform not in self._UPDATE_ALLOWED_PLATFORMS:
-            return "[失败] /update is only available from messaging platforms. Run `bookworm update` from the terminal."
+            return i18n._("[失败] /update is only available from messaging platforms. Run `bookworm update` from the terminal.")
 
         if is_managed():
-            return f"[失败] {format_managed_message('update BookwormPRO')}"
+            return i18n._("[失败] {msg}").format(msg=format_managed_message('update BookwormPRO'))
 
         project_root = Path(__file__).parent.parent.resolve()
         git_dir = project_root / '.git'
 
         if not git_dir.exists():
-            return "[失败] Not a git repository — cannot update."
+            return i18n._("[失败] Not a git repository — cannot update.")
 
         hermes_cmd = _resolve_hermes_bin()
         if not hermes_cmd:
@@ -7871,10 +7963,10 @@ class GatewayRunner:
         except Exception as e:
             pending_path.unlink(missing_ok=True)
             exit_code_path.unlink(missing_ok=True)
-            return f"[失败] Failed to start update: {e}"
+            return i18n._("[失败] Failed to start update: {e}").format(e=e)
 
         self._schedule_update_notification_watch()
-        return "[BWM] Starting BookwormPRO update… I'll stream progress here."
+        return i18n._("[BWM] Starting BookwormPRO update… I'll stream progress here.")
 
     def _schedule_update_notification_watch(self) -> None:
         """Ensure a background task is watching for update completion."""
@@ -7993,9 +8085,9 @@ class GatewayRunner:
                     exit_code_raw = exit_code_path.read_text().strip() or "1"
                     exit_code = int(exit_code_raw)
                     if exit_code == 0:
-                        await adapter.send(chat_id, "[成功] BookwormPRO update finished.")
+                        await adapter.send(chat_id, i18n._("[成功] BookwormPRO update finished."))
                     else:
-                        await adapter.send(chat_id, "[失败] BookwormPRO update failed (exit code {}).".format(exit_code))
+                        await adapter.send(chat_id, i18n._("[失败] BookwormPRO update failed (exit code {exit_code}).").format(exit_code=exit_code))
                     logger.info("Update finished (exit=%s), notified %s", exit_code, session_key)
                 except Exception as e:
                     logger.warning("Update final notification failed: %s", e)
@@ -8050,13 +8142,13 @@ class GatewayRunner:
                             except Exception as btn_err:
                                 logger.debug("Button-based update prompt failed: %s", btn_err)
                         if not sent_buttons:
-                            default_hint = f" (default: {default})" if default else ""
+                            default_hint = i18n._(" (default: {default})").format(default=default) if default else ""
                             await adapter.send(
                                 chat_id,
-                                f"[BWM] **Update needs your input:**\n\n"
-                                f"{prompt_text}{default_hint}\n\n"
-                                f"Reply `/approve` (yes) or `/deny` (no), "
-                                f"or type your answer directly."
+                                i18n._("[BWM] **Update needs your input:**\n\n"
+                                "{prompt_text}{default_hint}\n\n"
+                                "Reply `/approve` (yes) or `/deny` (no), "
+                                "or type your answer directly.").format(prompt_text=prompt_text, default_hint=default_hint),
                             )
                         self._update_prompt_pending[session_key] = True
                         # Remove the prompt file so it isn't re-read on the
@@ -8076,7 +8168,7 @@ class GatewayRunner:
             exit_code_path.write_text("124")
             await _flush_buffer()
             try:
-                await adapter.send(chat_id, "[失败] BookwormPRO update timed out after 30 minutes.")
+                await adapter.send(chat_id, i18n._("[失败] BookwormPRO update timed out after 30 minutes."))
             except Exception:
                 pass
             for p in (pending_path, claimed_path, output_path,
@@ -8145,14 +8237,14 @@ class GatewayRunner:
                     if len(output) > 3500:
                         output = "…" + output[-3500:]
                     if exit_code == 0:
-                        msg = f"[成功] BookwormPRO update finished.\n\n```\n{output}\n```"
+                        msg = i18n._("[成功] BookwormPRO update finished.") + f"\n\n```\n{output}\n```"
                     else:
-                        msg = f"[失败] BookwormPRO update failed.\n\n```\n{output}\n```"
+                        msg = i18n._("[失败] BookwormPRO update failed.") + f"\n\n```\n{output}\n```"
                 else:
                     if exit_code == 0:
-                        msg = "[成功] BookwormPRO update finished successfully."
+                        msg = i18n._("[成功] BookwormPRO update finished successfully.")
                     else:
-                        msg = "[失败] BookwormPRO update failed. Check the gateway logs or run `bookworm update` manually for details."
+                        msg = i18n._("[失败] BookwormPRO update failed. Check the gateway logs or run `bookworm update` manually for details.")
                 await adapter.send(chat_id, msg)
                 logger.info(
                     "Sent post-update notification to %s:%s (exit=%s)",
@@ -8198,7 +8290,7 @@ class GatewayRunner:
             metadata = {"thread_id": thread_id} if thread_id else None
             await adapter.send(
                 chat_id,
-                "♻ Gateway restarted successfully. Your session continues.",
+                i18n._("♻ Gateway restarted successfully. Your session continues."),
                 metadata=metadata,
             )
             logger.info(
@@ -8603,10 +8695,10 @@ class GatewayRunner:
                 )
                 if should_notify:
                     new_output = session.output_buffer[-1000:] if session.output_buffer else ""
-                    message_text = (
-                        f"[Background process {session_id} finished with exit code {session.exit_code}~ "
-                        f"Here's the final output:\n{new_output}]"
-                    )
+                    message_text = i18n._(
+                        "[Background process {session_id} finished with exit code {exit_code}~ "
+                        "Here's the final output:\n{output}]"
+                    ).format(session_id=session_id, exit_code=session.exit_code, output=new_output)
                     adapter = None
                     for p, a in self.adapters.items():
                         if p.value == platform_name:
@@ -8624,10 +8716,10 @@ class GatewayRunner:
                 # New output available -- deliver status update (only in "all" mode)
                 # Skip periodic updates for agent_notify watchers (they only care about completion)
                 new_output = session.output_buffer[-500:] if session.output_buffer else ""
-                message_text = (
-                    f"[Background process {session_id} is still running~ "
-                    f"New output:\n{new_output}]"
-                )
+                message_text = i18n._(
+                    "[Background process {session_id} is still running~ "
+                    "New output:\n{output}]"
+                ).format(session_id=session_id, output=new_output)
                 adapter = None
                 for p, a in self.adapters.items():
                     if p.value == platform_name:
@@ -9515,7 +9607,7 @@ class GatewayRunner:
 
                     # Handle dedup messages: update last line with repeat counter
                     if isinstance(raw, tuple) and len(raw) == 3 and raw[0] == "__dedup__":
-                        _, base_msg, count = raw
+                        _ign, base_msg, count = raw
                         if progress_lines:
                             progress_lines[-1] = f"{base_msg} (×{count + 1})"
                         msg = progress_lines[-1] if progress_lines else base_msg
@@ -9585,7 +9677,7 @@ class GatewayRunner:
                         try:
                             raw = progress_queue.get_nowait()
                             if isinstance(raw, tuple) and len(raw) == 3 and raw[0] == "__dedup__":
-                                _, base_msg, count = raw
+                                _ign, base_msg, count = raw
                                 if progress_lines:
                                     progress_lines[-1] = f"{base_msg} (×{count + 1})"
                             else:
@@ -10078,13 +10170,13 @@ class GatewayRunner:
 
                 # Fallback: plain text approval prompt
                 cmd_preview = cmd[:200] + "..." if len(cmd) > 200 else cmd
-                msg = (
-                    f"[警告] **Dangerous command requires approval:**\n"
-                    f"```\n{cmd_preview}\n```\n"
-                    f"Reason: {desc}\n\n"
-                    f"Reply `/approve` to execute, `/approve session` to approve this pattern "
-                    f"for the session, `/approve always` to approve permanently, or `/deny` to cancel."
-                )
+                msg = i18n._(
+                    "[警告] **Dangerous command requires approval:**\n"
+                    "```\n{cmd_preview}\n```\n"
+                    "Reason: {desc}\n\n"
+                    "Reply `/approve` to execute, `/approve session` to approve this pattern "
+                    "for the session, `/approve always` to approve permanently, or `/deny` to cancel."
+                ).format(cmd_preview=cmd_preview, desc=desc)
                 try:
                     asyncio.run_coroutine_threadsafe(
                         _status_adapter.send(
@@ -10297,7 +10389,7 @@ class GatewayRunner:
 
         async def _start_stream_consumer():
             """Wait for the stream consumer to be created, then run it."""
-            for _ in range(200):  # Up to 10s wait
+            for _i in range(200):  # Up to 10s wait
                 if stream_consumer_holder[0] is not None:
                     await stream_consumer_holder[0].run()
                     return
@@ -10415,7 +10507,7 @@ class GatewayRunner:
                 try:
                     await _notify_adapter.send(
                         source.chat_id,
-                        f"[等待] Still working... ({_elapsed_mins} min elapsed{_status_detail})",
+                        i18n._("[等待] Still working... ({elapsed_mins} min elapsed{status_detail})").format(elapsed_mins=_elapsed_mins, status_detail=_status_detail),
                         metadata=_status_thread_metadata,
                     )
                 except Exception as _ne:
@@ -10450,7 +10542,7 @@ class GatewayRunner:
                 # detection in case monitor_for_interrupt() silently died.
                 response = None
                 while True:
-                    done, _ = await asyncio.wait(
+                    done, _ign = await asyncio.wait(
                         {_executor_task}, timeout=_POLL_INTERVAL
                     )
                     if done:
@@ -10480,7 +10572,7 @@ class GatewayRunner:
                 # call, and stream delta) every few seconds.
                 response = None
                 while True:
-                    done, _ = await asyncio.wait(
+                    done, _ign = await asyncio.wait(
                         {_executor_task}, timeout=_POLL_INTERVAL
                     )
                     if done:
@@ -10506,10 +10598,10 @@ class GatewayRunner:
                             try:
                                 await _warn_adapter.send(
                                     source.chat_id,
-                                    f"[警告] No activity for {_elapsed_warn} min. "
-                                    f"If the agent does not respond soon, it will "
-                                    f"be timed out in {_remaining_mins} min. "
-                                    f"You can continue waiting or use /reset.",
+                                    i18n._("[警告] No activity for {elapsed_warn} min. "
+                                    "If the agent does not respond soon, it will "
+                                    "be timed out in {remaining_mins} min. "
+                                    "You can continue waiting or use /reset.").format(elapsed_warn=_elapsed_warn, remaining_mins=_remaining_mins),
                                     metadata=_status_thread_metadata,
                                 )
                             except Exception as _warn_err:
@@ -11005,7 +11097,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
                     pass
                 return False
             # Wait up to 10 seconds for the old process to exit
-            for _ in range(20):
+            for _i in range(20):
                 try:
                     os.kill(existing_pid, 0)
                     time.sleep(0.5)
