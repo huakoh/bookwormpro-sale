@@ -2184,21 +2184,49 @@ def cmd_chat(args):
 
 
 
-    # Resolve --resume by title if it's not a direct session ID
-
+    # Resolve --resume: interactive picker, number, or title/ID
     resume_val = getattr(args, "resume", None)
-
-    if resume_val:
-
-        resolved = _resolve_session_by_name_or_id(resume_val)
-
-        if resolved:
-
-            args.resume = resolved
-
-        # If resolution fails, keep the original value — _init_agent will
-
-        # report "Session not found" with the original input
+    if resume_val is True:
+        # No argument: launch interactive session picker
+        try:
+            from bwm_state import SessionDB
+            db = SessionDB()
+            sessions = db.list_sessions_rich(exclude_sources=["tool"], limit=50)
+            db.close()
+        except Exception:
+            sessions = []
+        if not sessions:
+            print(_("No previous sessions found."))
+            sys.exit(1)
+        selected_id = _session_browse_picker(sessions)
+        if not selected_id:
+            print(_("Cancelled."))
+            sys.exit(0)
+        args.resume = selected_id
+    elif resume_val:
+        # Try numeric selection from recent sessions
+        try:
+            idx = int(resume_val)
+            if idx >= 1:
+                from bwm_state import SessionDB
+                db = SessionDB()
+                sessions = db.list_sessions_rich(exclude_sources=["tool"], limit=idx + 5)
+                db.close()
+                if idx <= len(sessions):
+                    args.resume = sessions[idx - 1]["id"]
+                else:
+                    resolved = _resolve_session_by_name_or_id(resume_val)
+                    if resolved:
+                        args.resume = resolved
+            else:
+                resolved = _resolve_session_by_name_or_id(resume_val)
+                if resolved:
+                    args.resume = resolved
+        except (ValueError, TypeError):
+            # Not a number — resolve by title/ID
+            resolved = _resolve_session_by_name_or_id(resume_val)
+            if resolved:
+                args.resume = resolved
 
 
 
@@ -13687,9 +13715,13 @@ For more help on a command:
 
         metavar="SESSION",
 
+        nargs="?",
+
+        const=True,
+
         default=None,
 
-        help="Resume a previous session by ID or title",
+        help="Resume a previous session. No arg = interactive picker, or pass ID/title/number",
 
     )
 
@@ -13979,9 +14011,13 @@ For more help on a command:
 
         metavar="SESSION_ID",
 
+        nargs="?",
+
+        const=True,
+
         default=argparse.SUPPRESS,
 
-        help="Resume a previous session by ID (shown on exit)",
+        help="Resume a previous session. No arg = interactive picker, or pass ID/title/number",
 
     )
 
