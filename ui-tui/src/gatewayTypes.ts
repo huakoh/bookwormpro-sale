@@ -106,8 +106,12 @@ export interface SessionResumeResponse {
 }
 
 export interface SessionListItem {
+  estimated_cost_usd?: number
   id: string
+  input_tokens?: number
+  last_preview?: string
   message_count: number
+  output_tokens?: number
   preview: string
   source?: string
   started_at: number

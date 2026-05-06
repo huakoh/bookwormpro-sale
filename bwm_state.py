@@ -847,6 +847,13 @@ class SessionDB:
                     ''
                 ) AS _preview_raw,
                 COALESCE(
+                    (SELECT SUBSTR(REPLACE(REPLACE(m3.content, X'0A', ' '), X'0D', ' '), 1, 120)
+                     FROM messages m3
+                     WHERE m3.session_id = s.id AND m3.role = 'user' AND m3.content IS NOT NULL
+                     ORDER BY m3.timestamp DESC, m3.id DESC LIMIT 1),
+                    ''
+                ) AS _last_preview_raw,
+                COALESCE(
                     (SELECT MAX(m2.timestamp) FROM messages m2 WHERE m2.session_id = s.id),
                     s.started_at
                 ) AS last_active
@@ -862,13 +869,18 @@ class SessionDB:
         sessions = []
         for row in rows:
             s = dict(row)
-            # Build the preview from the raw substring
             raw = s.pop("_preview_raw", "").strip()
             if raw:
                 text = raw[:60]
                 s["preview"] = text + ("..." if len(raw) > 60 else "")
             else:
                 s["preview"] = ""
+            last_raw = s.pop("_last_preview_raw", "").strip()
+            if last_raw:
+                text = last_raw[:100]
+                s["last_preview"] = text + ("..." if len(last_raw) > 100 else "")
+            else:
+                s["last_preview"] = ""
             sessions.append(s)
 
         # Project compression roots forward to their tips. Each row whose
@@ -897,7 +909,7 @@ class SessionDB:
                 for key in (
                     "id", "ended_at", "end_reason", "message_count",
                     "tool_call_count", "title", "last_active", "preview",
-                    "model", "system_prompt",
+                    "last_preview", "model", "system_prompt",
                 ):
                     if key in tip_row:
                         merged[key] = tip_row[key]
@@ -922,6 +934,13 @@ class SessionDB:
                     ''
                 ) AS _preview_raw,
                 COALESCE(
+                    (SELECT SUBSTR(REPLACE(REPLACE(m3.content, X'0A', ' '), X'0D', ' '), 1, 120)
+                     FROM messages m3
+                     WHERE m3.session_id = s.id AND m3.role = 'user' AND m3.content IS NOT NULL
+                     ORDER BY m3.timestamp DESC, m3.id DESC LIMIT 1),
+                    ''
+                ) AS _last_preview_raw,
+                COALESCE(
                     (SELECT MAX(m2.timestamp) FROM messages m2 WHERE m2.session_id = s.id),
                     s.started_at
                 ) AS last_active
@@ -940,6 +959,12 @@ class SessionDB:
             s["preview"] = text + ("..." if len(raw) > 60 else "")
         else:
             s["preview"] = ""
+        last_raw = s.pop("_last_preview_raw", "").strip()
+        if last_raw:
+            text = last_raw[:100]
+            s["last_preview"] = text + ("..." if len(last_raw) > 100 else "")
+        else:
+            s["last_preview"] = ""
         return s
 
     # =========================================================================

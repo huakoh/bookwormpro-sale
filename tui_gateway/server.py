@@ -1610,6 +1610,10 @@ def _(rid, params: dict) -> dict:
                         "started_at": s.get("started_at") or 0,
                         "message_count": s.get("message_count") or 0,
                         "source": s.get("source") or "",
+                        "input_tokens": s.get("input_tokens") or 0,
+                        "output_tokens": s.get("output_tokens") or 0,
+                        "estimated_cost_usd": s.get("estimated_cost_usd") or 0,
+                        "last_preview": s.get("last_preview") or "",
                     }
                     for s in rows
                 ]

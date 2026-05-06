@@ -4558,6 +4558,28 @@ class HermesCLI:
             return []
         return [s for s in sessions if s.get("id") != self.session_id]
 
+    @staticmethod
+    def _fmt_tokens(session: dict) -> str:
+        inp = session.get("input_tokens") or 0
+        out = session.get("output_tokens") or 0
+        total = inp + out
+        if total == 0:
+            return "—"
+        if total < 1000:
+            return f"{total}"
+        if total < 1_000_000:
+            return f"{total / 1000:.1f}k"
+        return f"{total / 1_000_000:.1f}M"
+
+    @staticmethod
+    def _fmt_cost(session: dict) -> str:
+        cost = session.get("estimated_cost_usd") or session.get("actual_cost_usd") or 0
+        if not cost:
+            return "—"
+        if cost < 0.01:
+            return f"${cost:.4f}"
+        return f"${cost:.2f}"
+
     def _show_recent_sessions(self, *, reason: str = "history", limit: int = 10) -> bool:
         """Render recent sessions inline from the active chat TUI.
 
@@ -4575,15 +4597,17 @@ class HermesCLI:
         else:
             print("  Recent sessions:")
         print()
-        print(f"  {'Title':<32} {'Preview':<40} {'Last Active':<13} {'ID'}")
-        print(f"  {'─' * 32} {'─' * 40} {'─' * 13} {'─' * 24}")
-        for session in sessions:
-            title = (session.get("title") or "—")[:30]
-            preview = (session.get("preview") or "")[:38]
+        print(f"  {'#':<3} {'Title':<28} {'Last Message':<32} {'Tokens':<8} {'Cost':<8} {'Active':<11} {'ID'}")
+        print(f"  {'─' * 3} {'─' * 28} {'─' * 32} {'─' * 8} {'─' * 8} {'─' * 11} {'─' * 24}")
+        for i, session in enumerate(sessions, 1):
+            title = (session.get("title") or "—")[:26]
+            preview = (session.get("last_preview") or session.get("preview") or "")[:30]
+            tokens = self._fmt_tokens(session)
+            cost = self._fmt_cost(session)
             last_active = _relative_time(session.get("last_active"))
-            print(f"  {title:<32} {preview:<40} {last_active:<13} {session['id']}")
+            print(f"  {i:<3} {title:<28} {preview:<32} {tokens:<8} {cost:<8} {last_active:<11} {session['id']}")
         print()
-        print("  Use /resume <session id or title> to continue where you left off.")
+        print("  Use /resume <# or session id or title> to continue where you left off.")
         print()
         return True
 
@@ -4732,21 +4756,57 @@ class HermesCLI:
         if not silent:
             print("(^_^)v New session started!")
 
+    def _pick_session_interactive(self, sessions: list) -> dict | None:
+        """Show an interactive curses picker for session selection. Returns chosen session or None."""
+        from bwm_cli.main import _relative_time
+        from bwm_cli.curses_ui import curses_single_select
+
+        items = []
+        for s in sessions:
+            title = (s.get("title") or "—")[:26]
+            tokens = self._fmt_tokens(s)
+            cost = self._fmt_cost(s)
+            active = _relative_time(s.get("last_active"))
+            msgs = s.get("message_count") or 0
+            line = f"{title:<28} {tokens:>6} tok  {cost:>7}  {msgs:>3} msgs  {active}"
+            items.append(line)
+
+        idx = curses_single_select(
+            "  Resume a session  (↑↓ navigate, Enter confirm, ESC cancel)",
+            items,
+            cancel_label="  ← Back",
+        )
+        if idx is None or idx >= len(sessions):
+            return None
+        return sessions[idx]
+
     def _handle_resume_command(self, cmd_original: str) -> None:
         """Handle /resume <session_id_or_title> — switch to a previous session mid-conversation."""
         parts = cmd_original.split(None, 1)
         target = parts[1].strip() if len(parts) > 1 else ""
 
         if not target:
-            _cprint("  Usage: /resume <session_id_or_title>")
-            if self._show_recent_sessions(reason="resume"):
+            sessions = self._list_recent_sessions(limit=15)
+            if not sessions:
+                _cprint("  No recent sessions to resume.")
                 return
-            _cprint("  Tip:   Use /history or `bookworm sessions list` to find sessions.")
-            return
+            # Try interactive picker first; fall back to static table on non-TTY
+            picked = self._pick_session_interactive(sessions)
+            if picked:
+                target = picked["id"]
+            else:
+                return
 
         if not self._session_db:
             _cprint("  Session database not available.")
             return
+
+        # Resolve numeric index (e.g. /resume 3 → 3rd recent session)
+        if target.isdigit():
+            idx = int(target)
+            sessions = self._list_recent_sessions(limit=15)
+            if 1 <= idx <= len(sessions):
+                target = sessions[idx - 1]["id"]
 
         # Resolve title or ID
         from bwm_cli.main import _resolve_session_by_name_or_id
