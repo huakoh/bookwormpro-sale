@@ -53,6 +53,12 @@ from agent.sanitize import (
     _sanitize_structure_non_ascii,
 )
 
+from agent.response_handler import (
+    strip_think_blocks,
+    has_natural_response_ending,
+    clean_error_message,
+)
+
 from openai import OpenAI
 import fire
 from datetime import datetime
