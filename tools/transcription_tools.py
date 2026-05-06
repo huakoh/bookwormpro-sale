@@ -28,6 +28,7 @@ Usage::
 
 import logging
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -156,6 +157,34 @@ def _get_local_command_template() -> Optional[str]:
 
 def _has_local_command() -> bool:
     return _get_local_command_template() is not None
+
+
+# ---------------------------------------------------------------------------
+# STT command template validation (H8 — injection guard)
+# ---------------------------------------------------------------------------
+
+# The only placeholders that _transcribe_local_command() substitutes.
+# Any extra {placeholder} in the template is an unknown expansion and must
+# be rejected to prevent accidental shell injection via env-var misconfiguration.
+_ALLOWED_STT_PLACEHOLDERS = frozenset({
+    "{input_path}",
+    "{output_dir}",
+    "{model}",
+    "{language}",
+})
+
+
+def _validate_stt_template(template: str) -> bool:
+    """Return True when *template* contains only known STT placeholders.
+
+    Rejects templates with unexpected ``{...}`` expansions, which could expand
+    to attacker-controlled values if the template is misconfigured or tampered
+    with.  An unknown placeholder would bypass shlex.quote() protection because
+    the value comes from a source other than the four hardened substitutions in
+    ``_transcribe_local_command()``.
+    """
+    found = set(re.findall(r"\{[^}]+\}", template))
+    return found.issubset(_ALLOWED_STT_PLACEHOLDERS)
 
 
 def _normalize_local_model(model_name: Optional[str]) -> str:
@@ -474,6 +503,27 @@ def _transcribe_local_command(file_path: str, model_name: str) -> Dict[str, Any]
         or DEFAULT_LOCAL_STT_LANGUAGE
     )
     normalized_model = _normalize_local_command_model(model_name)
+
+    # Validate template placeholders before execution (H8: injection guard).
+    # Reject any template containing unknown {placeholders} that are not in
+    # the known-safe set — they would bypass shlex.quote() protection.
+    if not _validate_stt_template(command_template):
+        unknown = set(re.findall(r"\{[^}]+\}", command_template)) - _ALLOWED_STT_PLACEHOLDERS
+        logger.error(
+            "Refusing to execute %s template — unknown placeholders detected: %s. "
+            "Only %s are permitted.",
+            LOCAL_STT_COMMAND_ENV,
+            unknown,
+            _ALLOWED_STT_PLACEHOLDERS,
+        )
+        return {
+            "success": False,
+            "transcript": "",
+            "error": (
+                f"Invalid {LOCAL_STT_COMMAND_ENV} template: unknown placeholders {unknown}. "
+                f"Allowed: {_ALLOWED_STT_PLACEHOLDERS}"
+            ),
+        }
 
     try:
         with tempfile.TemporaryDirectory(prefix="bookworm-local-stt-") as output_dir:

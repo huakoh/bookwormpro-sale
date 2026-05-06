@@ -39,7 +39,12 @@ JOBS_FILE = CRON_DIR / "jobs.json"
 # In-process lock protecting load_jobs→modify→save_jobs cycles.
 # Required when tick() runs jobs in parallel threads — without this,
 # concurrent mark_job_run / advance_next_run calls can clobber each other.
-_jobs_file_lock = threading.Lock()
+#
+# RLock (re-entrant) is used so that save_jobs() can acquire the lock
+# internally even when called from within a block that already holds it
+# (e.g. load_jobs() auto-repair path calls save_jobs() while the caller
+# holds the lock in mark_job_run / advance_next_run).
+_jobs_file_lock = threading.RLock()
 OUTPUT_DIR = CRON_DIR / "output"
 ONESHOT_GRACE_SECONDS = 120
 
@@ -353,22 +358,29 @@ def load_jobs() -> List[Dict[str, Any]]:
 
 
 def save_jobs(jobs: List[Dict[str, Any]]):
-    """Save all jobs to storage."""
-    ensure_dirs()
-    fd, tmp_path = tempfile.mkstemp(dir=str(JOBS_FILE.parent), suffix='.tmp', prefix='.jobs_')
-    try:
-        with os.fdopen(fd, 'w', encoding='utf-8') as f:
-            json.dump({"jobs": jobs, "updated_at": _hermes_now().isoformat()}, f, indent=2)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp_path, JOBS_FILE)
-        _secure_file(JOBS_FILE)
-    except BaseException:
+    """Save all jobs to storage (thread-safe: acquires _jobs_file_lock internally).
+
+    The lock is acquired here so callers never need to hold it themselves —
+    avoiding accidental double-locking bugs.  Because _jobs_file_lock is an
+    RLock, callers that *do* hold the lock (e.g. mark_job_run / advance_next_run)
+    can call save_jobs() safely without deadlock.
+    """
+    with _jobs_file_lock:
+        ensure_dirs()
+        fd, tmp_path = tempfile.mkstemp(dir=str(JOBS_FILE.parent), suffix='.tmp', prefix='.jobs_')
         try:
-            os.unlink(tmp_path)
-        except OSError:
-            pass
-        raise
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                json.dump({"jobs": jobs, "updated_at": _hermes_now().isoformat()}, f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, JOBS_FILE)
+            _secure_file(JOBS_FILE)
+        except BaseException:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
 
 def _normalize_workdir(workdir: Optional[str]) -> Optional[str]:
@@ -670,6 +682,8 @@ def mark_job_run(job_id: str, success: bool, error: Optional[str] = None,
     ``delivery_error`` is tracked separately from the agent error — a job
     can succeed (agent produced output) but fail delivery (platform down).
     """
+    # Lock is now internal to save_jobs() (RLock — safe to re-enter).
+    # Load under lock so load→modify→save is atomic with respect to other writers.
     with _jobs_file_lock:
         jobs = load_jobs()
         for i, job in enumerate(jobs):
@@ -680,11 +694,11 @@ def mark_job_run(job_id: str, success: bool, error: Optional[str] = None,
                 job["last_error"] = error if not success else None
                 # Track delivery failures separately — cleared on successful delivery
                 job["last_delivery_error"] = delivery_error
-                
+
                 # Increment completed count
                 if job.get("repeat"):
                     job["repeat"]["completed"] = job["repeat"].get("completed", 0) + 1
-                    
+
                     # Check if we've hit the repeat limit
                     times = job["repeat"].get("times")
                     completed = job["repeat"]["completed"]
@@ -693,7 +707,7 @@ def mark_job_run(job_id: str, success: bool, error: Optional[str] = None,
                         jobs.pop(i)
                         save_jobs(jobs)
                         return
-                
+
                 # Compute next run
                 job["next_run_at"] = compute_next_run(job["schedule"], now)
 

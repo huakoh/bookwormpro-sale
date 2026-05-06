@@ -325,3 +325,45 @@ def is_safe_url(url: str) -> bool:
         # become SSRF bypass vectors
         logger.warning("Blocked request — URL safety check error for %s: %s", url, exc)
         return False
+
+
+# ---------------------------------------------------------------------------
+# XSS href safety — scheme allowlist (separate from SSRF protection above)
+# ---------------------------------------------------------------------------
+
+# Schemes safe to render as clickable <a href="..."> links.
+# javascript:/data:/vbscript: and similar are intentionally excluded.
+_SAFE_HREF_SCHEMES = frozenset({"https", "http", "mailto", "tel"})
+
+
+def is_safe_href(url: str) -> bool:
+    """Check whether *url* is safe to render as a clickable hyperlink.
+
+    Unlike ``is_safe_url()`` which guards against SSRF (server-side
+    requests to internal infrastructure), this function defends against
+    client-side XSS via dangerous URL schemes
+    (``javascript:``, ``data:``, ``vbscript:``, etc.).
+
+    Rules
+    -----
+    - Empty / non-string input → False.
+    - Relative paths (``/foo/bar``) and anchor links (``#section``) → True
+      (no scheme means the browser keeps the current origin).
+    - Scheme present → must be in ``_SAFE_HREF_SCHEMES`` allowlist.
+    - Any parse error → False (fail closed).
+
+    This function does **not** perform DNS resolution or IP-class checks;
+    pair it with ``is_safe_url()`` / ``resolve_and_validate()`` when the
+    server also fetches the URL.
+    """
+    if not url or not isinstance(url, str):
+        return False
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False
+    scheme = (parsed.scheme or "").strip().lower()
+    if not scheme:
+        # Relative URL (starts with /) or anchor (#section) — safe
+        return url.startswith(("/", "#"))
+    return scheme in _SAFE_HREF_SCHEMES

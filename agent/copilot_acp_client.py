@@ -28,7 +28,40 @@ ACP_MARKER_BASE_URL = "acp://copilot"
 _DEFAULT_TIMEOUT_SECONDS = 900.0
 
 _TOOL_CALL_BLOCK_RE = re.compile(r"<tool_call>\s*(\{.*?\})\s*</tool_call>", re.DOTALL)
-_TOOL_CALL_JSON_RE = re.compile(r"\{\s*\"id\"\s*:\s*\"[^\"]+\"\s*,\s*\"type\"\s*:\s*\"function\"\s*,\s*\"function\"\s*:\s*\{.*?\}\s*\}", re.DOTALL)
+
+# ReDoS-safe: _TOOL_CALL_JSON_RE replaced by incremental JSON decoder.
+# The old pattern used `\{.*?\}` with DOTALL which causes catastrophic
+# backtracking on nested braces. We now use json.JSONDecoder.raw_decode()
+# which is linear-time and handles arbitrary nesting correctly.
+_MAX_TOOL_CALL_SCAN_LEN = 65_536  # guard against pathologically large inputs
+
+_json_decoder = json.JSONDecoder()
+
+
+def _find_tool_call_jsons(text: str) -> list[dict]:
+    """Extract all function-type tool call objects from *text*.
+
+    Uses incremental JSON decoding instead of regex to avoid ReDoS on inputs
+    with deeply nested or malformed braces.  Only objects whose top-level
+    ``type`` field equals ``"function"`` are returned.
+    """
+    results: list[dict] = []
+    # Limit scan length to prevent abuse via extremely long model outputs
+    scan_text = text[:_MAX_TOOL_CALL_SCAN_LEN]
+    idx = 0
+    while idx < len(scan_text):
+        # Fast-skip to the next '{' to avoid O(n) JSONDecodeError retries
+        brace_pos = scan_text.find("{", idx)
+        if brace_pos == -1:
+            break
+        try:
+            obj, end = _json_decoder.raw_decode(scan_text, brace_pos)
+            if isinstance(obj, dict) and obj.get("type") == "function":
+                results.append(obj)
+            idx = end
+        except json.JSONDecodeError:
+            idx = brace_pos + 1
+    return results
 
 
 def _resolve_command() -> str:
@@ -252,11 +285,22 @@ def _extract_tool_calls_from_text(text: str) -> tuple[list[SimpleNamespace], str
         consumed_spans.append((m.start(), m.end()))
 
     # Only try bare-JSON fallback when no XML blocks were found.
+    # Uses incremental JSON decoding (ReDoS-safe) instead of the old regex.
     if not extracted:
-        for m in _TOOL_CALL_JSON_RE.finditer(text):
-            raw = m.group(0)
-            _try_add_tool_call(raw)
-            consumed_spans.append((m.start(), m.end()))
+        scan_text = text[:_MAX_TOOL_CALL_SCAN_LEN]
+        idx = 0
+        while idx < len(scan_text):
+            brace_pos = scan_text.find("{", idx)
+            if brace_pos == -1:
+                break
+            try:
+                obj_candidate, end = _json_decoder.raw_decode(scan_text, brace_pos)
+                if isinstance(obj_candidate, dict) and obj_candidate.get("type") == "function":
+                    _try_add_tool_call(json.dumps(obj_candidate))
+                    consumed_spans.append((brace_pos, end))
+                idx = end
+            except json.JSONDecodeError:
+                idx = brace_pos + 1
 
     if not consumed_spans:
         return extracted, text.strip()

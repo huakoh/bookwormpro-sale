@@ -1122,13 +1122,40 @@ class SessionDB:
 
         return self._execute_write(_do)
 
-    def get_messages(self, session_id: str) -> List[Dict[str, Any]]:
-        """Load all messages for a session, ordered by timestamp."""
+    def get_messages(
+        self,
+        session_id: str,
+        limit: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """Load messages for a session, ordered by timestamp.
+
+        Args:
+            session_id: The session to load messages for.
+            limit: Maximum number of messages to return (most recent when set).
+                   None (default) returns all messages — equivalent to the
+                   historical unlimited behaviour for backward compatibility.
+                   Pass an explicit integer (e.g. 500) for large-session safety.
+        """
         with self._lock:
-            cursor = self._conn.execute(
-                "SELECT * FROM messages WHERE session_id = ? ORDER BY timestamp, id",
-                (session_id,),
-            )
+            if limit is not None and limit > 0:
+                # Subquery selects the N most-recent rows; outer query re-sorts ASC
+                # so callers always receive messages in chronological order.
+                cursor = self._conn.execute(
+                    """
+                    SELECT * FROM (
+                        SELECT * FROM messages
+                        WHERE session_id = ?
+                        ORDER BY timestamp DESC, id DESC
+                        LIMIT ?
+                    ) ORDER BY timestamp, id
+                    """,
+                    (session_id, limit),
+                )
+            else:
+                cursor = self._conn.execute(
+                    "SELECT * FROM messages WHERE session_id = ? ORDER BY timestamp, id",
+                    (session_id,),
+                )
             rows = cursor.fetchall()
         result = []
         for row in rows:
