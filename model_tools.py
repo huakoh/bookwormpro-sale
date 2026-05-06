@@ -107,15 +107,27 @@ def _run_async(coro):
 
     if loop and loop.is_running():
         # Inside an async context (gateway, RL env) — run in a fresh thread.
+        # We wrap the coroutine in asyncio.wait_for() so the timeout fires
+        # *inside* asyncio.run(), giving the event loop a chance to actually
+        # cancel the coroutine via CancelledError propagation.  The old
+        # future.cancel() approach could not interrupt a running thread —
+        # the coroutine kept executing in the background after the caller
+        # got a TimeoutError (goroutine leak).
         import concurrent.futures
+
+        _TIMEOUT_S = 300
+
+        async def _with_timeout(c):
+            return await asyncio.wait_for(c, timeout=_TIMEOUT_S)
+
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-        future = pool.submit(asyncio.run, coro)
+        future = pool.submit(asyncio.run, _with_timeout(coro))
         try:
-            return future.result(timeout=300)
+            return future.result(timeout=_TIMEOUT_S + 5)  # outer budget > inner
         except concurrent.futures.TimeoutError:
-            # WARNING: future.cancel() cannot interrupt a running asyncio.run() thread.
-            # The coroutine may continue executing in the background after timeout.
-            # TODO: Use asyncio.wait_for() inside the coroutine for true cancellation.
+            # asyncio.wait_for already cancelled the coroutine inside the
+            # thread; this outer TimeoutError is a safety net for the rare
+            # case where the thread itself is wedged (e.g. blocking C ext).
             future.cancel()
             raise
         finally:

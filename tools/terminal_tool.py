@@ -710,8 +710,18 @@ def _transform_sudo_command(command: str | None) -> tuple[str | None, str | None
     if not has_real_sudo:
         return command, None
 
-    has_configured_password = "SUDO_PASSWORD" in os.environ
-    sudo_password = os.environ.get("SUDO_PASSWORD", "") if has_configured_password else _cached_sudo_password
+    _SUDO_ENV_KEY = "SUDO_PASSWORD"
+    has_configured_password = _SUDO_ENV_KEY in os.environ
+    if has_configured_password:
+        # Use pop() instead of get() so the value is immediately removed from
+        # the process environment.  /proc/PID/environ is readable by any
+        # process sharing the same uid, so leaving credentials in environ
+        # after first read creates an unnecessary exposure window.
+        # NOTE: for persistent secrets prefer the system keyring (keyring lib /
+        # secretstorage) over environment variables entirely.
+        sudo_password = os.environ.pop(_SUDO_ENV_KEY, "")
+    else:
+        sudo_password = _cached_sudo_password
 
     if not has_configured_password and not sudo_password and os.getenv("BOOKWORMPRO_INTERACTIVE"):
         sudo_password = _prompt_for_sudo_password(timeout_seconds=45)
@@ -720,8 +730,11 @@ def _transform_sudo_command(command: str | None) -> tuple[str | None, str | None
 
     if has_configured_password or sudo_password:
         # Trailing newline is required: sudo -S reads one line for the password.
-        return transformed, sudo_password + "\n"
+        stdin_val = sudo_password + "\n"
+        sudo_password = ""  # zero out local reference after use  # noqa: F841
+        return transformed, stdin_val
 
+    sudo_password = ""  # noqa: F841
     return command, None
 
 

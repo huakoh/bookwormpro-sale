@@ -12,11 +12,18 @@ that use 198.18.0.0/15 or 100.64.0.0/10).  Even when disabled, cloud
 metadata hostnames (metadata.google.internal, 169.254.169.254) are
 **always** blocked — those are never legitimate agent targets.
 
-Limitations (documented, not fixable at pre-flight level):
-  - DNS rebinding (TOCTOU): an attacker-controlled DNS server with TTL=0
-    can return a public IP for the check, then a private IP for the actual
-    connection. Fixing this requires connection-level validation (e.g.
-    Python's Champion library or an egress proxy like Stripe's Smokescreen).
+DNS-rebinding mitigation (TOCTOU):
+  ``resolve_and_validate(url)`` resolves the hostname once, validates the IP,
+  and returns the resolved IP together with the original URL so callers can
+  construct a direct-IP request (bypassing a second OS-level DNS resolution).
+  This closes the TTL=0 rebinding window at the application layer.
+  Callers that use httpx should pass the resolved IP in the Host header and
+  connect to the IP directly, e.g. via ``_SSRF_TRANSPORT``.
+
+  For a fully kernel-level fix (e.g. in a multi-tenant gateway), an egress
+  proxy such as Stripe Smokescreen or Python's ``trusty`` library is
+  recommended in addition.
+
   - Redirect-based bypass is mitigated by httpx event hooks that re-validate
     each redirect target in vision_tools, gateway platform adapters, and
     media cache helpers. Web tools use third-party SDKs (Firecrawl/Tavily)
@@ -27,6 +34,7 @@ import ipaddress
 import logging
 import os
 import socket
+from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
@@ -146,6 +154,118 @@ def _allows_private_ip_resolution(hostname: str, scheme: str) -> bool:
     return scheme == "https" and hostname in _TRUSTED_PRIVATE_IP_HOSTS
 
 
+def _resolve_to_ip(hostname: str) -> list[ipaddress.IPv4Address | ipaddress.IPv6Address]:
+    """Resolve *hostname* to a list of IP address objects.
+
+    Returns an empty list on DNS failure (caller should treat as blocked).
+    Uses ``AF_UNSPEC`` so both IPv4 and IPv6 records are returned.
+    """
+    try:
+        addr_info = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+    except socket.gaierror:
+        return []
+    ips: list[ipaddress.IPv4Address | ipaddress.IPv6Address] = []
+    for _family, _type, _proto, _canon, sockaddr in addr_info:
+        ip_str = sockaddr[0]
+        try:
+            ips.append(ipaddress.ip_address(ip_str))
+        except ValueError:
+            continue
+    return ips
+
+
+def _validate_resolved_ip(
+    ip: ipaddress.IPv4Address | ipaddress.IPv6Address,
+    hostname: str,
+    scheme: str,
+    allow_all_private: bool,
+) -> bool:
+    """Return True if *ip* is allowed for the given *hostname*/*scheme*.
+
+    Centralises the per-IP block logic so both ``is_safe_url`` and
+    ``resolve_and_validate`` share identical rules.
+    """
+    # Always-blocked IPs and link-local range — no toggle overrides these
+    if ip in _ALWAYS_BLOCKED_IPS or any(ip in net for net in _ALWAYS_BLOCKED_NETWORKS):
+        logger.warning(
+            "Blocked request to cloud metadata address: %s -> %s",
+            hostname, ip,
+        )
+        return False
+
+    allow_private_ip = _allows_private_ip_resolution(hostname, scheme)
+    if not allow_all_private and not allow_private_ip and _is_blocked_ip(ip):
+        logger.warning(
+            "Blocked request to private/internal address: %s -> %s",
+            hostname, ip,
+        )
+        return False
+
+    return True
+
+
+def resolve_and_validate(url: str) -> Optional[Tuple[str, str]]:
+    """Resolve *url*'s hostname to a validated IP and return ``(ip_str, url)``.
+
+    This is the DNS-rebinding mitigation layer.  By resolving the hostname
+    *once* and returning the resolved IP, callers can connect directly to
+    the IP (pinning the connection to the validated address) rather than
+    letting the OS re-resolve the name for the actual TCP connect — which
+    would open a TTL=0 rebinding window.
+
+    Usage pattern for httpx callers::
+
+        result = resolve_and_validate("https://example.com/path")
+        if result is None:
+            raise ValueError("SSRF: URL blocked")
+        resolved_ip, original_url = result
+        # Connect to resolved_ip with Host header set to the original hostname.
+
+    Returns:
+        ``(resolved_ip_str, original_url)`` if the URL is safe.
+        ``None`` if the URL is blocked (private IP, metadata endpoint, bad DNS,
+        or any unexpected error).
+
+    The ``allow_private_urls`` toggle and trusted-hostname whitelist are both
+    respected, same as ``is_safe_url``.
+    """
+    try:
+        parsed = urlparse(url)
+        hostname = (parsed.hostname or "").strip().lower().rstrip(".")
+        scheme = (parsed.scheme or "").strip().lower()
+
+        if not hostname:
+            return None
+
+        # Always-blocked hostnames — no IP check needed
+        if hostname in _BLOCKED_HOSTNAMES:
+            logger.warning("Blocked request to internal hostname: %s", hostname)
+            return None
+
+        allow_all_private = _global_allow_private_urls()
+
+        ips = _resolve_to_ip(hostname)
+        if not ips:
+            logger.warning("Blocked request — DNS resolution failed for: %s", hostname)
+            return None
+
+        # Validate every resolved IP; reject if any is blocked.
+        for ip in ips:
+            if not _validate_resolved_ip(ip, hostname, scheme, allow_all_private):
+                return None
+
+        # Return the first resolved IP as the canonical connect address.
+        # Callers should use this IP for the actual connection to avoid
+        # a second OS-level DNS resolution (the TOCTOU rebinding window).
+        resolved_ip_str = str(ips[0])
+        logger.debug("resolve_and_validate: %s -> %s (validated)", hostname, resolved_ip_str)
+        return resolved_ip_str, url
+
+    except Exception as exc:
+        logger.warning("Blocked request — resolve_and_validate error for %s: %s", url, exc)
+        return None
+
+
 def is_safe_url(url: str) -> bool:
     """Return True if the URL target is not a private/internal address.
 
@@ -174,35 +294,17 @@ def is_safe_url(url: str) -> bool:
 
         allow_private_ip = _allows_private_ip_resolution(hostname, scheme)
 
-        # Try to resolve and check IP
-        try:
-            addr_info = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
-        except socket.gaierror:
-            # DNS resolution failed — fail closed. If DNS can't resolve it,
-            # the HTTP client will also fail, so blocking loses nothing.
+        # Resolve hostname once and validate every returned IP.
+        # Using _resolve_to_ip + _validate_resolved_ip ensures is_safe_url
+        # and resolve_and_validate share identical block logic.
+        ips = _resolve_to_ip(hostname)
+        if not ips:
+            # DNS resolution failed — fail closed.
             logger.warning("Blocked request — DNS resolution failed for: %s", hostname)
             return False
 
-        for family, _, _, _, sockaddr in addr_info:
-            ip_str = sockaddr[0]
-            try:
-                ip = ipaddress.ip_address(ip_str)
-            except ValueError:
-                continue
-
-            # Always block cloud metadata IPs and link-local, even with toggle on
-            if ip in _ALWAYS_BLOCKED_IPS or any(ip in net for net in _ALWAYS_BLOCKED_NETWORKS):
-                logger.warning(
-                    "Blocked request to cloud metadata address: %s -> %s",
-                    hostname, ip_str,
-                )
-                return False
-
-            if not allow_all_private and not allow_private_ip and _is_blocked_ip(ip):
-                logger.warning(
-                    "Blocked request to private/internal address: %s -> %s",
-                    hostname, ip_str,
-                )
+        for ip in ips:
+            if not _validate_resolved_ip(ip, hostname, scheme, allow_all_private):
                 return False
 
         if allow_all_private:

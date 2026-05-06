@@ -24,9 +24,10 @@ Mounting
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from tui_gateway import server
 
@@ -109,9 +110,38 @@ class WSTransport:
         self._closed = True
 
 
-async def handle_ws(ws: Any) -> None:
-    """Run one WebSocket session. Wire-compatible with ``tui_gateway.entry``."""
+async def handle_ws(ws: Any, expected_token: Optional[str] = None) -> None:
+    """Run one WebSocket session. Wire-compatible with ``tui_gateway.entry``.
+
+    Args:
+        ws: Starlette ``WebSocket`` instance (or any object with the same API).
+        expected_token: When provided, the ``?token=`` query parameter on the
+            upgrade request must match this value (constant-time comparison).
+            If the token is absent or wrong the socket is closed with code 4001
+            before ``gateway.ready`` is emitted.
+
+            The primary auth layer lives in ``bwm_cli.web_server.gateway_ws``
+            (checks ``_SESSION_TOKEN`` before calling this function).  This
+            parameter adds a *defence-in-depth* check so that any future mount
+            point that forgets to validate beforehand still rejects anonymous
+            connections.
+    """
     await ws.accept()
+
+    # Defence-in-depth token check.  The caller (web_server.gateway_ws) already
+    # validates the token before reaching here; this guard protects any future
+    # mount point that may omit that validation.
+    if expected_token is not None:
+        token = ""
+        try:
+            token = ws.query_params.get("token", "")
+        except Exception:
+            pass
+        if not hmac.compare_digest(token.encode(), expected_token.encode()):
+            _log.warning("ws: rejected unauthenticated connection from %s",
+                         getattr(getattr(ws, "client", None), "host", "unknown"))
+            await ws.close(code=4001, reason="unauthorized")
+            return
 
     transport = WSTransport(ws, asyncio.get_running_loop())
 
