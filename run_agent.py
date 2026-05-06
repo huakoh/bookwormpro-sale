@@ -40,6 +40,19 @@ from types import SimpleNamespace
 import urllib.request
 import uuid
 from typing import List, Dict, Any, Optional
+from agent.sanitize import (
+    _sanitize_surrogates,
+    _sanitize_structure_surrogates,
+    _sanitize_messages_surrogates,
+    _escape_invalid_chars_in_json_strings,
+    _repair_tool_call_arguments,
+    _strip_non_ascii,
+    _strip_emoji_keep_codeblocks,
+    _sanitize_messages_non_ascii,
+    _sanitize_tools_non_ascii,
+    _sanitize_structure_non_ascii,
+)
+
 from openai import OpenAI
 import fire
 from datetime import datetime

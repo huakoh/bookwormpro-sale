@@ -147,6 +147,7 @@ _BREAKER_SKIP_PATTERNS = frozenset({
     "auth",                     # 401/403 — credential issue, not provider
 
     "auth_permanent",
+    "empty_response",          # model returned empty — not provider fault
 
 })
 

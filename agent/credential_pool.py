@@ -1299,12 +1299,29 @@ def _seed_from_env(provider: str, entries: List[PooledCredential]) -> Tuple[bool
                     "credential pool: skipping env:OPENROUTER_API_KEY seed — "
                     "manual entry %s targets %s, which the official key "
                     "cannot authenticate against. Run "
-                    "`bookworm auth remove openrouter` to drop one side, or "
+                    " to drop one side, or "
                     "unset OPENROUTER_API_KEY in your shell.",
                     _conflict.label or _conflict.id[:8],
                     _conflict.base_url,
                 )
-                return changed, active_sources
+                # Auto-cleanup stale entries after 5 consecutive conflicts
+                _ckey = "_conflict_" + provider + ":" + str(_conflict.id)
+                _tpath = _HERMES_HOME / ".credential_conflict_tracker.json"
+                try:
+                    _tracker = json.loads(_tpath.read_text()) if _tpath.exists() else {}
+                except Exception:
+                    _tracker = {}
+                _cnt = _tracker.get(_ckey, 0) + 1
+                _tracker[_ckey] = _cnt
+                _tpath.write_text(json.dumps(_tracker))
+                if _cnt >= 5:
+                    logger.warning("Auto-removing stale credential %s after %d conflicts", _conflict.label or _conflict.id[:8], _cnt)
+                    entries[:] = [e for e in entries if e.id != _conflict.id]
+                    _tracker.pop(_ckey, None)
+                    _tpath.write_text(json.dumps(_tracker))
+                    changed = True
+                else:
+                    return changed, active_sources
             active_sources.add(source)
             changed |= _upsert_entry(
                 entries,

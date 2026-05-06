@@ -45,7 +45,7 @@ function scoreSkillCustom(skill, queryTokens, N, dfMap, avgdl, k1, b) {
   const IDF_FLOOR = Math.log(2);
 
   for (const kwEntry of (skill.keywords || [])) {
-    const kwLower = kwEntry.keyword.toLowerCase();
+    const kwLower = (kwEntry.keyword || "").toLowerCase();
     const baseWeight = kwEntry.tfidfWeight || kwEntry.weight || 1;
 
     // 全局 IDF
@@ -88,7 +88,7 @@ function buildDFMap(skills) {
   for (const skill of skills) {
     const seen = new Set();
     for (const kw of (skill.keywords || [])) {
-      const k = kw.keyword.toLowerCase();
+      const k = (kw.keyword || "").toLowerCase();
       if (!seen.has(k)) {
         seen.add(k);
         dfMap.set(k, (dfMap.get(k) || 0) + 1);

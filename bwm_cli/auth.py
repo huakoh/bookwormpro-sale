@@ -749,6 +749,13 @@ def _auth_store_lock(timeout_seconds: float = AUTH_LOCK_TIMEOUT_SECONDS):
 
 def _load_auth_store(auth_file: Optional[Path] = None) -> Dict[str, Any]:
     auth_file = auth_file or _auth_file_path()
+    # --- P2-3: AES-256-GCM encryption via auth_encryption module ---
+    try:
+        from bwm_cli.auth_encryption import load_auth_store as _enc_load
+        return _enc_load(auth_file)
+    except ImportError:
+        pass  # encryption module not available, use plaintext fallback
+    # --- End P2-3 ---
     if not auth_file.exists():
         return {"version": AUTH_STORE_VERSION, "providers": {}}
 
@@ -787,7 +794,50 @@ def _load_auth_store(auth_file: Optional[Path] = None) -> Dict[str, Any]:
     return {"version": AUTH_STORE_VERSION, "providers": {}}
 
 
+    try:
+        raw = json.loads(auth_file.read_text())
+    except Exception as exc:
+        corrupt_path = auth_file.with_suffix(".json.corrupt")
+        try:
+            import shutil
+            shutil.copy2(auth_file, corrupt_path)
+        except Exception:
+            pass
+        logger.warning(
+            "auth: failed to parse %s (%s) — starting with empty store. "
+            "Corrupt file preserved at %s",
+            auth_file, exc, corrupt_path,
+        )
+        return {"version": AUTH_STORE_VERSION, "providers": {}}
+
+    if isinstance(raw, dict) and (
+        isinstance(raw.get("providers"), dict)
+        or isinstance(raw.get("credential_pool"), dict)
+    ):
+        raw.setdefault("providers", {})
+        return raw
+
+    # Migrate from PR's "systems" format if present
+    if isinstance(raw, dict) and isinstance(raw.get("systems"), dict):
+        systems = raw["systems"]
+        providers = {}
+        if "nous_portal" in systems:
+            providers["bookwormpro"] = systems["nous_portal"]
+        return {"version": AUTH_STORE_VERSION, "providers": providers,
+                "active_provider": "bookwormpro" if providers else None}
+
+    return {"version": AUTH_STORE_VERSION, "providers": {}}
+
+
 def _save_auth_store(auth_store: Dict[str, Any]) -> Path:
+    # --- P2-3: AES-256-GCM encryption via auth_encryption module ---
+    try:
+        from bwm_cli.auth_encryption import save_auth_store as _enc_save
+        _enc_save(_auth_file_path(), auth_store)
+        return _auth_file_path()
+    except ImportError:
+        pass  # encryption module not available, use plaintext fallback
+    # --- End P2-3 ---
     auth_file = _auth_file_path()
     auth_file.parent.mkdir(parents=True, exist_ok=True)
     auth_store["version"] = AUTH_STORE_VERSION
@@ -816,6 +866,7 @@ def _save_auth_store(auth_store: Dict[str, Any]) -> Path:
         except OSError:
             pass
     # Restrict file permissions to owner only
+
     try:
         auth_file.chmod(stat.S_IRUSR | stat.S_IWUSR)
     except OSError:

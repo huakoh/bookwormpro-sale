@@ -196,7 +196,7 @@ function buildBM25Params(index) {
   for (const skill of skills) {
     const seen = new Set();
     for (const { keyword } of (skill.keywords || [])) {
-      const kw = keyword.toLowerCase();
+      const kw = (keyword || "").toLowerCase();
       if (!seen.has(kw)) {
         seen.add(kw);
         df.set(kw, (df.get(kw) || 0) + 1);
@@ -211,7 +211,7 @@ function buildBM25Params(index) {
     for (const skill of groupSkills) {
       const seen = new Set();
       for (const { keyword } of (skill.keywords || [])) {
-        const kw = keyword.toLowerCase();
+        const kw = (keyword || "").toLowerCase();
         if (!seen.has(kw)) {
           seen.add(kw);
           localDf.set(kw, (localDf.get(kw) || 0) + 1);
@@ -360,7 +360,7 @@ function legacyScoreSkill(skill, queryTokens) {
   const skillDeltas = (weights.deltas || {})[skill.name] || {};
 
   for (const { keyword, weight } of skill.keywords) {
-    const kwLower = keyword.toLowerCase();
+    const kwLower = (keyword || "").toLowerCase();
     const delta = skillDeltas[kwLower] || 0;
     const adjustedWeight = Math.max(0.1, weight + delta);
 
@@ -428,7 +428,7 @@ function scoreSkill(skill, queryTokens, bm25Params, invertedIndex) {
   }
 
   for (const kwEntry of skill.keywords) {
-    const kwLower = kwEntry.keyword.toLowerCase();
+    const kwLower = (kwEntry.keyword || "").toLowerCase();
     const delta = skillDeltas[kwLower] || 0;
     // 使用 tfidfWeight 如果可用，否则 fallback 到 weight
     const baseWeight = kwEntry.tfidfWeight || kwEntry.weight;
@@ -565,7 +565,7 @@ function rerankTopK(results, queryTokens, index, k = 10) {
     const coreSet = new Set();
     const allSet = new Set();
     for (const kw of (skill.keywords || [])) {
-      const kwLower = kw.keyword.toLowerCase();
+      const kwLower = (kw.keyword || "").toLowerCase();
       allSet.add(kwLower);
       if (kw.tier === 'core') coreSet.add(kwLower);
     }
@@ -587,7 +587,7 @@ function rerankTopK(results, queryTokens, index, k = 10) {
     // 信号 2: Tier bonus — 统计 matchedKeywords 中 core 占比
     let coreMatches = 0, totalMatches = (r.matchedKeywords || []).length;
     for (const mk of (r.matchedKeywords || [])) {
-      if (kwData.core.has(mk.keyword.toLowerCase())) coreMatches++;
+      if (kwData.core.has((mk.keyword || "").toLowerCase())) coreMatches++;
     }
     const tierRatio = totalMatches > 0 ? coreMatches / totalMatches : 0;
 
@@ -1140,7 +1140,7 @@ function buildInvertedIndex(index) {
   const invertedIdx = new Map(); // keyword → Set<skillIndex>
   for (let i = 0; i < skills.length; i++) {
     for (const { keyword } of (skills[i].keywords || [])) {
-      const kw = keyword.toLowerCase();
+      const kw = (keyword || "").toLowerCase();
       if (!invertedIdx.has(kw)) invertedIdx.set(kw, new Set());
       invertedIdx.get(kw).add(i);
     }

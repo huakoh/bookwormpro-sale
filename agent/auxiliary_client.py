@@ -412,9 +412,9 @@ auxiliary_is_nous: bool = False
 
 #   auxiliary.vision.fallback_model: "qwen/qwen3.6-plus"
 
-_OPENROUTER_MODEL = "google/gemini-3-flash-preview"
+_OPENROUTER_MODEL = "deepseek/deepseek-chat"  # cheap default for side tasks
 
-_NOUS_MODEL = "google/gemini-3-flash-preview"
+_NOUS_MODEL = "deepseek/deepseek-chat"  # cheap default for side tasks
 
 try:
 
@@ -433,6 +433,18 @@ try:
 except Exception:
 
     pass  # config unavailable, use hardcoded defaults
+
+# Prefer cheap models for auxiliary side tasks (compression, memory flush, summaries).
+# Set to False in config.yaml auxiliary.use_cheap_model_for_side_tasks to use main model.
+_USE_CHEAP_MODEL_FOR_SIDE_TASKS = True
+try:
+    from bwm_cli.config import load_config as _lc2
+    _aux_cfg2 = (_lc2().get("auxiliary", {}) or {})
+    _flag = _aux_cfg2.get("use_cheap_model_for_side_tasks")
+    if _flag is not None:
+        _USE_CHEAP_MODEL_FOR_SIDE_TASKS = bool(_flag)
+except Exception:
+    pass
 
 _NOUS_DEFAULT_BASE_URL = ""
 
@@ -2332,11 +2344,12 @@ def _validate_base_url(base_url: str) -> None:
 
     from urllib.parse import urlparse
 
-
-
     import os as _os
-    if _os.getenv("BOOKWORMPRO_SSRF_VALIDATION_DISABLED", "").strip() in ("1", "true", "yes") or \
-       _os.getenv("BOOKWORMPRO_HARDENING_DISABLED", "").strip() in ("1", "true", "yes"):
+    # Require BOTH env vars for SSRF bypass (dual confirmation)
+    _ssrf_disabled = _os.getenv("BOOKWORMPRO_SSRF_VALIDATION_DISABLED", "").strip() in ("1", "true", "yes")
+    _hardening_disabled = _os.getenv("BOOKWORMPRO_HARDENING_DISABLED", "").strip() in ("1", "true", "yes")
+    if _ssrf_disabled and _hardening_disabled:
+        logger.warning("SSRF validation disabled via dual env-var confirmation")
         return  # validation disabled
 
     candidate = str(base_url or "").strip()
@@ -3205,7 +3218,7 @@ def _resolve_auto(main_runtime: Optional[Dict[str, Any]] = None) -> Tuple[Option
 
         if client is not None:
 
-            logger.info("Auxiliary auto-detect: using main provider %s (%s)",
+            logger.debug("Auxiliary auto-detect: using main provider %s (%s)",
 
                         main_provider, resolved or main_model)
 
@@ -3225,13 +3238,13 @@ def _resolve_auto(main_runtime: Optional[Dict[str, Any]] = None) -> Tuple[Option
 
             if tried:
 
-                logger.info("Auxiliary auto-detect: using %s (%s) — skipped: %s",
+               logger.debug("Auxiliary auto-detect: using %s (%s) — skipped: %s",
 
                             label, model or "default", ", ".join(tried))
 
             else:
 
-                logger.info("Auxiliary auto-detect: using %s (%s)", label, model or "default")
+              logger.debug("Auxiliary auto-detect: using %s (%s)", label, model or "default")
 
             return client, model
 

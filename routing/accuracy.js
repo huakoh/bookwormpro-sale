@@ -68,3 +68,15 @@ for (const entry of goldenSet.entries.slice(0, 10)) {
   c2++;
 }
 console.log('  10 queries: ' + (Date.now() - t1) + 'ms (' + ((Date.now()-t1)/c2).toFixed(1) + 'ms avg)');
+
+// CI threshold check
+const MIN_ACCURACY = parseFloat(process.env.BWR_MIN_ACCURACY || '85.0');
+const accuracy = correct / total * 100;
+console.log('Threshold: ' + MIN_ACCURACY.toFixed(1) + '%');
+console.log('Status: ' + (accuracy >= MIN_ACCURACY ? 'PASS' : 'FAIL'));
+
+if (accuracy < MIN_ACCURACY) {
+  console.error('ERROR: Accuracy ' + accuracy.toFixed(1) + '% below threshold ' + MIN_ACCURACY.toFixed(1) + '%');
+  process.exit(1);
+}
+process.exit(0);

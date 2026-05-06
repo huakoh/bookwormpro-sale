@@ -1,0 +1,45 @@
+name: BWR Routing Accuracy
+
+on:
+  push:
+    paths:
+      - 'routing/**'
+      - 'skills/**/SKILL.md'
+  pull_request:
+    paths:
+      - 'routing/**'
+      - 'skills/**/SKILL.md'
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday 9am
+  workflow_dispatch:
+
+jobs:
+  accuracy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Run Golden Set Accuracy
+        id: accuracy
+        run: node routing/accuracy.js
+        env:
+          BWR_MIN_ACCURACY: '85.0'
+      
+      - name: Generate Badge
+        if: always()
+        run: |
+          mkdir -p .github/badges
+          ACC=N/A
+          echo "BWR Accuracy: $ACC" > .github/badges/bwr-accuracy.txt
+      
+      - name: Report Status
+        if: failure()
+        run: |
+          echo '::warning::BWR routing accuracy dropped below 85% threshold'
+          echo 'Run locally: node routing/accuracy.js'

@@ -61,7 +61,7 @@ const skillToKws = new Map();
 skillsData.skills.forEach(skill => {
   const kws = new Set();
   skill.keywords.forEach(k => {
-    const kw = k.keyword.toLowerCase().trim();
+    const kw = (k.keyword || "").toLowerCase().trim();
     // 跳过太长（描述性）、太短（<2字符）或噪声词
     if (kw.length < 2 || kw.length > 20 || NOISE.has(kw)) return;
     // 跳过含有明显描述性文本的关键词

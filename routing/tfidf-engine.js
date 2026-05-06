@@ -23,7 +23,7 @@ function buildCorpus(skills) {
   const corpus = new Map();
   for (const skill of skills) {
     for (const { keyword } of (skill.keywords || [])) {
-      const kw = keyword.toLowerCase();
+      const kw = (keyword || "").toLowerCase();
       if (!corpus.has(kw)) corpus.set(kw, new Set());
       corpus.get(kw).add(skill.name);
     }
@@ -55,7 +55,7 @@ function applyTFIDFWeights(index) {
 
   for (const skill of skills) {
     for (const kwEntry of (skill.keywords || [])) {
-      const kw = kwEntry.keyword.toLowerCase();
+      const kw = (kwEntry.keyword || "").toLowerCase();
       const df = corpus.has(kw) ? corpus.get(kw).size : 0;
       const idf = computeIDF(df, N);
       // TF 简化为 1 (布尔频率: 关键词在技能中出现即为 1)
