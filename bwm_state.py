@@ -180,6 +180,12 @@ class SessionDB:
 
         self._init_schema()
 
+        # Restrict DB file to owner-only (matches auth.json protection).
+        try:
+            self.db_path.chmod(0o600)
+        except OSError:
+            pass  # Windows or read-only filesystem — best effort
+
     # ── Core write helper ──
 
     def _execute_write(self, fn: Callable[[sqlite3.Connection], T]) -> T:
@@ -432,14 +438,16 @@ class SessionDB:
                 pass
             raise
 
-        # FTS5 virtual table is created outside the main transaction because
-        # CREATE VIRTUAL TABLE cannot be rolled back and is safe to re-run
-        # (IF NOT EXISTS guard).  executescript() is acceptable here because
-        # there is no surrounding transaction to corrupt at this point.
+        # FTS5 virtual table + triggers are created outside the main
+        # transaction because CREATE VIRTUAL TABLE cannot be rolled back.
+        # Each statement uses execute() (not executescript) to avoid
+        # implicit COMMIT side-effects.  All statements are idempotent
+        # (IF NOT EXISTS / IF NOT EXISTS guards).
         try:
             cursor.execute("SELECT * FROM messages_fts LIMIT 0")
         except sqlite3.OperationalError:
-            cursor.executescript(FTS_SQL)
+            for fts_stmt in _split_sql(FTS_SQL):
+                cursor.execute(fts_stmt)
 
     # =========================================================================
     # Session lifecycle

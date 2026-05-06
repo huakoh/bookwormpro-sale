@@ -73,7 +73,7 @@ class ScanResult:
     skill_name: str
     source: str
     trust_level: str    # "builtin" | "trusted" | "community"
-    verdict: str        # "safe" | "caution" | "dangerous"
+    verdict: str        # "safe" | "notice" | "caution" | "dangerous"
     findings: List[Finding] = field(default_factory=list)
     scanned_at: str = ""
     summary: str = ""
