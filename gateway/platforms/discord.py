@@ -1809,6 +1809,11 @@ class DiscordAdapter(BasePlatformAdapter):
             logger.warning("[%s] Blocked unsafe image URL during Discord send_image", self.name)
             return await super().send_image(chat_id, image_url, caption, reply_to, metadata=metadata)
 
+        # TODO(ssrf-toctou): migrate to resolve_and_validate + IP-direct connect once
+        # aiohttp supports connector-level connect_addr (tracked in aiohttp#7522).
+        # Currently aiohttp does not expose a per-request resolved-IP override,
+        # so the TOCTOU window cannot be closed without replacing aiohttp here.
+
         try:
             import aiohttp
 
@@ -1887,6 +1892,11 @@ class DiscordAdapter(BasePlatformAdapter):
         if not is_safe_url(animation_url):
             logger.warning("[%s] Blocked unsafe animation URL during Discord send_animation", self.name)
             return await super().send_animation(chat_id, animation_url, caption, reply_to, metadata=metadata)
+
+        # TODO(ssrf-toctou): migrate to resolve_and_validate + IP-direct connect once
+        # aiohttp supports connector-level connect_addr (tracked in aiohttp#7522).
+        # Currently aiohttp does not expose a per-request resolved-IP override,
+        # so the TOCTOU window cannot be closed without replacing aiohttp here.
 
         try:
             import aiohttp
@@ -3158,6 +3168,10 @@ class DiscordAdapter(BasePlatformAdapter):
             raise ValueError(
                 f"Blocked unsafe attachment URL (SSRF protection): {att.url}"
             )
+        # TODO(ssrf-toctou): migrate to resolve_and_validate + IP-direct connect once
+        # aiohttp supports connector-level connect_addr (tracked in aiohttp#7522).
+        # Currently aiohttp does not expose a per-request resolved-IP override,
+        # so the TOCTOU window cannot be closed without replacing aiohttp here.
         import aiohttp
         from gateway.platforms.base import resolve_proxy_url, proxy_kwargs_for_aiohttp
         _proxy = resolve_proxy_url(platform_env_var="DISCORD_PROXY")

@@ -410,6 +410,11 @@ class MattermostAdapter(BasePlatformAdapter):
             logger.warning("Mattermost: blocked unsafe URL (SSRF protection)")
             return await self.send(chat_id, f"{caption or ''}\n{url}".strip(), reply_to)
 
+        # TODO(ssrf-toctou): migrate to resolve_and_validate + IP-direct connect once
+        # aiohttp supports connector-level connect_addr (tracked in aiohttp#7522).
+        # self._session is a long-lived aiohttp.ClientSession shared across requests;
+        # replacing it with httpx per-call would require larger refactor.
+
         import aiohttp
 
         last_exc = None

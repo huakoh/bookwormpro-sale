@@ -891,6 +891,11 @@ class MatrixAdapter(BasePlatformAdapter):
                 chat_id, image_url, caption, reply_to, metadata=metadata
             )
 
+        # TODO(ssrf-toctou): migrate primary aiohttp path to resolve_and_validate +
+        # IP-direct connect once aiohttp supports per-request resolved-IP override
+        # (tracked in aiohttp#7522). The httpx fallback path below can be migrated
+        # independently when the aiohttp path is also fixed.
+
         try:
             # Try aiohttp first (always available), fall back to httpx
             try:
@@ -1708,14 +1713,14 @@ class MatrixAdapter(BasePlatformAdapter):
         existing = self._pending_text_batches.get(key)
         chunk_len = len(event.text or "")
         if existing is None:
-            event._last_chunk_len = chunk_len  # type: ignore[attr-defined]
+            event._last_chunk_len = chunk_len
             self._pending_text_batches[key] = event
         else:
             if event.text:
                 existing.text = (
                     f"{existing.text}\n{event.text}" if existing.text else event.text
                 )
-            existing._last_chunk_len = chunk_len  # type: ignore[attr-defined]
+            existing._last_chunk_len = chunk_len
             if event.media_urls:
                 existing.media_urls.extend(event.media_urls)
                 existing.media_types.extend(event.media_types)

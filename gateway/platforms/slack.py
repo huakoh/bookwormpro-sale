@@ -709,10 +709,16 @@ class SlackAdapter(BasePlatformAdapter):
         if not self._app:
             return SendResult(success=False, error="Not connected")
 
-        from tools.url_safety import is_safe_url
-        if not is_safe_url(image_url):
+        import urllib.parse as _urlparse
+        from tools.url_safety import resolve_and_validate, is_safe_url
+        _resolved = resolve_and_validate(image_url)
+        if _resolved is None:
             logger.warning("[Slack] Blocked unsafe image URL (SSRF protection)")
             return await super().send_image(chat_id, image_url, caption, reply_to, metadata=metadata)
+        _resolved_ip, _original_url = _resolved
+        _parsed = _urlparse.urlparse(_original_url)
+        # 用已解析的 IP 直连，添加 Host 头，关闭 TOCTOU DNS 重绑定窗口
+        _ip_url = _original_url.replace(_parsed.hostname, _resolved_ip, 1)
 
         try:
             import httpx
@@ -724,13 +730,16 @@ class SlackAdapter(BasePlatformAdapter):
                     if not is_safe_url(redirect_url):
                         raise ValueError("Blocked redirect to private/internal address")
 
-            # Download the image first
+            # Download the image first (connect to resolved IP, set Host header)
             async with httpx.AsyncClient(
                 timeout=30.0,
                 follow_redirects=True,
                 event_hooks={"response": [_ssrf_redirect_guard]},
             ) as client:
-                response = await client.get(image_url)
+                response = await client.get(
+                    _ip_url,
+                    headers={"Host": _parsed.hostname},
+                )
                 response.raise_for_status()
 
             result = await self._get_client(chat_id).files_upload_v2(

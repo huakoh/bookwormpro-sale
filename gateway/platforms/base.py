@@ -492,9 +492,15 @@ async def cache_image_from_url(url: str, ext: str = ".jpg", retries: int = 2) ->
     Raises:
         ValueError: If the URL targets a private/internal network (SSRF protection).
     """
-    from tools.url_safety import is_safe_url
-    if not is_safe_url(url):
+    import urllib.parse as _urlparse
+    from tools.url_safety import resolve_and_validate
+    _resolved = resolve_and_validate(url)
+    if _resolved is None:
         raise ValueError(f"Blocked unsafe URL (SSRF protection): {safe_url_for_log(url)}")
+    resolved_ip, original_url = _resolved
+    _parsed = _urlparse.urlparse(original_url)
+    # 用已解析的 IP 直连，添加 Host 头，关闭 TOCTOU DNS 重绑定窗口
+    _ip_url = original_url.replace(_parsed.hostname, resolved_ip, 1)
 
     import httpx
     _log = logging.getLogger(__name__)
@@ -507,8 +513,9 @@ async def cache_image_from_url(url: str, ext: str = ".jpg", retries: int = 2) ->
         for attempt in range(retries + 1):
             try:
                 response = await client.get(
-                    url,
+                    _ip_url,
                     headers={
+                        "Host": _parsed.hostname,
                         "User-Agent": "Mozilla/5.0 (compatible; BookwormPRO/1.0)",
                         "Accept": "image/*,*/*;q=0.8",
                     },
@@ -606,9 +613,15 @@ async def cache_audio_from_url(url: str, ext: str = ".ogg", retries: int = 2) ->
     Raises:
         ValueError: If the URL targets a private/internal network (SSRF protection).
     """
-    from tools.url_safety import is_safe_url
-    if not is_safe_url(url):
+    import urllib.parse as _urlparse
+    from tools.url_safety import resolve_and_validate
+    _resolved = resolve_and_validate(url)
+    if _resolved is None:
         raise ValueError(f"Blocked unsafe URL (SSRF protection): {safe_url_for_log(url)}")
+    resolved_ip, original_url = _resolved
+    _parsed = _urlparse.urlparse(original_url)
+    # 用已解析的 IP 直连，添加 Host 头，关闭 TOCTOU DNS 重绑定窗口
+    _ip_url = original_url.replace(_parsed.hostname, resolved_ip, 1)
 
     import httpx
     _log = logging.getLogger(__name__)
@@ -621,8 +634,9 @@ async def cache_audio_from_url(url: str, ext: str = ".ogg", retries: int = 2) ->
         for attempt in range(retries + 1):
             try:
                 response = await client.get(
-                    url,
+                    _ip_url,
                     headers={
+                        "Host": _parsed.hostname,
                         "User-Agent": "Mozilla/5.0 (compatible; BookwormPRO/1.0)",
                         "Accept": "audio/*,*/*;q=0.8",
                     },
@@ -831,6 +845,12 @@ class MessageEvent:
 
     # Timestamps
     timestamp: datetime = field(default_factory=datetime.now)
+
+    # Internal debounce state — tracks the character length of the most
+    # recently appended chunk for text-batching adapters (feishu, matrix,
+    # discord, telegram, wecom).  Not part of the public message contract;
+    # do not read outside platform adapter code.
+    _last_chunk_len: int = field(default=0, repr=False, compare=False)
     
     def is_command(self) -> bool:
         """Check if this is a command message (e.g., /new, /reset)."""

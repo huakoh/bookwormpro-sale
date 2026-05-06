@@ -1036,9 +1036,15 @@ class WeComAdapter(BasePlatformAdapter):
         url: str,
         max_bytes: int,
     ) -> Tuple[bytes, Dict[str, str]]:
-        from tools.url_safety import is_safe_url
-        if not is_safe_url(url):
+        import urllib.parse as _urlparse
+        from tools.url_safety import resolve_and_validate
+        _resolved = resolve_and_validate(url)
+        if _resolved is None:
             raise ValueError(f"Blocked unsafe URL (SSRF protection): {url[:80]}")
+        _resolved_ip, _original_url = _resolved
+        _parsed = _urlparse.urlparse(_original_url)
+        # 用已解析的 IP 直连，添加 Host 头，关闭 TOCTOU DNS 重绑定窗口
+        _ip_url = _original_url.replace(_parsed.hostname, _resolved_ip, 1)
 
         if not HTTPX_AVAILABLE:
             raise RuntimeError("httpx is required for WeCom media download")
@@ -1048,8 +1054,9 @@ class WeComAdapter(BasePlatformAdapter):
         try:
             async with client.stream(
                 "GET",
-                url,
+                _ip_url,
                 headers={
+                    "Host": _parsed.hostname,
                     "User-Agent": "BookwormPRO/1.0",
                     "Accept": "*/*",
                 },

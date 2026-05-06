@@ -54,14 +54,17 @@ SANDBOX_AVAILABLE = sys.platform != "win32"
 
 # Tools allowed inside the sandbox. The intersection of this list
 # and the session's enabled tools determines which stubs are generated.
-# SECURITY: "terminal" is intentionally excluded — allowing shell access
-# from sandbox scripts defeats the entire isolation model.
+# SECURITY: "terminal" and "write_file" are intentionally excluded — allowing
+# shell access or arbitrary file writes from sandbox scripts defeats the
+# isolation model.
+# SECURITY: "patch" is also excluded — it accepts arbitrary absolute paths and
+# can modify host-filesystem files outside the sandbox directory, providing
+# an equivalent escape vector to write_file.
 SANDBOX_ALLOWED_TOOLS = frozenset([
     "web_search",
     "web_extract",
     "read_file",
     "search_files",
-    "patch",
 ])
 
 # Resource limit defaults (overridable via config.yaml → code_execution.*)

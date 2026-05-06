@@ -71,18 +71,27 @@ from urllib.request import Request, urlopen
 
 # aiohttp/websockets are independent optional deps — import outside lark_oapi
 # so they remain available for tests and webhook mode even if lark_oapi is missing.
+aiohttp: Optional[Any] = None
+web: Optional[Any] = None
 try:
     import aiohttp
     from aiohttp import web
 except ImportError:
-    aiohttp = None  # type: ignore[assignment]
-    web = None  # type: ignore[assignment]
+    pass
 
+websockets: Optional[Any] = None
 try:
     import websockets
 except ImportError:
-    websockets = None  # type: ignore[assignment]
+    pass
 
+lark: Optional[Any] = None
+CallBackCard: Optional[Any] = None
+P2CardActionTriggerResponse: Optional[Any] = None
+EventDispatcherHandler: Optional[Any] = None
+FeishuWSClient: Optional[Any] = None
+FEISHU_DOMAIN: Optional[str] = None
+LARK_DOMAIN: Optional[str] = None
 try:
     import lark_oapi as lark
     from lark_oapi.api.application.v6 import GetApplicationRequest
@@ -115,13 +124,6 @@ try:
     FEISHU_AVAILABLE = True
 except ImportError:
     FEISHU_AVAILABLE = False
-    lark = None  # type: ignore[assignment]
-    CallBackCard = None  # type: ignore[assignment]
-    P2CardActionTriggerResponse = None  # type: ignore[assignment]
-    EventDispatcherHandler = None  # type: ignore[assignment]
-    FeishuWSClient = None  # type: ignore[assignment]
-    FEISHU_DOMAIN = None  # type: ignore[assignment]
-    LARK_DOMAIN = None  # type: ignore[assignment]
 
 FEISHU_WEBSOCKET_AVAILABLE = websockets is not None
 FEISHU_WEBHOOK_AVAILABLE = aiohttp is not None
@@ -2838,16 +2840,23 @@ class FeishuAdapter(BasePlatformAdapter):
         default_ext: str,
         preferred_name: str,
     ) -> tuple[str, str]:
-        from tools.url_safety import is_safe_url
-        if not is_safe_url(file_url):
+        import urllib.parse as _urlparse
+        from tools.url_safety import resolve_and_validate
+        _resolved = resolve_and_validate(file_url)
+        if _resolved is None:
             raise ValueError(f"Blocked unsafe URL (SSRF protection): {file_url[:80]}")
+        _resolved_ip, _original_url = _resolved
+        _parsed = _urlparse.urlparse(_original_url)
+        # 用已解析的 IP 直连，添加 Host 头，关闭 TOCTOU DNS 重绑定窗口
+        _ip_url = _original_url.replace(_parsed.hostname, _resolved_ip, 1)
 
         import httpx
 
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             response = await client.get(
-                file_url,
+                _ip_url,
                 headers={
+                    "Host": _parsed.hostname,
                     "User-Agent": "Mozilla/5.0 (compatible; BookwormPRO/1.0)",
                     "Accept": "*/*",
                 },
@@ -3064,7 +3073,7 @@ class FeishuAdapter(BasePlatformAdapter):
         chunk_len = len(event.text or "")
         existing = self._pending_text_batches.get(key)
         if existing is None:
-            event._last_chunk_len = chunk_len  # type: ignore[attr-defined]
+            event._last_chunk_len = chunk_len
             self._pending_text_batches[key] = event
             self._pending_text_batch_counts[key] = 1
             self._schedule_text_batch_flush(key)
@@ -3089,7 +3098,7 @@ class FeishuAdapter(BasePlatformAdapter):
             return
 
         existing.text = next_text
-        existing._last_chunk_len = chunk_len  # type: ignore[attr-defined]
+        existing._last_chunk_len = chunk_len
         existing.timestamp = event.timestamp
         if event.message_id:
             existing.message_id = event.message_id
@@ -4448,10 +4457,11 @@ def _poll_registration(
     return None
 
 
+_qrcode_mod: Optional[Any] = None
 try:
     import qrcode as _qrcode_mod
 except (ImportError, TypeError):
-    _qrcode_mod = None  # type: ignore[assignment]
+    pass
 
 
 def _render_qr(url: str) -> bool:

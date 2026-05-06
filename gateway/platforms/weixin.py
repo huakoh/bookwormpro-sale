@@ -1768,6 +1768,11 @@ class WeixinAdapter(BasePlatformAdapter):
         if not is_safe_url(url):
             raise ValueError(f"Blocked unsafe URL (SSRF protection): {url}")
 
+        # TODO(ssrf-toctou): migrate to resolve_and_validate + IP-direct connect once
+        # aiohttp supports connector-level connect_addr (tracked in aiohttp#7522).
+        # self._send_session is a long-lived aiohttp.ClientSession; replacing it with
+        # httpx per-call would require broader refactor of the WeChat send pipeline.
+
         assert self._send_session is not None
         async with self._send_session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
             response.raise_for_status()
