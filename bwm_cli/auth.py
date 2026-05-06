@@ -467,7 +467,7 @@ def _resolve_api_key_provider_secret(
         except ValueError as exc:
             logger.warning("Copilot token validation failed: %s", exc)
         except Exception:
-            pass
+            logger.debug("Copilot token resolution failed (non-ValueError)", exc_info=True)
         return "", ""
 
     for env_var in pconfig.api_key_env_vars:
@@ -653,8 +653,18 @@ def _oauth_trace(event: str, *, sequence_id: Optional[str] = None, **fields: Any
     payload: Dict[str, Any] = {"event": event}
     if sequence_id:
         payload["sequence_id"] = sequence_id
-    payload.update(fields)
-    logger.info("oauth_trace %s", json.dumps(payload, sort_keys=True, ensure_ascii=False))
+    # SECURITY: debug-only, not shown in production logs.
+    # Scrub keys that may carry token/secret material before logging.
+    _SENSITIVE_KEYS = frozenset({
+        "token", "access_token", "refresh_token", "id_token",
+        "client_secret", "secret", "password", "code", "code_verifier",
+    })
+    sanitized = {
+        k: "***" if k.lower() in _SENSITIVE_KEYS else v
+        for k, v in fields.items()
+    }
+    payload.update(sanitized)
+    logger.debug("oauth_trace %s", json.dumps(payload, sort_keys=True, ensure_ascii=False))
 
 
 # =============================================================================
@@ -767,7 +777,7 @@ def _load_auth_store(auth_file: Optional[Path] = None) -> Dict[str, Any]:
             import shutil
             shutil.copy2(auth_file, corrupt_path)
         except Exception:
-            pass
+            logger.debug("Failed to preserve corrupt auth file backup", exc_info=True)
         logger.warning(
             "auth: failed to parse %s (%s) — starting with empty store. "
             "Corrupt file preserved at %s",
@@ -961,6 +971,7 @@ def is_source_suppressed(provider_id: str, source: str) -> bool:
         suppressed = auth_store.get("suppressed_sources", {})
         return source in suppressed.get(provider_id, [])
     except Exception:
+        logger.debug("is_source_suppressed: failed to load auth store", exc_info=True)
         return False
 
 
@@ -1020,7 +1031,7 @@ def is_provider_explicitly_configured(provider_id: str) -> bool:
         if active and active == normalized:
             return True
     except Exception:
-        pass
+        logger.debug("is_provider_active: failed to read active_provider from auth store", exc_info=True)
 
     # 2. Check config.yaml model.provider
     try:
@@ -1032,7 +1043,7 @@ def is_provider_explicitly_configured(provider_id: str) -> bool:
             if cfg_provider == normalized:
                 return True
     except Exception:
-        pass
+        logger.debug("is_provider_active: failed to read provider from config.yaml", exc_info=True)
 
     # 3. Check provider-specific env vars
     # Exclude CLAUDE_CODE_OAUTH_TOKEN — it's set by Claude Code itself,

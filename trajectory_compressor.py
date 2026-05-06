@@ -352,11 +352,13 @@ class TrajectoryCompressor:
         # Initialize OpenRouter client
         self._init_summarizer()
         
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%H:%M:%S'
-        )
+        # 仅在 root logger 没有 handler 时配置，避免覆盖调用方已有的 logging 配置
+        if not logging.getLogger().handlers:
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s - %(levelname)s - %(message)s',
+                datefmt='%H:%M:%S'
+            )
         self.logger = logging.getLogger(__name__)
     
     def _init_tokenizer(self):
@@ -378,6 +380,9 @@ class TrajectoryCompressor:
         which handles auth, headers, and provider detection internally.
         For custom endpoints, falls back to raw client construction.
         """
+
+        # 初始化为 None，防止 _use_call_llm=True 分支跳过赋值导致 AttributeError
+        self._async_client_api_key = None
 
         provider = self._detect_provider()
         if provider:
@@ -423,6 +428,12 @@ class TrajectoryCompressor:
         ``process_directory()`` gets a client tied to its own loop,
         avoiding "Event loop is closed" errors on repeated calls.
         """
+        if self._async_client_api_key is None:
+            raise RuntimeError(
+                "_get_async_client() called but _async_client_api_key is not set. "
+                "This path is only valid when _use_call_llm=False (custom endpoint). "
+                "Check _init_summarizer logic."
+            )
         from openai import AsyncOpenAI
         from agent.auxiliary_client import _to_openai_base_url
         # Always create a fresh client so it binds to the running loop.
@@ -524,7 +535,14 @@ class TrajectoryCompressor:
         
         compressible_start = max(head_protected) + 1 if head_protected else 0
         compressible_end = min(tail_protected) if tail_protected else n
-        
+
+        if compressible_start >= compressible_end:
+            logger.warning(
+                "No compressible region (start=%d >= end=%d, n=%d); "
+                "trajectory will be returned unchanged.",
+                compressible_start, compressible_end, n,
+            )
+
         return protected, compressible_start, compressible_end
     
     def _extract_turn_content_for_summary(self, trajectory: List[Dict[str, str]], start: int, end: int) -> str:

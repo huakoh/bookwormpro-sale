@@ -452,12 +452,26 @@ def _ensure_current_event_loop(request):
 @pytest.fixture(autouse=True)
 def _enforce_test_timeout():
     """Kill any individual test that takes longer than 30 seconds.
-    SIGALRM is Unix-only; skip on Windows."""
+    SIGALRM is Unix-only; on Windows we use threading.Timer as a best-effort
+    fallback — it cannot forcibly terminate a hung thread, but it logs a
+    diagnostic failure so the test suite doesn't silently hang."""
+    timeout = 30
     if sys.platform == "win32":
-        yield
+        import threading
+
+        def _win_timeout():
+            pytest.fail(f"Test timed out after {timeout}s")
+
+        timer = threading.Timer(timeout, _win_timeout)
+        timer.daemon = True
+        timer.start()
+        try:
+            yield
+        finally:
+            timer.cancel()
         return
     old = signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(30)
+    signal.alarm(timeout)
     yield
     signal.alarm(0)
     signal.signal(signal.SIGALRM, old)

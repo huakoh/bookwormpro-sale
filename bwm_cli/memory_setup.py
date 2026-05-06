@@ -284,7 +284,7 @@ def _install_dependencies(provider_name: str) -> None:
                 continue
             try:
                 subprocess.run(
-                    check_args, capture_output=True, timeout=5
+                    check_args, shell=False, capture_output=True, timeout=5
                 )
             except Exception:
                 if install_cmd:

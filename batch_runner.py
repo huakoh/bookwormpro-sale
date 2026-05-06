@@ -445,7 +445,7 @@ def _process_batch_worker(args: Tuple) -> Dict[str, Any]:
             if not reasoning.get("has_any_reasoning", True):
                 print(f"   🚫 Prompt {prompt_index} discarded (no reasoning in any turn)")
                 discarded_no_reasoning += 1
-                completed_in_batch.append(prompt_index)
+                # 不加入 completed_in_batch，resume 时允许重试此 prompt
                 continue
             
             # Get and normalize tool stats for consistent schema across all entries
@@ -471,7 +471,8 @@ def _process_batch_worker(args: Tuple) -> Dict[str, Any]:
                 "tool_error_counts": tool_error_counts  # Simple: {tool: failure_count} - normalized
             }
             
-            # Append to batch output file
+            # NOTE: Append-mode JSONL write is not atomic. A crash may leave a
+            # truncated trailing line. Reader should skip malformed trailing lines.
             with open(batch_output_file, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(trajectory_entry, ensure_ascii=False) + "\n")
         
@@ -878,7 +879,9 @@ class BatchRunner:
         
         print(f"\n[工具] Initializing {self.num_workers} worker processes...")
         
-        # Checkpoint writes happen in the parent process; keep a lock for safety.
+        # NOTE: checkpoint_lock protects _save_checkpoint file writes only.
+        # completed_prompts_set updates are safe because imap_unordered
+        # callbacks run serially in the parent process main thread.
         checkpoint_lock = Lock()
 
         # Process batches in parallel

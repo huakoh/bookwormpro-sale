@@ -590,7 +590,13 @@ class APIServerAdapter(BasePlatformAdapter):
 
     @staticmethod
     def _parse_cors_origins(value: Any) -> tuple[str, ...]:
-        """Normalize configured CORS origins into a stable tuple."""
+        """Normalize configured CORS origins into a stable tuple.
+
+        Wildcard '*' is explicitly rejected: allowing all origins bypasses CORS
+        protection entirely and exposes the API to cross-site request forgery from
+        any browser origin.  Admins who set API_SERVER_CORS_ORIGINS=* will receive
+        a WARNING log and a safe localhost-only fallback will be used instead.
+        """
         if not value:
             return ()
 
@@ -601,7 +607,24 @@ class APIServerAdapter(BasePlatformAdapter):
         else:
             items = [str(value)]
 
-        return tuple(str(item).strip() for item in items if str(item).strip())
+        # 安全过滤: 移除通配符 "*"，防止 CORS 完全开放
+        safe_origins = [s for s in (str(item).strip() for item in items) if s and s != "*"]
+        wildcard_present = any(str(item).strip() == "*" for item in items)
+        if wildcard_present:
+            logger.warning(
+                "API_SERVER_CORS_ORIGINS contains '*' (allow-all) which is a security risk. "
+                "Wildcard has been removed. Set explicit origins (e.g. http://localhost:3000) "
+                "or leave the variable unset to restrict CORS to same-origin requests only."
+            )
+        if not safe_origins and wildcard_present:
+            # 原始值仅含 "*"：回退到本地开发安全默认值
+            logger.warning(
+                "No safe CORS origins remain after removing '*'. "
+                "Falling back to http://localhost:3000 as the sole allowed origin."
+            )
+            safe_origins = ["http://localhost:3000"]
+
+        return tuple(safe_origins)
 
     @staticmethod
     def _resolve_model_name(explicit: str) -> str:

@@ -920,9 +920,9 @@ def execute_code(
     Returns:
         JSON string with execution results.
     """
-    if not SANDBOX_AVAILABLE:
+    if sys.platform == "win32":
         return json.dumps({
-            "error": "execute_code is not available on Windows. Use normal tool calls instead."
+            "error": "execute_code is not supported on Windows. Use normal tool calls instead."
         })
 
     if not code or not code.strip():

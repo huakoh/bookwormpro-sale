@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import threading
 from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Deque, Optional
@@ -70,7 +71,11 @@ except Exception:
     BOOKWORMPRO_VERSION = "0.0.0"
 
 # Thread pool for running AIAgent (synchronous) in parallel.
-_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="acp-agent")
+_MAX_WORKERS = 4
+_executor = ThreadPoolExecutor(max_workers=_MAX_WORKERS, thread_name_prefix="acp-agent")
+# Semaphore provides back-pressure: reject with 503 when all workers are busy.
+# Without this, the 5th+ request would queue indefinitely with no timeout.
+_executor_semaphore = threading.Semaphore(_MAX_WORKERS)
 
 # Server-side page size for list_sessions. The ACP ListSessionsRequest schema
 # does not expose a client-side limit, so this is a fixed cap that clients
@@ -608,11 +613,17 @@ class HermesACPAgent(acp.Agent):
                     except Exception:
                         logger.debug("Could not restore approval callback", exc_info=True)
 
+        # Back-pressure: reject immediately when all workers are occupied.
+        if not _executor_semaphore.acquire(blocking=False):
+            logger.warning("All %d executor slots busy; returning 503 for session %s", _MAX_WORKERS, session_id)
+            return PromptResponse(stop_reason="refusal")
         try:
             result = await loop.run_in_executor(_executor, _run_agent)
         except Exception:
             logger.exception("Executor error for session %s", session_id)
             return PromptResponse(stop_reason="end_turn")
+        finally:
+            _executor_semaphore.release()
 
         if result.get("messages"):
             state.history = result["messages"]

@@ -1,4 +1,4 @@
-import { type MutableRefObject, useCallback, useRef } from 'react'
+import { type MutableRefObject, useCallback, useEffect, useRef } from 'react'
 
 import { attachedImageNotice } from '../domain/messages.js'
 import { looksLikeSlashCommand } from '../domain/slash.js'
@@ -129,16 +129,21 @@ export function useSubmission(opts: UseSubmissionOptions) {
       patchUiState({ status: 'interpolating…' })
       const matches = [...text.matchAll(new RegExp(INTERPOLATION_RE.source, 'g'))]
 
+      const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
+        Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('interpolation timeout')), ms))])
+
       Promise.all(
         matches.map(m =>
-          gw
-            .request<ShellExecResponse>('shell.exec', { command: m[1]! })
-            .then(raw => {
-              const r = asRpcResult<ShellExecResponse>(raw)
+          withTimeout(
+            gw
+              .request<ShellExecResponse>('shell.exec', { command: m[1]! })
+              .then(raw => {
+                const r = asRpcResult<ShellExecResponse>(raw)
 
-              return [r?.stdout, r?.stderr].filter(Boolean).join('\n').trim()
-            })
-            .catch(() => '(error)')
+                return [r?.stdout, r?.stderr].filter(Boolean).join('\n').trim()
+              }),
+            5000
+          ).catch(() => '(error)')
         )
       ).then(results => then(spliceMatches(text, matches, results)))
     },

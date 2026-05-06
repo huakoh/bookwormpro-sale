@@ -24,7 +24,12 @@ services:
     image: bookwormpro
     container_name: bookworm
     restart: unless-stopped
-    network_mode: host
+    # Bind only to localhost so the gateway's bot tokens cannot be reached
+    # from the LAN or other containers outside the internal bridge network.
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-8765}:${GATEWAY_PORT:-8765}"
+    networks:
+      - bwm_internal
     volumes:
       - ~/.bookwormpro:/opt/data
       # Host bridge: expose the user's Desktop and a generic workspace into the
@@ -52,7 +57,11 @@ services:
     image: bookwormpro
     container_name: bookworm-dashboard
     restart: unless-stopped
-    network_mode: host
+    # Dashboard binds to localhost only — no LAN exposure.
+    ports:
+      - "127.0.0.1:9119:9119"
+    networks:
+      - bwm_internal
     depends_on:
       - gateway
     volumes:
@@ -63,5 +72,12 @@ services:
       - BOOKWORMPRO_UID=${BOOKWORMPRO_UID:-10000}
       - BOOKWORMPRO_GID=${BOOKWORMPRO_GID:-10000}
       - BOOKWORMPRO_HOST_BRIDGE=1
+      # Dashboard reaches the gateway via internal DNS (service name),
+      # not via the host loopback. Set GATEWAY_URL if the default differs.
+      - GATEWAY_URL=${GATEWAY_URL:-http://gateway:${GATEWAY_PORT:-8765}}
     # Localhost-only. For remote access, tunnel via `ssh -L 9119:localhost:9119`.
-    command: ["dashboard", "--host", "127.0.0.1", "--no-open"]
+    command: ["dashboard", "--host", "0.0.0.0", "--no-open"]
+
+networks:
+  bwm_internal:
+    driver: bridge

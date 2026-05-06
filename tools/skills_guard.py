@@ -39,18 +39,18 @@ from typing import List, Tuple
 TRUSTED_REPOS = {"openai/skills", "anthropics/skills"}
 
 INSTALL_POLICY = {
-    #                  safe      caution    dangerous
-    "builtin":       ("allow",  "allow",   "allow"),
-    "trusted":       ("allow",  "allow",   "block"),
-    "community":     ("allow",  "block",   "block"),
+    #                  safe      notice     caution    dangerous
+    "builtin":       ("allow",  "allow",   "allow",   "allow"),
+    "trusted":       ("allow",  "allow",   "allow",   "block"),
+    "community":     ("allow",  "allow",   "block",   "block"),
     # Agent-created: "ask" on dangerous surfaces as an error to the agent,
     # which can retry without the flagged content. This gate only runs when
     # skills.guard_agent_created is enabled (off by default) — see
     # tools/skill_manager_tool.py::_guard_agent_created_enabled.
-    "agent-created": ("allow",  "allow",   "ask"),
+    "agent-created": ("allow",  "allow",   "allow",   "ask"),
 }
 
-VERDICT_INDEX = {"safe": 0, "caution": 1, "dangerous": 2}
+VERDICT_INDEX = {"safe": 0, "notice": 1, "caution": 2, "dangerous": 3}
 
 
 # ---------------------------------------------------------------------------
@@ -557,12 +557,21 @@ def scan_file(file_path: Path, rel_path: str = "") -> List[Finding]:
     lines = content.split('\n')
     seen = set()  # (pattern_id, line_number) for deduplication
 
+    # 排除常见占位符：含这些词的值不视为真实凭证
+    _PLACEHOLDER_RE = re.compile(
+        r'(your[_-]|example[_-]|changeme|placeholder|xxx+|TODO|FIXME|<[^>]+>|\$\{[^}]+\})',
+        re.IGNORECASE,
+    )
+
     # Regex pattern matching
     for pattern, pid, severity, category, description in THREAT_PATTERNS:
         for i, line in enumerate(lines, start=1):
             if (pid, i) in seen:
                 continue
             if re.search(pattern, line, re.IGNORECASE):
+                # hardcoded_secret 误报过滤：跳过含占位符的行
+                if pid == "hardcoded_secret" and _PLACEHOLDER_RE.search(line):
+                    continue
                 seen.add((pid, i))
                 matched_text = line.strip()
                 if len(matched_text) > 120:
@@ -621,8 +630,20 @@ def scan_skill(skill_path: Path, source: str = "community") -> ScanResult:
         # Structural checks first
         all_findings.extend(_check_structure(skill_path))
 
-        # Pattern scanning on each file
+        # Pattern scanning on each file — early-terminate to prevent OOM on
+        # maliciously deep directory trees; also skip symlinks to avoid loops.
+        file_count = 0
         for f in skill_path.rglob("*"):
+            if f.is_symlink():
+                continue  # symlink depth protection
+            file_count += 1
+            if file_count > MAX_FILE_COUNT:
+                logger.warning(
+                    "Skill scan for %s exceeded MAX_FILE_COUNT=%d; truncating.",
+                    skill_path,
+                    MAX_FILE_COUNT,
+                )
+                break
             if f.is_file():
                 rel = str(f.relative_to(skill_path))
                 all_findings.extend(scan_file(f, rel))
@@ -909,18 +930,28 @@ def _resolve_trust_level(source: str) -> str:
 
 
 def _determine_verdict(findings: List[Finding]) -> str:
-    """Determine the overall verdict from a list of findings."""
+    """Determine the overall verdict from a list of findings.
+
+    Severity ladder (highest wins):
+      critical            → "dangerous"  (install blocked for community/trusted)
+      high                → "caution"    (install blocked for community)
+      medium (no high+)   → "notice"     (warning printed, install allowed)
+      low only            → "safe"       (informational, install allowed)
+      no findings         → "safe"
+    """
     if not findings:
         return "safe"
 
-    has_critical = any(f.severity == "critical" for f in findings)
-    has_high = any(f.severity == "high" for f in findings)
+    severities = {f.severity for f in findings}
 
-    if has_critical:
+    if "critical" in severities:
         return "dangerous"
-    if has_high:
+    if "high" in severities:
         return "caution"
-    return "caution"
+    if "medium" in severities:
+        return "notice"
+    # only "low" (or unknown) findings remain
+    return "safe"
 
 
 def _build_summary(name: str, source: str, trust: str, verdict: str, findings: List[Finding]) -> str:

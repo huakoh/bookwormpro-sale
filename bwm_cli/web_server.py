@@ -2385,6 +2385,8 @@ async def pty_ws(ws: WebSocket) -> None:
         return
 
     # --- auth + loopback check (before accept so we can close cleanly) ---
+    # TODO: migrate to WebSocket subprotocol auth to avoid token in URL
+    # (token in query string appears in server logs, browser history, Referer headers)
     token = ws.query_params.get("token", "")
     expected = _SESSION_TOKEN
     if not hmac.compare_digest(token.encode(), expected.encode()):
@@ -2460,8 +2462,9 @@ async def pty_ws(ws: WebSocket) -> None:
             # Resize escape is consumed locally, never written to the PTY.
             match = _RESIZE_RE.match(raw)
             if match and match.end() == len(raw):
-                cols = int(match.group(1))
-                rows = int(match.group(2))
+                # Clamp dimensions to safe bounds to prevent resource exhaustion
+                cols = max(1, min(int(match.group(1)), 500))
+                rows = max(1, min(int(match.group(2)), 300))
                 bridge.resize(cols=cols, rows=rows)
                 continue
 

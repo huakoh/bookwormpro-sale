@@ -47,7 +47,8 @@ RUN cd web && npm run build
 # Make install dir world-readable so any BOOKWORMPRO_UID can read it at runtime.
 # The venv needs to be traversable too.
 USER root
-RUN chmod -R a+rX /opt/bookworm
+# 只对需要公开可读的子目录授权，而非整个 /opt/bookworm
+RUN chmod -R a+rX /opt/bookworm/bwm_cli/web_dist /opt/bookworm/scripts
 # Start as root so the entrypoint can usermod/groupmod + gosu.
 # If BOOKWORMPRO_UID is unset, the entrypoint drops to the default bookworm user (10000).
 
@@ -60,4 +61,7 @@ ENV BOOKWORMPRO_WEB_DIST=/opt/bookworm/bwm_cli/web_dist
 ENV BOOKWORMPRO_HOME=/opt/data
 ENV PATH="/opt/data/.local/bin:${PATH}"
 VOLUME [ "/opt/data" ]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import socket; s=socket.create_connection(('localhost', 8765), 2); s.close()" || exit 1
+
 ENTRYPOINT [ "/usr/bin/tini", "-g", "--", "/opt/bookworm/docker/entrypoint.sh" ]

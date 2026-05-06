@@ -657,12 +657,17 @@ def create_custom_toolset(
 ) -> None:
     """
     Create a custom toolset at runtime.
-    
+
     Args:
         name (str): Name for the new toolset
         description (str): Description of the toolset
         tools (List[str]): Direct tools to include
         includes (List[str]): Other toolsets to include
+
+    SECURITY: This function writes to the global TOOLSETS dict.
+    If reachable from agent tool execution (e.g., execute_code sandbox),
+    it could be used to inject malicious toolset definitions.
+    TODO: Restrict to startup-time registration only.
     """
     TOOLSETS[name] = {
         "description": description,
@@ -685,7 +690,7 @@ def get_toolset_info(name: str) -> Dict[str, Any]:
     """
     toolset = get_toolset(name)
     if not toolset:
-        return None
+        return None  # 显式返回，调用方已有 `if info:` / `if not info: continue` guard
     
     resolved_tools = resolve_toolset(name)
     

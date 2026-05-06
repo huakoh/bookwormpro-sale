@@ -22,6 +22,22 @@ type Phase =
   | "approved"
   | "error";
 
+/**
+ * 安全校验: 只允许 https://, http://localhost, http://127.0.0.1 协议的 URL 打开新窗口。
+ * 阻止 javascript:/vbscript:/data: 等危险协议通过后端响应注入 XSS。
+ */
+function safeOpen(url: string | undefined): void {
+  if (!url) return;
+  const isHttps = url.startsWith("https://");
+  const isLocalHttp =
+    url.startsWith("http://localhost") || url.startsWith("http://127.0.0.1");
+  if (isHttps || isLocalHttp) {
+    window.open(url, "_blank", "noopener,noreferrer");
+  } else {
+    console.warn("[OAuthLoginModal] safeOpen: blocked unsafe URL", url);
+  }
+}
+
 export function OAuthLoginModal({
   provider,
   onClose,
@@ -49,9 +65,9 @@ export function OAuthLoginModal({
         setSecondsLeft(resp.expires_in);
         setPhase(resp.flow === "device_code" ? "polling" : "awaiting_user");
         if (resp.flow === "pkce") {
-          window.open(resp.auth_url, "_blank", "noopener,noreferrer");
+          safeOpen(resp.auth_url);
         } else {
-          window.open(resp.verification_url, "_blank", "noopener,noreferrer");
+          safeOpen(resp.verification_url);
         }
       })
       .catch((e) => {

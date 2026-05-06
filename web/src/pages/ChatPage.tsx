@@ -284,7 +284,10 @@ export default function ChatPage() {
     });
 
     const isMac =
-      typeof navigator !== "undefined" && /Mac/i.test(navigator.platform);
+      typeof navigator !== "undefined" &&
+      // navigator.platform is deprecated; userAgentData is preferred where available
+      ((navigator as Navigator & { userAgentData?: { platform: string } }).userAgentData?.platform === "macOS" ||
+        /mac/i.test(navigator.platform ?? ""));
 
     term.attachCustomKeyEventHandler((ev) => {
       if (ev.type !== "keydown") return true;
@@ -292,6 +295,7 @@ export default function ChatPage() {
       const copyModifier = isMac ? ev.metaKey : ev.ctrlKey && ev.shiftKey;
       const pasteModifier = isMac ? ev.metaKey : ev.ctrlKey && ev.shiftKey;
 
+      // else if 确保 macOS 上 Cmd+C 和 Cmd+V 互斥，避免有选中文本时 Cmd+V 误触 copy 分支
       if (copyModifier && ev.key.toLowerCase() === "c") {
         const sel = term.getSelection();
         if (sel) {
@@ -299,9 +303,7 @@ export default function ChatPage() {
           ev.preventDefault();
           return false;
         }
-      }
-
-      if (pasteModifier && ev.key.toLowerCase() === "v") {
+      } else if (pasteModifier && ev.key.toLowerCase() === "v") {
         navigator.clipboard
           .readText()
           .then((text) => {

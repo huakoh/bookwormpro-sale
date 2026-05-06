@@ -125,6 +125,15 @@ def _get_mcp_stderr_log() -> Any:
             log_dir = get_hermes_home() / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             log_path = log_dir / "mcp-stderr.log"
+            # 超过 10 MB 时截断，防止日志无限膨胀
+            if log_path.exists() and log_path.stat().st_size > 10 * 1024 * 1024:
+                from datetime import datetime as _dt
+                with open(log_path, "w", encoding="utf-8") as _trunc:
+                    _trunc.write(
+                        f"--- Log truncated at {_dt.now().isoformat()} "
+                        f"(exceeded 10 MB) ---\n"
+                    )
+                logger.debug("mcp-stderr.log exceeded 10 MB, truncated.")
             # Line-buffered so server output lands on disk promptly; errors=
             # "replace" tolerates garbled binary output from misbehaving
             # servers.
@@ -1091,6 +1100,21 @@ class MCPServerTask:
             headers["mcp-protocol-version"] = LATEST_PROTOCOL_VERSION
         connect_timeout = config.get("connect_timeout", _DEFAULT_CONNECT_TIMEOUT)
         ssl_verify = config.get("ssl_verify", True)
+        # SECURITY: disabling TLS verification exposes connections to MITM attacks.
+        # Only permit in explicit dev mode; force True in production.
+        if not ssl_verify:
+            import os as _os
+            if _os.getenv("BOOKWORMPRO_DEV", "").strip() in {"1", "true", "yes", "on"}:
+                logger.warning(
+                    "TLS verification disabled for MCP server %s — this is insecure"
+                    " (BOOKWORMPRO_DEV=1 detected)", self.name,
+                )
+            else:
+                logger.warning(
+                    "TLS verification disabled for MCP server %s is not allowed"
+                    " in production; forcing ssl_verify=True", self.name,
+                )
+                ssl_verify = True
 
         # OAuth 2.1 PKCE: route through the central MCPOAuthManager so the
         # same provider instance is reused across reconnects, pre-flow

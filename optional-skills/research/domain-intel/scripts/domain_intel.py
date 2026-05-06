@@ -14,6 +14,7 @@ All output is structured JSON. No dependencies beyond Python stdlib.
 Works on Linux, macOS, and Windows.
 """
 
+import ipaddress
 import json
 import re
 import socket
@@ -23,6 +24,14 @@ import urllib.request
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+
+
+def _is_private_host(host: str) -> bool:
+    """Return True if host resolves to a private/loopback IP, False for public hostnames."""
+    try:
+        return ipaddress.ip_address(host).is_private
+    except ValueError:
+        return False  # hostname (not raw IP) — must verify TLS
 
 
 # ─── Subdomain Discovery (crt.sh) ──────────────────────────────────────────
@@ -90,8 +99,11 @@ def check_ssl(host, port=443, timeout=10):
     except ssl.SSLCertVerificationError as e:
         warning = str(e)
         ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
+        # SECURITY: only disable hostname/cert verification for private/loopback hosts;
+        # public hostnames must always be verified to prevent MITM.
+        if _is_private_host(host):
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
         with socket.create_connection((host, port), timeout=timeout) as sock:
             with ctx.wrap_socket(sock, server_hostname=host) as s:
                 cert, cipher, proto = s.getpeercert(), s.cipher(), s.version()
@@ -269,12 +281,14 @@ def check_available(domain):
     signals["dns_ns"] = ns
     dns_exists = bool(a or ns)
 
-    # SSL
+    # SSL reachability probe — verify TLS for public hosts, skip only for private/loopback.
+    # SECURITY: blindly disabling check_hostname/verify_mode allows MITM on public domains.
     ssl_up = False
     try:
         ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
+        if _is_private_host(domain):
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
         with socket.create_connection((domain, 443), timeout=3) as s:
             with ctx.wrap_socket(s, server_hostname=domain):
                 ssl_up = True

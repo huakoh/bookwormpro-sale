@@ -239,6 +239,8 @@ type InlineNode =
   | { type: "link"; text: string; href: string }
   | { type: "br" };
 
+// KNOWN LIMITATION: Nested mixed formatting (e.g., **a *b* c**) may parse
+// incorrectly. Consider migrating to micromark/marked for full CommonMark support.
 function parseInline(text: string): InlineNode[] {
   const nodes: InlineNode[] = [];
   // Pattern priority: code > link > bold > italic > bare URL > line break
@@ -324,7 +326,23 @@ function InlineContent({
                 <HighlightedText text={node.content} terms={highlightTerms} />
               </em>
             );
-          case "link":
+          case "link": {
+            // 安全校验: 阻止 javascript:/vbscript: 等危险协议 XSS
+            const isSafeUrl = (href: string) =>
+              /^(https?:|mailto:|tel:)/i.test(href) ||
+              href.startsWith("/") ||
+              href.startsWith("#");
+            if (!isSafeUrl(node.href)) {
+              return (
+                <span
+                  key={i}
+                  className="text-primary/60 line-through decoration-primary/30"
+                  title="Blocked unsafe URL"
+                >
+                  {node.text}
+                </span>
+              );
+            }
             return (
               <a
                 key={i}
@@ -336,6 +354,7 @@ function InlineContent({
                 {node.text}
               </a>
             );
+          }
           case "br":
             return <br key={i} />;
         }
