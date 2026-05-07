@@ -12413,6 +12413,29 @@ def _cmd_update_impl(args, gateway_mode: bool):
                             # SIGUSR1 wiring, drain exceeded the budget,
 
                             # restart-policy mismatch).
+                            #
+                            # Always `reset-failed` first.  If systemd's own
+                            # auto-restart attempts already parked the unit
+                            # in a failed state (transient CHDIR / OOM /
+                            # filesystem race after our drain + exit-75),
+                            # a plain `systemctl restart` can wedge against
+                            # the RestartSec backoff and leave the unit
+                            # dead.  Clearing the failed state first makes
+                            # the restart idempotent.  Mirrors the recovery
+                            # path in `hermes gateway restart`
+                            # (`systemd_restart()`) as of PR #20949.
+
+                            subprocess.run(
+
+                                scope_cmd + ["reset-failed", svc_name],
+
+                                capture_output=True,
+
+                                text=True,
+
+                                timeout=10,
+
+                            )
 
                             restart = subprocess.run(
 
@@ -12457,12 +12480,28 @@ def _cmd_update_impl(args, gateway_mode: bool):
                                     # Retry once — transient startup failures
 
                                     # (stale module cache, import race) often
+                                    # resolve on the second attempt.  Again
 
-                                    # resolve on the second attempt.
+                                    # clear any failed state first so the
+
+                                    # retry isn't blocked by the previous
+
+                                    # crash.
 
                                     print(
 
                                         f"  [警告] {svc_name} died after restart, retrying..."
+
+                                    )
+                                    subprocess.run(
+
+                                        scope_cmd + ["reset-failed", svc_name],
+
+                                        capture_output=True,
+
+                                        text=True,
+
+                                        timeout=10,
 
                                     )
 
@@ -12499,15 +12538,19 @@ def _cmd_update_impl(args, gateway_mode: bool):
                                         print(_("  [成功] {svc_name} recovered on retry").format(svc_name=svc_name))
 
                                     else:
+                                        _scope_flag = "--user " if scope == "user" else ""
 
                                         print(
 
-                                            f"  [失败] {svc_name} failed to stay running after restart.\n"
+                                            _("  [失败] {svc_name} 重启后仍无法运行\n"
 
-                                            f"    Check logs: journalctl --user -u {svc_name} --since '2 min ago'\n"
+                                            "    查看日志: journalctl {_scope_flag}-u {svc_name} --since '2 min ago'\n"
 
-                                            f"    Restart manually: systemctl {'--user ' if scope == 'user' else ''}restart {svc_name}"
+                                            "    手动恢复:\n"
 
+                                            "      systemctl {_scope_flag}reset-failed {svc_name}\n"
+
+                                            "      systemctl {_scope_flag}restart {svc_name}").format(svc_name=svc_name, _scope_flag=_scope_flag)
                                         )
 
                             else:
