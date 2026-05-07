@@ -578,7 +578,7 @@ agent:
 #   - A preset like "bookworm-cli" or "bookworm-telegram" (curated tool set)
 #   - A list of individual toolsets to compose your own (see list below)
 #
-# Supported platform keys: cli, telegram, discord, whatsapp, slack, qqbot
+# Supported platform keys: cli, telegram, discord, whatsapp, slack, qqbot, teams, google_chat
 #
 # Examples:
 #
@@ -608,6 +608,8 @@ agent:
 #   signal:        bookworm-signal         (same as telegram)
 #   homeassistant: bookworm-homeassistant  (same as telegram)
 #   qqbot:            bookworm-qqbot            (same as telegram)
+#   teams:            bookworm-teams            (same as telegram)
+#   google_chat:      bookworm-google_chat      (same as telegram)
 #
 platform_toolsets:
   cli: [bookworm-cli]
@@ -618,6 +620,9 @@ platform_toolsets:
   signal: [bookworm-signal]
   homeassistant: [bookworm-homeassistant]
   qqbot: [bookworm-qqbot]
+  yuanbao: [bookworm-yuanbao]
+  teams: [bookworm-teams]
+  google_chat: [bookworm-google_chat]
 
 # =============================================================================
 # Gateway Platform Settings

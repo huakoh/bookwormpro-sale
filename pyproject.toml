@@ -88,6 +88,19 @@ google = [
   "google-auth-oauthlib>=1.0,<2",
   "google-auth-httplib2>=0.2,<1",
 ]
+google_chat = [
+  # Google Chat 网关适配器 (plugins/platforms/google_chat/): 通过 Pub/Sub 接收
+  # 入站事件，通过 Chat REST API 发送出站消息。与 [google] 共享 api-client 和
+  # httplib2 传输层，但额外依赖 Pub/Sub 库。
+  # google-auth-oauthlib 用于原生附件投递的用户 OAuth 授权流——Chat 的
+  # media.upload 端点拒绝服务账号鉴权，因此用户需在聊天中执行一次 /setup-files。
+  # 详见 plugins/platforms/google_chat/oauth.py。
+  "google-cloud-pubsub>=2.20,<3",
+  "google-api-python-client>=2.100,<3",
+  "google-auth>=2.20,<3",
+  "google-auth-httplib2>=0.2,<1",
+  "google-auth-oauthlib>=1.0,<2",
+]
 # `bookworm dashboard` (localhost SPA + API).  Not in core to keep the default install lean.
 web = ["fastapi>=0.104.0,<1", "uvicorn[standard]>=0.24.0,<1"]
 rl = [
@@ -123,6 +136,7 @@ all = [
   "bookwormpro[dingtalk]",
   "bookwormpro[feishu]",
   "bookwormpro[google]",
+  "bookwormpro[google_chat]",
   "bookwormpro[mistral]",
   "bookwormpro[bedrock]",
   "bookwormpro[web]",

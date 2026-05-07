@@ -17,6 +17,7 @@ For the full voice feature set — including CLI microphone mode, spoken replies
 | Telegram | [成功] | [成功] | [成功] | [成功] | — | [成功] | [成功] |
 | Discord | [成功] | [成功] | [成功] | [成功] | [成功] | [成功] | [成功] |
 | Slack | [成功] | [成功] | [成功] | [成功] | [成功] | [成功] | [成功] |
+| Google Chat | — | [成功] | [成功] | [成功] | — | [成功] | — |
 | WhatsApp | — | [成功] | [成功] | — | — | [成功] | [成功] |
 | Signal | — | [成功] | [成功] | — | — | [成功] | [成功] |
 | SMS | — | — | — | — | — | — | — |
@@ -44,6 +45,7 @@ flowchart TB
             dc[Discord]
             wa[WhatsApp]
             sl[Slack]
+            gc[Google Chat]
             sig[Signal]
             sms[SMS]
             em[Email]
@@ -70,6 +72,7 @@ flowchart TB
     dc --> store
     wa --> store
     sl --> store
+    gc --> store
     sig --> store
     sms --> store
     em --> store
@@ -359,6 +362,7 @@ Each platform has its own toolset:
 | Discord | `bookworm-discord` | Full tools including terminal |
 | WhatsApp | `bookworm-whatsapp` | Full tools including terminal |
 | Slack | `bookworm-slack` | Full tools including terminal |
+| Google Chat | `bookworm-google-chat` | Full tools including terminal |
 | Signal | `bookworm-signal` | Full tools including terminal |
 | SMS | `bookworm-sms` | Full tools including terminal |
 | Email | `bookworm-email` | Full tools including terminal |
@@ -372,6 +376,8 @@ Each platform has its own toolset:
 | Weixin | `bookworm-weixin` | Full tools including terminal |
 | BlueBubbles | `bookworm-bluebubbles` | Full tools including terminal |
 | QQBot | `bookworm-qqbot` | Full tools including terminal |
+| Yuanbao | `bookworm-yuanbao` | Full tools including terminal |
+| Microsoft Teams | `bookworm-teams` | Full tools including terminal |
 | API Server | `bookworm` (default) | Full tools including terminal |
 | Webhooks | `bookworm-webhook` | Full tools including terminal |
 
@@ -380,6 +386,7 @@ Each platform has its own toolset:
 - [Telegram Setup](telegram.md)
 - [Discord Setup](discord.md)
 - [Slack Setup](slack.md)
+- [Google Chat Setup](google_chat.md)
 - [WhatsApp Setup](whatsapp.md)
 - [Signal Setup](signal.md)
 - [SMS Setup (Twilio)](sms.md)
