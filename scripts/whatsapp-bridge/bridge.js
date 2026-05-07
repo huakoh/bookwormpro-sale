@@ -227,17 +227,34 @@ async function startSocket() {
         if (!isSelfChat) continue;
       }
 
-      // Check allowlist for messages from others (resolve LID ↔ phone aliases)
-      if (!msg.key.fromMe && !matchesAllowedUser(senderId, ALLOWED_USERS, SESSION_DIR)) {
-        try {
-          console.log(JSON.stringify({
-            event: 'ignored',
-            reason: 'allowlist_mismatch',
-            chatId,
-            senderId,
-          }));
-        } catch {}
-        continue;
+      // Handle !fromMe messages (from other people) based on mode.
+      // Self-chat mode only responds to the user's own messages to
+      // themselves — stranger DMs / group pings must never reach the
+      // Python gateway, otherwise a pairing-code reply fires in response
+      // to arbitrary incoming messages (#8389).
+      if (!msg.key.fromMe) {
+        if (WHATSAPP_MODE === 'self-chat') {
+          try {
+            console.log(JSON.stringify({
+              event: 'ignored',
+              reason: 'self_chat_mode_rejects_non_self',
+              chatId,
+              senderId,
+            }));
+          } catch {}
+          continue;
+        }
+        if (!matchesAllowedUser(senderId, ALLOWED_USERS, SESSION_DIR)) {
+          try {
+            console.log(JSON.stringify({
+              event: 'ignored',
+              reason: 'allowlist_mismatch',
+              chatId,
+              senderId,
+            }));
+          } catch {}
+          continue;
+        }
       }
 
       const messageContent = getMessageContent(msg);
@@ -599,9 +616,13 @@ if (PAIR_ONLY) {
     console.log(`🌉 WhatsApp bridge listening on port ${PORT} (mode: ${WHATSAPP_MODE})`);
     console.log(`📁 Session stored in: ${SESSION_DIR}`);
     if (ALLOWED_USERS.size > 0) {
-      console.log(`[加锁] Allowed users: ${Array.from(ALLOWED_USERS).join(', ')}`);
+      console.log(`[加锁] 已授权用户: ${Array.from(ALLOWED_USERS).join(', ')}`);
+    } else if (WHATSAPP_MODE === 'self-chat') {
+      console.log(`[加锁] 自聊模式 — 仅处理你发给自己的消息`);
     } else {
-      console.log(`[警告]  No WHATSAPP_ALLOWED_USERS set — all messages will be processed`);
+      console.log(`[加锁] 未设置 WHATSAPP_ALLOWED_USERS — 陌生人消息将被拒绝`);
+      console.log(`   设置 WHATSAPP_ALLOWED_USERS=<手机号> 授权特定用户`);
+      console.log(`   或 WHATSAPP_ALLOWED_USERS=* 开放所有用户`);
     }
     console.log();
     startSocket();
