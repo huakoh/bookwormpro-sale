@@ -1195,6 +1195,51 @@ class MCPServerTask:
         if _MCP_NOTIFICATION_TYPES and _MCP_MESSAGE_HANDLER_SUPPORTED:
             sampling_kwargs["message_handler"] = self._make_message_handler()
 
+        # SSE transport (for MCP servers that implement the SSE transport protocol
+        # rather than Streamable HTTP). Configure with ``transport: sse`` in the
+        # mcp_servers entry in config.yaml.
+        if config.get("transport") == "sse":
+            if sse_client is None:
+                raise ImportError(
+                    f"MCP server '{self.name}' requires SSE transport but "
+                    "mcp.client.sse.sse_client is not available. "
+                    "Upgrade the mcp package to get SSE support."
+                )
+            # sse_read_timeout governs how long sse_client will wait between
+            # events on the SSE stream. Using the tool_timeout (default 60s)
+            # here is wrong: SSE servers commonly hold the stream idle for
+            # minutes between events, so a 60s read timeout drops the
+            # connection after the first slow stretch. 300s matches the
+            # Streamable HTTP code path's httpx read timeout below. Original
+            # observation from @amiller in PR #5981 (Router Teamwork,
+            # Supermemory on Cloudflare Workers idle-disconnect at ~60s).
+            _sse_kwargs: dict = {
+                "url": url,
+                "headers": headers or None,
+                "timeout": float(connect_timeout),
+                "sse_read_timeout": 300.0,
+            }
+            if _oauth_auth is not None:
+                # Pass OAuth auth through to sse_client so SSE MCP servers
+                # behind OAuth 2.1 PKCE work. Previously built but never
+                # forwarded — SSE OAuth would silently fail with 401s.
+                _sse_kwargs["auth"] = _oauth_auth
+            async with sse_client(**_sse_kwargs) as (read_stream, write_stream):
+                async with ClientSession(
+                    read_stream, write_stream, **sampling_kwargs
+                ) as session:
+                    await session.initialize()
+                    self.session = session
+                    await self._discover_tools()
+                    self._ready.set()
+                    reason = await self._wait_for_lifecycle_event()
+                    if reason == "reconnect":
+                        logger.info(
+                            "MCP server '%s': reconnect requested — "
+                            "tearing down SSE session", self.name,
+                        )
+            return
+
         if _MCP_NEW_HTTP:
             # New API (mcp >= 1.24.0): build an explicit httpx.AsyncClient
             # matching the SDK's own create_mcp_http_client defaults.
