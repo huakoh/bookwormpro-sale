@@ -79,6 +79,15 @@ if [ ! -f "$BOOKWORMPRO_HOME/SOUL.md" ]; then
     cp "$INSTALL_DIR/docker/SOUL.md" "$BOOKWORMPRO_HOME/SOUL.md"
 fi
 
+# .gitignore seed — protects against accidental secret commit if container
+# operator runs `git init` inside the home volume for backup purposes.
+# Idempotent: only seeds when missing, never overwrites user edits.
+if [ ! -f "$BOOKWORMPRO_HOME/.gitignore" ] && [ -f "$INSTALL_DIR/docker/seed/.gitignore" ]; then
+    cp "$INSTALL_DIR/docker/seed/.gitignore" "$BOOKWORMPRO_HOME/.gitignore"
+    chown bookworm:bookworm "$BOOKWORMPRO_HOME/.gitignore" 2>/dev/null || true
+    chmod 640 "$BOOKWORMPRO_HOME/.gitignore" 2>/dev/null || true
+fi
+
 # Memory seed: bootstrap MEMORY.md / USER.md from templates on first run.
 # Builtin memory (tools/memory_tool.py) reads $BOOKWORMPRO_HOME/memories/{MEMORY,USER}.md
 # and freezes a snapshot into the system prompt at session start. Empty files

@@ -1066,6 +1066,18 @@ copy_config_templates() {
         log_info "~/.bookwormpro/.env already exists, keeping it"
     fi
 
+    # Seed .gitignore at ~/.bookwormpro/.gitignore — protects against accidental
+    # secret commit if user later runs `git init` here (e.g. for backup to private repo).
+    # See docker/seed/.gitignore for rationale.
+    if [ ! -f "$BOOKWORMPRO_HOME/.gitignore" ]; then
+        if [ -f "$INSTALL_DIR/docker/seed/.gitignore" ]; then
+            cp "$INSTALL_DIR/docker/seed/.gitignore" "$BOOKWORMPRO_HOME/.gitignore"
+            log_success "Seeded ~/.bookwormpro/.gitignore (secret-bearing paths excluded)"
+        fi
+    else
+        log_info "~/.bookwormpro/.gitignore already exists, keeping it"
+    fi
+
     # Create config.yaml at ~/.bookwormpro/config.yaml (top level, easy to find)
     if [ ! -f "$BOOKWORMPRO_HOME/config.yaml" ]; then
         if [ -f "$INSTALL_DIR/cli-config.yaml.example" ]; then

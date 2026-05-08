@@ -646,6 +646,20 @@ function Copy-ConfigTemplates {
     } else {
         Write-Info "~/.bookwormpro/.env already exists, keeping it"
     }
+
+    # Seed .gitignore — protects against accidental secret commit if user
+    # later runs `git init` here (e.g. for backup to private repo).
+    # See docker/seed/.gitignore for rationale.
+    $gitignorePath = "$HermesHome\.gitignore"
+    if (-not (Test-Path $gitignorePath)) {
+        $seedPath = "$InstallDir\docker\seed\.gitignore"
+        if (Test-Path $seedPath) {
+            Copy-Item $seedPath $gitignorePath
+            Write-Success "Seeded ~/.bookwormpro/.gitignore (secret-bearing paths excluded)"
+        }
+    } else {
+        Write-Info "~/.bookwormpro/.gitignore already exists, keeping it"
+    }
     
     # Create config.yaml
     $configPath = "$HermesHome\config.yaml"
