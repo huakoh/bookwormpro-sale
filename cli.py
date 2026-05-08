@@ -3596,7 +3596,7 @@ class HermesCLI:
         if self.resume_display == "minimal":
             return
 
-        MAX_DISPLAY_EXCHANGES = 10   # max user+assistant pairs to show
+        MAX_DISPLAY_EXCHANGES = 20   # max user+assistant pairs to show
         MAX_USER_LEN = 300           # truncate user messages
         MAX_ASST_LEN = 200           # truncate assistant text
         MAX_ASST_LINES = 3           # max lines of assistant text
@@ -4544,19 +4544,32 @@ class HermesCLI:
         print(f"  Config File: {config_path} {config_status}")
         print()
     
-    def _list_recent_sessions(self, limit: int = 10) -> list[dict[str, Any]]:
-        """Return recent CLI sessions for in-chat browsing/resume affordances."""
+    def _list_recent_sessions(self, limit: int = 10, titled_only: bool = True) -> list[dict[str, Any]]:
+        """Return recent CLI sessions for in-chat browsing/resume affordances.
+
+        Args:
+            limit: Maximum number of sessions to return.
+            titled_only: When True (default), only sessions with a non-empty
+                user-set title (via /title) are returned.  Untitled sessions
+                are skipped, so the picker shows N titled records instead of
+                a mix dominated by anonymous "—" rows.
+        """
         if not self._session_db:
             return []
+        # Fetch a wider net so filtering still yields ~limit titled sessions.
+        fetch = limit * 5 if titled_only else limit
         try:
             sessions = self._session_db.list_sessions_rich(
                 source="cli",
                 exclude_sources=["tool"],
-                limit=limit,
+                limit=fetch,
             )
         except Exception:
             return []
-        return [s for s in sessions if s.get("id") != self.session_id]
+        sessions = [s for s in sessions if s.get("id") != self.session_id]
+        if titled_only:
+            sessions = [s for s in sessions if (s.get("title") or "").strip()]
+        return sessions[:limit]
 
     @staticmethod
     def _fmt_tokens(session: dict) -> str:
@@ -4786,7 +4799,7 @@ class HermesCLI:
         target = parts[1].strip() if len(parts) > 1 else ""
 
         if not target:
-            sessions = self._list_recent_sessions(limit=15)
+            sessions = self._list_recent_sessions(limit=20)
             if not sessions:
                 _cprint("  No recent sessions to resume.")
                 return
@@ -4804,7 +4817,7 @@ class HermesCLI:
         # Resolve numeric index (e.g. /resume 3 → 3rd recent session)
         if target.isdigit():
             idx = int(target)
-            sessions = self._list_recent_sessions(limit=15)
+            sessions = self._list_recent_sessions(limit=20)
             if 1 <= idx <= len(sessions):
                 target = sessions[idx - 1]["id"]
 
@@ -4884,6 +4897,11 @@ class HermesCLI:
                 f" ({msg_count} user message{'s' if msg_count != 1 else ''},"
                 f" {len(self.conversation_history)} total)"
             )
+            # Render recap of prior conversation (same path as startup --resume)
+            try:
+                self._display_resumed_history()
+            except Exception:
+                pass
         else:
             _cprint(f"  ↻ Resumed session {target_id}{title_part} — no messages, starting fresh.")
 

@@ -216,10 +216,16 @@ def setup_logging(
 
     root = logging.getLogger()
 
+    # patch: pytest-log-split-v1 (2026-05-08) — pytest 测试时改写 agent.test.log，
+    # 避免污染生产 agent.log（callsite 用 Path.home() 绕过 BOOKWORMPRO_HOME 重定向时仍生效）
+    _is_pytest = bool(os.environ.get("PYTEST_CURRENT_TEST")) or "pytest" in __import__("sys").modules
+    _agent_log_name = "agent.test.log" if _is_pytest else "agent.log"
+    _errors_log_name = "errors.test.log" if _is_pytest else "errors.log"
+
     # --- agent.log (INFO+) — the main activity log -------------------------
     _add_rotating_handler(
         root,
-        log_dir / "agent.log",
+        log_dir / _agent_log_name,
         level=level,
         max_bytes=max_bytes,
         backup_count=backups,
@@ -229,7 +235,7 @@ def setup_logging(
     # --- errors.log (WARNING+) — quick triage log --------------------------
     _add_rotating_handler(
         root,
-        log_dir / "errors.log",
+        log_dir / _errors_log_name,
         level=logging.WARNING,
         max_bytes=2 * 1024 * 1024,
         backup_count=2,

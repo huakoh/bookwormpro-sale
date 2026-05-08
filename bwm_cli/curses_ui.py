@@ -12,6 +12,148 @@ from bwm_cli.i18n import _
 
 
 
+def _open_conout():
+    """Open a direct UTF-8 handle to the Windows console (CONOUT$).
+
+    Bypasses any sys.stdout interception by prompt_toolkit / pipes / wrappers,
+    so ANSI escape sequences are interpreted by the terminal instead of
+    being printed as literal text.  Returns a file-like object the caller
+    must close in a finally block.
+
+    Raises:
+        RuntimeError: If called on a non-Windows platform (CONOUT$ is a
+            Windows-specific console device).  All callers must guard with
+            ``sys.platform == "win32"``.
+    """
+    import io
+    if sys.platform != "win32":
+        raise RuntimeError("_open_conout() is Windows-only (CONOUT$ does not exist on this platform)")
+    raw = io.FileIO("CONOUT$", "w")
+    return io.TextIOWrapper(raw, encoding="utf-8", write_through=True, newline="")
+
+
+def _display_width(s: str) -> int:
+    """Visual column width of a string in a terminal.
+
+    East-Asian Wide / Fullwidth chars count 2 columns, others 1.
+    Approximation — does not handle zero-width joiners or grapheme clusters.
+    """
+    import unicodedata
+    return sum(2 if unicodedata.east_asian_width(c) in ("W", "F") else 1 for c in s)
+
+
+def _truncate_to_width(s: str, max_width: int) -> str:
+    """Truncate string so its terminal column width <= max_width."""
+    import unicodedata
+    if max_width <= 0:
+        return ""
+    out: list[str] = []
+    w = 0
+    for c in s:
+        cw = 2 if unicodedata.east_asian_width(c) in ("W", "F") else 1
+        if w + cw > max_width:
+            break
+        out.append(c)
+        w += cw
+    return "".join(out)
+
+
+from contextlib import contextmanager
+
+
+# Terminal control sequences (not in Colors — those are SGR text-style codes only).
+# Kept inline because they have no equivalent in the Colors palette.
+_ALT_SCREEN_ENTER = "\x1b[?1049h"
+_ALT_SCREEN_LEAVE = "\x1b[?1049l"
+_CURSOR_HIDE = "\x1b[?25l"
+_CURSOR_SHOW = "\x1b[?25h"
+_CURSOR_HOME = "\x1b[H"
+_CLEAR_SCREEN = "\x1b[2J"
+
+
+@contextmanager
+def _alt_screen_session():
+    """Context manager: enter Windows alternate screen + hide cursor.
+
+    Yields a CONOUT$ writable handle.  On exit (normal or exception),
+    leaves alt-screen, restores cursor, closes the handle, and drains
+    any residual keystrokes from the OS input buffer so that subsequent
+    input() / getpass() do not consume stale arrow-key bytes.
+
+    Also forces the console output/input code pages to UTF-8 (65001)
+    while the picker is active.  CONOUT$ writes raw bytes — the console
+    interprets them per its active code page, so a default CP936 (GBK)
+    Chinese Windows would mojibake our UTF-8 output (e.g. '↑↓' rendered
+    as '鈫戔啌').  Restored to the original code pages on exit.
+    """
+    import msvcrt
+    import ctypes
+    k32 = ctypes.windll.kernel32
+    old_out_cp = k32.GetConsoleOutputCP()
+    old_in_cp = k32.GetConsoleCP()
+    if old_out_cp != 65001:
+        k32.SetConsoleOutputCP(65001)
+    if old_in_cp != 65001:
+        k32.SetConsoleCP(65001)
+
+    out = _open_conout()
+    out.write(_ALT_SCREEN_ENTER + _CURSOR_HIDE)
+    out.flush()
+    try:
+        yield out
+    finally:
+        try:
+            try:
+                out.write(_CURSOR_SHOW + _ALT_SCREEN_LEAVE)
+                out.flush()
+            finally:
+                out.close()
+            try:
+                while msvcrt.kbhit():
+                    msvcrt.getwch()
+            except Exception:
+                pass
+        finally:
+            if old_out_cp != 65001:
+                k32.SetConsoleOutputCP(old_out_cp)
+            if old_in_cp != 65001:
+                k32.SetConsoleCP(old_in_cp)
+
+
+def _win_read_key() -> str:
+    """Read one key from msvcrt and normalize to a canonical name.
+
+    Returns one of: 'UP', 'DOWN', 'LEFT', 'RIGHT', 'ENTER', 'ESC',
+    'SPACE', 'CTRL_C', 'q', 'j', 'k', or '' (unrecognized).
+
+    Note: 'q' is treated as a cancel shortcut by all current pickers
+    (consistent with vim/less conventions).  Only safe for navigation-only
+    pickers — DO NOT reuse this helper for free-text input fields where
+    'q' is a valid character.
+    """
+    import msvcrt
+    ch = msvcrt.getwch()
+    if ch in ("\x00", "\xe0"):
+        ch2 = msvcrt.getwch()
+        return {
+            "H": "UP",
+            "P": "DOWN",
+            "K": "LEFT",
+            "M": "RIGHT",
+        }.get(ch2, "")
+    if ch == "\x03":
+        return "CTRL_C"
+    if ch == "\r":
+        return "ENTER"
+    if ch == "\x1b":
+        return "ESC"
+    if ch == " ":
+        return "SPACE"
+    if ch in ("q", "j", "k"):
+        return ch
+    return ""
+
+
 def flush_stdin() -> None:
     """Flush any stray bytes from the stdin input buffer.
 
@@ -32,6 +174,144 @@ def flush_stdin() -> None:
         termios.tcflush(sys.stdin, termios.TCIFLUSH)
     except Exception:
         pass
+
+
+def _win_checklist(
+    title: str,
+    items: list[str],
+    selected: set[int],
+    cancel_returns: set[int],
+    status_fn: Optional[Callable[[Set[int]], str]] = None,
+) -> set[int]:
+    """Windows-native multi-select checklist using msvcrt + ANSI."""
+    import os
+
+    if not items:
+        return cancel_returns
+
+    chosen = set(selected)
+    cursor = 0
+    scroll_offset = 0
+    R = Colors.RESET
+    H = Colors.BOLD + Colors.YELLOW
+    S = Colors.BOLD + Colors.GREEN
+    D = Colors.DIM
+
+    with _alt_screen_session() as out:
+        while True:
+            try:
+                cols, rows = os.get_terminal_size()
+            except OSError:
+                cols, rows = 80, 24
+            footer = 1 if status_fn else 0
+            visible = max(rows - 4 - footer, 1)
+
+            if cursor < scroll_offset:
+                scroll_offset = cursor
+            elif cursor >= scroll_offset + visible:
+                scroll_offset = cursor - visible + 1
+
+            out.write(_CURSOR_HOME + _CLEAR_SCREEN)
+            out.write(f"{H}{title}{R}\n")
+            out.write(f"{D}  ↑↓ navigate  SPACE toggle  ENTER confirm  ESC cancel{R}\n\n")
+
+            end = min(len(items), scroll_offset + visible)
+            for i in range(scroll_offset, end):
+                check = "x" if i in chosen else " "
+                label = _truncate_to_width(items[i], max(cols - 10, 1))
+                if i == cursor:
+                    out.write(f" {S}→ [{check}] {label}{R}\n")
+                else:
+                    out.write(f"   [{check}] {label}\n")
+
+            if status_fn:
+                st = status_fn(chosen) or ""
+                out.write(f"\n{D}{st}{R}")
+
+            out.flush()
+
+            key = _win_read_key()
+            if key == "UP" or key == "k":
+                cursor = (cursor - 1) % len(items)
+            elif key == "DOWN" or key == "j":
+                cursor = (cursor + 1) % len(items)
+            elif key == "CTRL_C":
+                raise KeyboardInterrupt
+            elif key == "SPACE":
+                chosen.symmetric_difference_update({cursor})
+            elif key == "ENTER":
+                return set(chosen)
+            elif key == "ESC" or key == "q":
+                return cancel_returns
+
+    return cancel_returns
+
+
+def _win_radiolist(
+    title: str,
+    items: list[str],
+    selected: int,
+    cancel_returns: int,
+    description: str | None = None,
+) -> int:
+    """Windows-native radio-select using msvcrt + ANSI."""
+    import os
+
+    if not items:
+        return cancel_returns
+
+    cursor = selected
+    scroll_offset = 0
+    desc_lines = (description or "").splitlines()
+    R = Colors.RESET
+    H = Colors.BOLD + Colors.YELLOW
+    S = Colors.BOLD + Colors.GREEN
+    D = Colors.DIM
+
+    with _alt_screen_session() as out:
+        while True:
+            try:
+                cols, rows = os.get_terminal_size()
+            except OSError:
+                cols, rows = 80, 24
+            header_rows = 2 + len(desc_lines) + 1
+            visible = max(rows - header_rows - 1, 1)
+
+            if cursor < scroll_offset:
+                scroll_offset = cursor
+            elif cursor >= scroll_offset + visible:
+                scroll_offset = cursor - visible + 1
+
+            out.write(_CURSOR_HOME + _CLEAR_SCREEN)
+            out.write(f"{H}{title}{R}\n")
+            for dl in desc_lines:
+                out.write(f"{dl}\n")
+            out.write(f"{D}  ↑↓ navigate  ENTER/SPACE select  ESC cancel{R}\n\n")
+
+            end = min(len(items), scroll_offset + visible)
+            for i in range(scroll_offset, end):
+                radio = "●" if i == selected else "○"
+                label = _truncate_to_width(items[i], max(cols - 10, 1))
+                if i == cursor:
+                    out.write(f" {S}→ ({radio}) {label}{R}\n")
+                else:
+                    out.write(f"   ({radio}) {label}\n")
+
+            out.flush()
+
+            key = _win_read_key()
+            if key == "UP" or key == "k":
+                cursor = (cursor - 1) % len(items)
+            elif key == "DOWN" or key == "j":
+                cursor = (cursor + 1) % len(items)
+            elif key == "CTRL_C":
+                raise KeyboardInterrupt
+            elif key in ("SPACE", "ENTER"):
+                return cursor
+            elif key == "ESC" or key == "q":
+                return cancel_returns
+
+    return cancel_returns
 
 
 def curses_checklist(
@@ -60,6 +340,9 @@ def curses_checklist(
     # terminal (e.g. subprocess pipe).  Return defaults immediately.
     if not sys.stdin.isatty():
         return cancel_returns
+
+    if sys.platform == "win32":
+        return _win_checklist(title, items, selected, cancel_returns, status_fn)
 
     try:
         import curses
@@ -187,6 +470,9 @@ def curses_radiolist(
     if not sys.stdin.isatty():
         return cancel_returns
 
+    if sys.platform == "win32":
+        return _win_radiolist(title, items, selected, cancel_returns, description)
+
     desc_lines: list[str] = []
     if description:
         desc_lines = description.splitlines()
@@ -310,6 +596,81 @@ def _radio_numbered_fallback(
         return cancel_returns
 
 
+def _win_single_select(
+    title: str,
+    items: list[str],
+    default_index: int = 0,
+    cancel_label: str = "Cancel",
+) -> int | None:
+    """Windows-native single-select using msvcrt + ANSI escape codes.
+
+    Bypasses curses entirely — windows-curses (PDCurses) cannot receive
+    arrow keys through ConPTY because ConPTY converts Windows Console
+    INPUT_RECORDs into VT sequences that PDCurses does not parse.
+    msvcrt.getwch() reads the Win32 input handle directly.
+
+    Output goes to CONOUT$ (not sys.stdout) so prompt_toolkit's stdout
+    interception does not turn ANSI escape sequences into literal text.
+    """
+    import os
+
+    if not items:
+        return None
+
+    all_items = list(items) + [cancel_label]
+    cancel_idx = len(items)
+    cursor = min(default_index, len(all_items) - 1)
+    scroll_offset = 0
+    R = Colors.RESET
+    H = Colors.BOLD + Colors.YELLOW
+    S = Colors.BOLD + Colors.GREEN
+    D = Colors.DIM
+
+    with _alt_screen_session() as out:
+        while True:
+            try:
+                cols, rows = os.get_terminal_size()
+            except OSError:
+                cols, rows = 80, 24
+            visible = max(rows - 4, 1)
+
+            if cursor < scroll_offset:
+                scroll_offset = cursor
+            elif cursor >= scroll_offset + visible:
+                scroll_offset = cursor - visible + 1
+
+            out.write(_CURSOR_HOME + _CLEAR_SCREEN)
+            out.write(f"{H}{title}{R}\n")
+            out.write(f"{D}  ↑↓ navigate  ENTER confirm  ESC/q cancel{R}\n\n")
+
+            end = min(len(all_items), scroll_offset + visible)
+            for i in range(scroll_offset, end):
+                label = _truncate_to_width(all_items[i], max(cols - 5, 1))
+                if i == cursor:
+                    out.write(f" {S}→ {label}{R}\n")
+                else:
+                    out.write(f"   {label}\n")
+
+            out.flush()
+
+            key = _win_read_key()
+            if key == "UP" or key == "k":
+                cursor = (cursor - 1) % len(all_items)
+            elif key == "DOWN" or key == "j":
+                cursor = (cursor + 1) % len(all_items)
+            elif key == "CTRL_C":
+                raise KeyboardInterrupt
+            elif key == "ENTER":
+                break
+            elif key == "ESC" or key == "q":
+                cursor = cancel_idx
+                break
+
+    if cursor >= cancel_idx:
+        return None
+    return cursor
+
+
 def curses_single_select(
     title: str,
     items: List[str],
@@ -324,6 +685,9 @@ def curses_single_select(
     """
     if not sys.stdin.isatty():
         return None
+
+    if sys.platform == "win32":
+        return _win_single_select(title, items, default_index, cancel_label)
 
     try:
         import curses
