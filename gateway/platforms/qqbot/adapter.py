@@ -1206,19 +1206,24 @@ class QQAdapter(BasePlatformAdapter):
 
     async def _download_and_cache(self, url: str, content_type: str) -> Optional[str]:
         """Download a URL and cache it locally."""
-        from tools.url_safety import is_safe_url
-
-        if not is_safe_url(url):
+        import urllib.parse as _urlparse
+        from tools.url_safety import resolve_and_validate
+        _resolved = resolve_and_validate(url)
+        if _resolved is None:
             raise ValueError(f"Blocked unsafe URL: {url[:80]}")
+        _resolved_ip, _original_url = _resolved
+        _parsed = _urlparse.urlparse(_original_url)
+        # 用已解析的 IP 直连，添加 Host 头，关闭 TOCTOU DNS 重绑定窗口
+        _ip_url = _original_url.replace(_parsed.hostname, _resolved_ip, 1)
 
         if not self._http_client:
             return None
 
         try:
             resp = await self._http_client.get(
-                url,
+                _ip_url,
                 timeout=30.0,
-                headers=self._qq_media_headers(),
+                headers={**self._qq_media_headers(), "Host": _parsed.hostname},
             )
             resp.raise_for_status()
             data = resp.content
@@ -1307,10 +1312,16 @@ class QQAdapter(BasePlatformAdapter):
             is_pre_wav = True
             logger.debug("[%s] STT: using voice_wav_url (pre-converted WAV)", self._log_tag)
 
-        from tools.url_safety import is_safe_url
-        if not is_safe_url(download_url):
+        import urllib.parse as _urlparse
+        from tools.url_safety import resolve_and_validate
+        _resolved = resolve_and_validate(download_url)
+        if _resolved is None:
             logger.warning("[QQ] STT blocked unsafe URL: %s", download_url[:80])
             return None
+        _resolved_ip, _original_url = _resolved
+        _parsed = _urlparse.urlparse(_original_url)
+        # 用已解析的 IP 直连，添加 Host 头，关闭 TOCTOU DNS 重绑定窗口
+        _ip_url = _original_url.replace(_parsed.hostname, _resolved_ip, 1)
 
         try:
             # 2. Download audio (QQ CDN requires Authorization header)
@@ -1318,16 +1329,16 @@ class QQAdapter(BasePlatformAdapter):
                 logger.warning("[%s] STT: no HTTP client", self._log_tag)
                 return None
 
-            download_headers = self._qq_media_headers()
+            download_headers = {**self._qq_media_headers(), "Host": _parsed.hostname}
             logger.debug(
                 "[%s] STT: downloading voice from %s (pre_wav=%s, headers=%s)",
                 self._log_tag,
-                download_url[:80],
+                _ip_url[:80],
                 is_pre_wav,
                 bool(download_headers),
             )
             resp = await self._http_client.get(
-                download_url,
+                _ip_url,
                 timeout=30.0,
                 headers=download_headers,
                 follow_redirects=True,
