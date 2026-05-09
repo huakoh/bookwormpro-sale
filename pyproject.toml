@@ -160,6 +160,15 @@ include = ["agent", "agent.*", "tools", "tools.*", "bwm_cli", "gateway", "gatewa
 testpaths = ["tests"]
 markers = [
     "integration: marks tests requiring external services (API keys, Modal, etc.)",
+    "tier1: Tier 1 smoke tests",
+    "tier2: Tier 2 config/auth tests",
+    "tier3: Tier 3 feature module tests",
+    "tier4: Tier 4 gateway integration tests",
+    "tier5: Tier 5 provider connectivity tests",
+    "tier6: Tier 6 data integrity tests",
+    "tier7: Tier 7 security baseline tests",
+    "security: Security audit tests",
+    "journey: User journey simulation",
 ]
 addopts = "-m 'not integration' -n auto"
 asyncio_mode = "auto"
