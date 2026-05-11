@@ -37,6 +37,9 @@ agent-browser/
 *.ppk
 *.pem
 privvy*
+keys/
+*.license
+.license
 images/
 __pycache__/
 bookwormpro.egg-info/

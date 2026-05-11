@@ -104,6 +104,18 @@ _REMOTE_ENV_BACKENDS = frozenset({"docker", "singularity", "modal", "ssh", "dayt
 _secret_capture_callback = None
 
 
+def _read_skill_file(path: Path) -> str:
+    """Read a skill file, transparently decrypting .skill.enc if needed."""
+    if path.name == "SKILL.skill.enc":
+        from agent.skill_crypto import decrypt_skill, get_license_key
+
+        key = get_license_key()
+        if not key:
+            raise PermissionError("License key required to read encrypted skills")
+        return decrypt_skill(path.read_bytes(), key)
+    return path.read_text(encoding="utf-8")
+
+
 def load_env() -> Dict[str, str]:
     """Load profile-scoped environment variables from BOOKWORMPRO_HOME/.env."""
     env_path = get_hermes_home() / ".env"
@@ -576,7 +588,7 @@ def _find_all_skills(*, skip_disabled: bool = False) -> List[Dict[str, Any]]:
             skill_dir = skill_md.parent
 
             try:
-                content = skill_md.read_text(encoding="utf-8")[:4000]
+                content = _read_skill_file(skill_md)[:4000]
                 frontmatter, body = _parse_frontmatter(content)
 
                 if not skill_matches_platform(frontmatter):
@@ -956,6 +968,10 @@ def skill_view(
                 skill_dir = direct_path
                 skill_md = direct_path / "SKILL.md"
                 break
+            elif direct_path.is_dir() and (direct_path / "SKILL.skill.enc").exists():
+                skill_dir = direct_path
+                skill_md = direct_path / "SKILL.skill.enc"
+                break
             elif direct_path.with_suffix(".md").exists():
                 skill_md = direct_path.with_suffix(".md")
                 break
@@ -997,7 +1013,16 @@ def skill_view(
 
         # Read the file once — reused for platform check and main content below
         try:
-            content = skill_md.read_text(encoding="utf-8")
+            content = _read_skill_file(skill_md)
+        except PermissionError as e:
+            return json.dumps(
+                {
+                    "success": False,
+                    "error": f"License required for skill '{name}': {e}",
+                    "readiness_status": "license_required",
+                },
+                ensure_ascii=False,
+            )
         except Exception as e:
             return json.dumps(
                 {

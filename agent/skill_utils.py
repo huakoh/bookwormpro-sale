@@ -432,13 +432,18 @@ def extract_skill_description(frontmatter: Dict[str, Any]) -> str:
 def iter_skill_index_files(skills_dir: Path, filename: str):
     """Walk skills_dir yielding sorted paths matching *filename*.
 
+    Also discovers encrypted variants (SKILL.skill.enc) when the
+    plaintext file is absent — used by the Sale distribution.
     Excludes ``.git``, ``.github``, ``.hub`` directories.
     """
+    _ENC_VARIANT = "SKILL.skill.enc"
     matches = []
     for root, dirs, files in os.walk(skills_dir, followlinks=True):
         dirs[:] = [d for d in dirs if d not in EXCLUDED_SKILL_DIRS]
         if filename in files:
             matches.append(Path(root) / filename)
+        elif _ENC_VARIANT in files:
+            matches.append(Path(root) / _ENC_VARIANT)
     for path in sorted(matches, key=lambda p: str(p.relative_to(skills_dir))):
         yield path
 
