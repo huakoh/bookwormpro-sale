@@ -355,7 +355,7 @@ AI_GATEWAY_BASE_URL = "https://ai-gateway.vercel.sh/v1"
 # instead of a plain string — otherwise the relay rejects with HTTP 400/429
 # ``content[].thinking ... must be passed back to the API``.
 BWW_RELAY_HOSTS: tuple[str, ...] = (
-    "bww.letcareme.com",
+    # relay endpoint removed for distribution
 )
 
 
