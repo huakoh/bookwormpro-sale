@@ -458,7 +458,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
     </div>
 
     <p style="margin-top:32px;color:var(--m);font-size:.9em">
-      试用到期后技能将锁定。<a href="#pricing">升级为 Starter / Pro</a> 即可永久解锁。<br>
+      试用到期后技能将锁定。<a href="#pricing">升级为个人版</a> 即可永久使用。<br>
       每台机器仅可试用一次 (HWID 绑定)。
     </p>
   </div>
@@ -518,9 +518,9 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
       <p>从本机移除已安装的 License 文件。</p>
     </div>
     <div class="card">
-      <h4>环境变量模式</h4>
-      <pre style="margin:8px 0"><span class="cmd">export BOOKWORMPRO_LICENSE_KEY="key"</span></pre>
-      <p>适用于 CI/CD 或容器环境，免文件激活。</p>
+      <h4>版本更新</h4>
+      <pre style="margin:8px 0"><span class="cmd">bookworm update</span></pre>
+      <p>更新到最新版本。License 和配置不受影响。</p>
     </div>
   </div>
 
@@ -545,7 +545,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
         <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 安装诊断 + 智能路由</li>
         <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 48 小时邮件支持</li>
         <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 7 天无理由退款</li>
-        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 自动版本更新</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 一键版本更新 (<code>bookworm update</code>)</li>
       </ul>
     </div>
 
@@ -555,11 +555,10 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
       <div style="color:var(--m);font-size:.9em">按机器数量授权</div>
       <ul style="list-style:none;margin:28px 0;text-align:left;font-size:.92em">
         <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 个人版全部功能</li>
-        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> <strong>多机 License</strong> (每台独立 HWID)</li>
-        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 批量授权管理</li>
-        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 私有部署支持</li>
-        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 专属技术对接人</li>
-        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> SLA 保障 + 发票合同</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> <strong>多机 License</strong> (每台独立 HWID 签发)</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 团队人数阶梯折扣</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 优先邮件技术支持</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 发票 + 合同</li>
       </ul>
     </div>
   </div>
@@ -567,10 +566,10 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
   <div class="qr-box" style="text-align:center;max-width:480px;margin:32px auto 0">
     <p style="color:#fff;font-size:1.05em"><strong>QQ 扫码联系客服</strong></p>
     <img src="/contact-qr.jpg" alt="QQ 联系客服">
-    <div class="step">1. QQ 扫码联系客服，选择套餐</div>
-    <div class="step">2. 支付后收到 .license 文件</div>
-    <div class="step">3. 按上方安装指南部署</div>
-    <div class="step">4. <a href="#activate" style="color:var(--a2)">bookworm activate</a> 一键激活</div>
+    <div class="step">1. 先按 <a href="#install-guide">安装指南</a> 部署 BookwormPRO</div>
+    <div class="step">2. 运行 <code style="color:var(--a2)">bookworm license hwid</code> 获取机器指纹</div>
+    <div class="step">3. QQ 扫码联系客服，发送 HWID + 选择套餐 + 支付</div>
+    <div class="step">4. 收到 .license 文件后 <a href="#activate" style="color:var(--a2)">bookworm activate</a> 激活</div>
   </div>
 </div></section>
 
