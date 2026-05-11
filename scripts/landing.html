@@ -134,9 +134,9 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
     <div class="stat"><div class="n">5 min</div><div class="l">安装</div></div>
   </div>
   <div class="cta">
-    <a href="#install-guide" class="btn btn-gold">安装指南</a>
-    <a href="#activate" class="btn btn-outline" style="border-color:var(--a2);color:var(--a2)">激活 License</a>
-    <a href="#pricing" class="btn btn-outline">获取授权</a>
+    <a href="#trial" class="btn btn-gold">免费试用 7 天</a>
+    <a href="#install-guide" class="btn btn-outline">安装指南</a>
+    <a href="#pricing" class="btn btn-outline">查看定价</a>
   </div>
 </header>
 
@@ -424,6 +424,43 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
     <div class="card"><div class="icon">🤖</div><h4>AI/ML</h4><p>模型微调、推理部署、提示词优化</p></div>
     <div class="card"><div class="icon">💰</div><h4>商业财经</h4><p>商业计划书、定价策略、财务顾问</p></div>
     <div class="card"><div class="icon">📱</div><h4>移动开发</h4><p>React Native、Flutter、微信小程序</p></div>
+  </div>
+</div></section>
+
+<!-- ═══════ 免费试用 ═══════ -->
+<section id="trial"><div class="container" style="text-align:center">
+  <h2>免费试用 7 天</h2>
+  <p class="section-sub">无需注册，无需信用卡 — 一行命令即可体验全部功能</p>
+
+  <div style="max-width:640px;margin:0 auto">
+    <div class="step-block" style="text-align:left">
+      <h4><span class="step-num">1</span> 安装 BookwormPRO</h4>
+      <pre><span class="comment"># Windows PowerShell</span>
+<span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.ps1 | iex</span>
+
+<span class="comment"># Linux / macOS</span>
+<span class="cmd">curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.sh | bash</span></pre>
+    </div>
+
+    <div class="step-block" style="text-align:left">
+      <h4><span class="step-num">2</span> 一键激活试用</h4>
+      <pre><span class="cmd">bookworm trial</span>
+<span class="output"># ┌──────────── 7-Day Free Trial ────────────┐</span>
+<span class="output"># │ Trial activated!                         │</span>
+<span class="output"># │   Tier:      trial                       │</span>
+<span class="output"># │   Expires:   2026-05-19                  │</span>
+<span class="output"># └──────────────────────────────────────────┘</span></pre>
+    </div>
+
+    <div class="step-block" style="text-align:left">
+      <h4><span class="step-num">3</span> 开始使用</h4>
+      <pre><span class="cmd">bookworm</span>    <span class="comment"># 进入对话，300+ 技能自动匹配</span></pre>
+    </div>
+
+    <p style="margin-top:32px;color:var(--m);font-size:.9em">
+      试用到期后技能将锁定。<a href="#pricing">升级为 Starter / Pro</a> 即可永久解锁。<br>
+      每台机器仅可试用一次 (HWID 绑定)。
+    </p>
   </div>
 </div></section>
 

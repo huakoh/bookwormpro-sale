@@ -17797,6 +17797,22 @@ Examples:
     activate_parser.set_defaults(func=cmd_activate)
 
     # =========================================================================
+    # trial command
+    # =========================================================================
+
+    trial_parser = subparsers.add_parser(
+        "trial",
+        help="Get a free 7-day trial license",
+        description="Automatically request a trial license bound to your machine (one per device)",
+    )
+
+    def cmd_trial(args):
+        from bwm_cli.license import do_trial
+        do_trial()
+
+    trial_parser.set_defaults(func=cmd_trial)
+
+    # =========================================================================
     # license command (status / hwid / deactivate)
     # =========================================================================
 

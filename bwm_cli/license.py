@@ -114,6 +114,72 @@ def do_hwid(console: Console | None = None) -> None:
     c.print("  Send this to your vendor to generate a bound license.\n")
 
 
+TRIAL_API = "https://portable.bookwormweb.com/api/trial"
+
+
+def do_trial(console: Console | None = None) -> None:
+    """Request a 7-day trial license from the server."""
+    import json as _json
+    c = console or _console
+
+    dst = _license_path()
+    if dst.exists():
+        try:
+            lic = _json.loads(dst.read_text(encoding="utf-8"))
+            from agent.skill_crypto import validate_license
+            valid, _ = validate_license(lic)
+            if valid:
+                c.print("\n  [yellow]You already have a valid license installed.[/]")
+                c.print("  Run [cyan]bookworm license status[/] to check details.\n")
+                return
+        except Exception:
+            pass
+
+    from agent.skill_crypto import get_machine_hwid
+    hwid = get_machine_hwid()
+    c.print(f"\n  Machine HWID: [dim]{hwid[:24]}...[/]")
+    c.print("  [bold]Requesting 7-day trial license...[/]")
+
+    try:
+        import httpx
+        resp = httpx.post(TRIAL_API, json={"hwid": hwid}, timeout=15)
+        data = resp.json()
+    except Exception as e:
+        c.print(f"  [bold red]Network error:[/] {e}")
+        c.print("  Please check your internet connection and try again.\n")
+        return
+
+    if resp.status_code == 409:
+        c.print(f"\n  [yellow]{data.get('message', 'Trial already used for this machine.')}[/]")
+        c.print("  Contact sales for a full license: [cyan]https://portable.bookwormweb.com/#pricing[/]\n")
+        return
+
+    if resp.status_code != 200:
+        c.print(f"\n  [bold red]Error:[/] {data.get('error', 'Unknown error')}\n")
+        return
+
+    lic = data.get("license")
+    if not lic:
+        c.print("\n  [bold red]Error:[/] Invalid server response\n")
+        return
+
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(_json.dumps(lic, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    import agent.skill_crypto
+    agent.skill_crypto._cached_license = None
+
+    c.print(Panel(
+        f"[bold green]Trial activated![/]\n\n"
+        f"  Tier:      {lic.get('tier', 'trial')}\n"
+        f"  Expires:   {lic.get('expires', 'N/A')}  ({data.get('days', 7)} days)\n"
+        f"  Installed: {display_hermes_home()}/.license\n\n"
+        f"  [dim]Enjoy BookwormPRO! Upgrade at https://portable.bookwormweb.com/#pricing[/]",
+        title="7-Day Free Trial",
+        border_style="green",
+    ))
+
+
 def do_deactivate(console: Console | None = None) -> None:
     """Remove installed license."""
     c = console or _console
