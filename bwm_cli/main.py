@@ -17776,7 +17776,45 @@ Examples:
 
     version_parser.set_defaults(func=cmd_version)
 
+    # =========================================================================
+    # activate command
+    # =========================================================================
 
+    activate_parser = subparsers.add_parser(
+        "activate",
+        help="Activate a BookwormPRO license",
+        description="Validate and install a license file for encrypted skill access",
+    )
+    activate_parser.add_argument(
+        "license_file",
+        help="Path to the .license file",
+    )
+
+    def cmd_activate(args):
+        from bwm_cli.license import do_activate
+        do_activate(args.license_file)
+
+    activate_parser.set_defaults(func=cmd_activate)
+
+    # =========================================================================
+    # license command (status / hwid / deactivate)
+    # =========================================================================
+
+    license_parser = subparsers.add_parser(
+        "license",
+        help="Manage BookwormPRO license",
+        description="View license status, show machine HWID, or remove license",
+    )
+    license_sub = license_parser.add_subparsers(dest="license_action")
+    license_sub.add_parser("status", help="Show current license status")
+    license_sub.add_parser("hwid", help="Print machine hardware ID")
+    license_sub.add_parser("deactivate", help="Remove installed license")
+
+    def cmd_license(args):
+        from bwm_cli.license import license_command
+        license_command(args)
+
+    license_parser.set_defaults(func=cmd_license)
 
     # =========================================================================
 
