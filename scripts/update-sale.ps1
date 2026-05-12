@@ -1,0 +1,43 @@
+$ErrorActionPreference = "Stop"
+$InstallDir = "$env:LOCALAPPDATA\bookworm\bookwormpro"
+$SkillsDest = "$env:LOCALAPPDATA\bookworm\skills"
+
+Write-Host ""
+Write-Host "  BookwormPRO Update" -ForegroundColor Cyan
+Write-Host "  ==================" -ForegroundColor Cyan
+Write-Host ""
+
+if (-not (Test-Path $InstallDir)) {
+    Write-Host "  [FAIL] BookwormPRO not installed at $InstallDir" -ForegroundColor Red
+    Read-Host "  Press Enter to exit"
+    exit 1
+}
+
+Write-Host "  [1/3] Pulling latest code..." -ForegroundColor Yellow
+Push-Location $InstallDir
+try {
+    git pull origin master 2>&1 | ForEach-Object { Write-Host "    $_" }
+    if ($LASTEXITCODE -ne 0) { throw "git pull failed" }
+    Write-Host "  [OK] Code updated" -ForegroundColor Green
+} catch {
+    Write-Host "  [FAIL] $_" -ForegroundColor Red
+    Pop-Location
+    Read-Host "  Press Enter to exit"
+    exit 1
+}
+Pop-Location
+
+Write-Host "  [2/3] Syncing skills..." -ForegroundColor Yellow
+if (-not (Test-Path $SkillsDest)) { New-Item -ItemType Directory -Path $SkillsDest -Force | Out-Null }
+Copy-Item -Recurse -Force "$InstallDir\skills\*" $SkillsDest -ErrorAction SilentlyContinue
+if (Test-Path "$InstallDir\optional-skills") {
+    Copy-Item -Recurse -Force "$InstallDir\optional-skills\*" $SkillsDest -ErrorAction SilentlyContinue
+}
+$encCount = (Get-ChildItem $SkillsDest -Recurse -Filter "*.enc" -ErrorAction SilentlyContinue).Count
+Write-Host "  [OK] $encCount encrypted skills synced" -ForegroundColor Green
+
+Write-Host "  [3/3] Done!" -ForegroundColor Green
+Write-Host ""
+Write-Host "  Restart bookworm to apply changes." -ForegroundColor Cyan
+Write-Host ""
+Read-Host "  Press Enter to exit"
