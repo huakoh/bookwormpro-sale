@@ -721,18 +721,24 @@ Delete the contents (or this file) to use the default personality.
     # Seed bundled skills into ~/.bookwormpro/skills/ (manifest-based, one-time per skill)
     Write-Info "Syncing bundled skills to ~/.bookwormpro/skills/ ..."
     $pythonExe = "$InstallDir\venv\Scripts\python.exe"
+    $syncOk = $false
     if (Test-Path $pythonExe) {
         try {
             & $pythonExe "$InstallDir\tools\skills_sync.py" 2>$null
-            Write-Success "Skills synced to ~/.bookwormpro/skills/"
-        } catch {
-            # Fallback: simple directory copy
-            $bundledSkills = "$InstallDir\skills"
-            $userSkills = "$HermesHome\skills"
-            if ((Test-Path $bundledSkills) -and -not (Get-ChildItem $userSkills -Exclude '.bundled_manifest' -ErrorAction SilentlyContinue)) {
-                Copy-Item -Path "$bundledSkills\*" -Destination $userSkills -Recurse -Force -ErrorAction SilentlyContinue
-                Write-Success "Skills copied to ~/.bookwormpro/skills/"
+            if ($LASTEXITCODE -eq 0) { $syncOk = $true }
+        } catch {}
+    }
+    if ($syncOk) {
+        Write-Success "Skills synced to ~/.bookwormpro/skills/"
+    } else {
+        $bundledSkills = "$InstallDir\skills"
+        $userSkills = "$HermesHome\skills"
+        if (Test-Path $bundledSkills) {
+            Copy-Item -Path "$bundledSkills\*" -Destination $userSkills -Recurse -Force -ErrorAction SilentlyContinue
+            if (Test-Path "$InstallDir\optional-skills") {
+                Copy-Item -Path "$InstallDir\optional-skills\*" -Destination $userSkills -Recurse -Force -ErrorAction SilentlyContinue
             }
+            Write-Success "Skills copied to ~/.bookwormpro/skills/"
         }
     }
 }

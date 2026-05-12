@@ -1117,9 +1117,12 @@ SOUL_EOF
     if "$INSTALL_DIR/venv/bin/python" "$INSTALL_DIR/tools/skills_sync.py" 2>/dev/null; then
         log_success "Skills synced to ~/.bookwormpro/skills/"
     else
-        # Fallback: simple directory copy if Python sync fails
-        if [ -d "$INSTALL_DIR/skills" ] && [ ! "$(ls -A "$BOOKWORMPRO_HOME/skills/" 2>/dev/null | grep -v '.bundled_manifest')" ]; then
+        # Fallback: always copy bundled skills (force overwrite)
+        if [ -d "$INSTALL_DIR/skills" ]; then
             cp -r "$INSTALL_DIR/skills/"* "$BOOKWORMPRO_HOME/skills/" 2>/dev/null || true
+            if [ -d "$INSTALL_DIR/optional-skills" ]; then
+                cp -r "$INSTALL_DIR/optional-skills/"* "$BOOKWORMPRO_HOME/skills/" 2>/dev/null || true
+            fi
             log_success "Skills copied to ~/.bookwormpro/skills/"
         fi
     fi
