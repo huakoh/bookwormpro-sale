@@ -69,11 +69,8 @@ INTERNAL_FILES = [
     "scripts/patches/patch_enc_support.py",
 ]
 
-# 源码中需要脱敏的替换对
-SANITIZE_PAIRS = [
-    ("bwm_constants.py", '    "bww.letcareme.com",', "    # relay endpoint removed for distribution"),
-    ("agent/credential_pool.py", "# relay endpoints (bww.letcareme.com et al)", "# relay endpoints"),
-]
+# 源码中需要脱敏的替换对 (relay 域名保留, 客户需要通过 relay 访问多模型)
+SANITIZE_PAIRS = []
 
 # install 脚本中仓库 URL 替换
 INSTALL_REPO_REPLACE = ("huakoh/BookwormPRO", "huakoh/bookwormpro-sale")
