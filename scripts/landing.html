@@ -164,7 +164,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
   <table class="prereq-table">
     <tr><th>依赖</th><th>要求</th><th>自动安装?</th><th>手动安装</th></tr>
     <tr><td><strong>Git</strong></td><td>任意版本</td><td class="cross">否 (必须预装)</td><td><code>winget install Git.Git</code></td></tr>
-    <tr><td>Python</td><td>3.11+</td><td class="check">是 (via uv)</td><td><code>winget install Python.Python.3.11</code></td></tr>
+    <tr><td>Python</td><td>3.12+</td><td class="check">是 (via uv)</td><td><code>winget install Python.Python.3.12</code></td></tr>
     <tr><td>Node.js</td><td>v22 LTS</td><td class="check">是</td><td><code>winget install OpenJS.NodeJS.LTS</code></td></tr>
     <tr><td>uv</td><td>latest</td><td class="check">是</td><td><code>irm astral.sh/uv/install.ps1 | iex</code></td></tr>
     <tr><td>ripgrep</td><td>任意</td><td class="check">是</td><td><code>winget install BurntSushi.ripgrep.MSVC</code></td></tr>
@@ -197,7 +197,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
       <pre><span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.ps1 | iex</span></pre>
       <p style="margin-top:12px">安装脚本会自动完成：</p>
       <ul style="color:var(--m);font-size:.88em;margin:8px 0 0 20px">
-        <li>安装 uv (Python 包管理器) + Python 3.11</li>
+        <li>安装 uv (Python 包管理器) + Python 3.12</li>
         <li>安装 Node.js v22 + ripgrep + ffmpeg</li>
         <li>克隆 BookwormPRO 到 <code>%LOCALAPPDATA%\bookworm\</code></li>
         <li>创建虚拟环境并安装所有依赖</li>

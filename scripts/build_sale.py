@@ -67,6 +67,13 @@ SANITIZE_PAIRS = [
 # install 脚本中仓库 URL 替换
 INSTALL_REPO_REPLACE = ("huakoh/BookwormPRO", "huakoh/bookwormpro-sale")
 
+# install 脚本中 Python 版本替换 (Cython .pyd 绑定构建时的 Python 版本)
+INSTALL_PYTHON_REPLACE_PS1 = ('$PythonVersion = "3.11"', '$PythonVersion = "3.12"')
+INSTALL_PYTHON_REPLACE_SH = ('PYTHON_VERSION="3.11"', 'PYTHON_VERSION="3.12"')
+# install 脚本默认分支替换 (sale 仓默认 master)
+INSTALL_BRANCH_REPLACE_PS1 = ('$Branch = "main"', '$Branch = "master"')
+INSTALL_BRANCH_REPLACE_SH = ('BRANCH="main"', 'BRANCH="master"')
+
 
 def run(cmd, **kwargs):
     print(f"  $ {cmd}")
@@ -200,13 +207,27 @@ def sanitize_files(workdir: Path, dry_run: bool = False):
         f = workdir / script_name
         if f.exists():
             content = f.read_text(encoding="utf-8")
-            old_repo, new_repo = INSTALL_REPO_REPLACE
-            if old_repo in content:
-                if dry_run:
-                    print(f"  [dry-run] 会替换仓库 URL: {script_name}")
-                else:
-                    f.write_text(content.replace(old_repo, new_repo), encoding="utf-8")
-                    print(f"  [repo-url] {script_name}")
+            replacements = [
+                (INSTALL_REPO_REPLACE, "repo-url"),
+            ]
+            if script_name.endswith(".ps1"):
+                replacements.append((INSTALL_PYTHON_REPLACE_PS1, "python-ver"))
+                replacements.append((INSTALL_BRANCH_REPLACE_PS1, "branch"))
+            else:
+                replacements.append((INSTALL_PYTHON_REPLACE_SH, "python-ver"))
+                replacements.append((INSTALL_BRANCH_REPLACE_SH, "branch"))
+
+            changed = False
+            for (old_val, new_val), label in replacements:
+                if old_val in content:
+                    if dry_run:
+                        print(f"  [dry-run] 会替换 {label}: {script_name}")
+                    else:
+                        content = content.replace(old_val, new_val)
+                        changed = True
+                        print(f"  [{label}] {script_name}")
+            if changed and not dry_run:
+                f.write_text(content, encoding="utf-8")
 
 
 def _find_all_skill_files(root: Path) -> list[Path]:
