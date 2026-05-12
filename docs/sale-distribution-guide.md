@@ -110,59 +110,116 @@ python scripts/generate_license.py verify customer.license --public-key keys/pub
 
 ## 客户操作手册
 
+> 在线版: https://portable.bookwormweb.com/quick-start
+
+### 0. 前置条件
+
+| 依赖 | 说明 |
+|------|------|
+| **Git** | 必须预装。Windows: `winget install Git.Git` |
+| **AI API Key** | 任一 Provider 的 Key。推荐 [DeepSeek](https://platform.deepseek.com) (支付宝充值 1 元起) |
+
+Python、Node.js、ripgrep、ffmpeg 等由安装脚本自动处理。
+
+### 0.5 清理旧版本 (如有)
+
+```powershell
+# 有 bookworm 命令的:
+bookworm uninstall
+
+# 没有 uninstall 命令 (早期版本):
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\bookworm","$HOME\.bookwormpro","$HOME\.hermes" -ErrorAction SilentlyContinue
+```
+
+清理后重开终端。
+
 ### 1. 安装 BookwormPRO
 
-```bash
-# 从 sale 仓安装 (仓库 URL 已在 install 脚本中替换)
-./scripts/install.sh
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.ps1 | iex
 ```
 
-### 2. 获取机器 HWID
+**Linux / macOS / WSL2:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.sh | bash
+```
+
+安装完成后**关闭并重新打开终端**，验证:
+```bash
+bookworm version
+# 应输出: BookwormPRO v7.0.0
+```
+
+### 2. 配置 AI 模型
 
 ```bash
+bookworm setup --quick    # 快速模式，30 秒完成
+bookworm setup model      # 或只配置模型
+```
+
+向导中选择 Provider 并填入 API Key。支持 28 个 Provider (DeepSeek / Anthropic / OpenAI / Gemini / Kimi 等)。
+
+### 3. 激活
+
+**方式 A: 免费试用 7 天**
+```bash
+bookworm trial
+```
+无需注册，每台机器可试用一次 (HWID 绑定)。
+
+**方式 B: 激活正式 License**
+
+```bash
+# 1. 获取机器 HWID
 bookworm license hwid
-# 输出: Machine HWID: 24afab...4ac71c
-# 将此值发送给供应商
-```
+# 输出: Machine HWID: 24afab...4ac71c (发送给供应商)
 
-### 3. 激活 License
-
-收到供应商发来的 `.license` 文件后：
-
-```bash
+# 2. 收到 .license 文件后激活
 bookworm activate /path/to/your.license
-```
 
-输出：
-```
-┌─────────── Activation Successful ───────────┐
-│ License activated                           │
-│   Licensee:  Your Company                   │
-│   Tier:      pro                            │
-│   Expires:   2027-06-01                     │
-│   Installed: ~/.bookwormpro/.license        │
-└─────────────────────────────────────────────┘
-```
-
-### 4. 查看 License 状态
-
-```bash
+# 3. 确认激活状态
 bookworm license status
 ```
 
-### 5. 其他命令
+### 4. 开始使用
 
 ```bash
-bookworm license hwid          # 查看机器指纹
-bookworm license deactivate    # 移除 license
+bookworm              # 经典 CLI 模式
+bookworm --tui        # 图形化 TUI (鼠标支持)
+bookworm --continue   # 继续上次会话
 ```
+
+进入对话后直接用中文描述需求，AI 自动匹配技能。
+
+### 5. 常用命令
+
+| 命令 | 用途 |
+|------|------|
+| `bookworm setup` | 完整配置向导 |
+| `bookworm setup model` | 只改 AI 模型 |
+| `bookworm setup gateway` | 配置消息平台 (Telegram/微信等) |
+| `bookworm gateway start` | 启动 Gateway |
+| `bookworm license status` | 查看 License 状态 |
+| `bookworm license hwid` | 查看机器指纹 |
+| `bookworm license deactivate` | 移除 License |
+| `bookworm canary` | 快速烟雾测试 (无网络) |
+| `bookworm canary --live` | 烟雾测试 + API 连通验证 |
+| `bookworm doctor` | 完整诊断报告 |
+| `bookworm update` | 更新到最新版本 |
+| `bookworm uninstall` | 卸载 BookwormPRO |
+| `bookworm dump` | 生成调试摘要 (发给技术支持) |
 
 ### 6. 环境变量方式 (可选)
 
 不使用 license 文件，直接设置环境变量：
 
 ```bash
+# Linux/macOS
 export BOOKWORMPRO_LICENSE_KEY="your-aes-key"
+
+# Windows PowerShell
+$env:BOOKWORMPRO_LICENSE_KEY = "your-aes-key"
 ```
 
 > 优先级: 环境变量 > .license 文件
@@ -215,8 +272,12 @@ export BOOKWORMPRO_LICENSE_KEY="your-aes-key"
 
 | 症状 | 原因 | 解决 |
 |------|------|------|
+| `bookworm: not recognized` | PATH 未生效 | 关闭终端重开。仍不行: `$env:PATH += ";$env:LOCALAPPDATA\bookworm\bookwormpro\venv\Scripts"` |
+| `No module named 'yaml'` | 依赖安装不完整 | `& "$env:LOCALAPPDATA\bookworm\bookwormpro\venv\Scripts\python.exe" -m pip install pyyaml` |
+| `irm ... 404` | sale 仓分支名错误 | URL 必须用 `/master/` 不是 `/main/` |
 | `License required for skill` | 未激活或 key 错误 | `bookworm activate <file>` |
 | `HWID mismatch` | 换了机器或虚拟机 | 重新运行 `bookworm license hwid` 联系供应商 |
 | `License expired` | 过期 | 联系供应商续期 |
 | `Invalid license signature` | 文件被篡改 | 重新获取原始 license 文件 |
 | Skills 列表为空 | 加密文件存在但无法解密 | 检查 license 状态: `bookworm license status` |
+| 安装卡在 tinker-atropos | 拉 PyTorch 太慢 | `Ctrl+C` 中断，重新用最新 install.ps1 安装 (已跳过此步) |
