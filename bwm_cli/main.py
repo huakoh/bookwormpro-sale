@@ -15813,7 +15813,7 @@ Examples:
         else:
             print(_("Scanning all skills..."))
             for d in sorted(skills_dir.iterdir()):
-                if d.is_dir() and (d / "SKILL.md").exists():
+                if d.is_dir() and ((d / "SKILL.md").exists() or (d / "SKILL.skill.enc").exists()):
                     r = scan_skill_safety(d)
                     if r.level != "SAFE":
                         print(f"  {d.name}: {r.level}")

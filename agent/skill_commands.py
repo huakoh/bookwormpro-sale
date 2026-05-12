@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from bwm_constants import display_hermes_home
+from agent.skill_crypto import is_encrypted_skill, read_skill_content
 from agent.skill_preprocessing import (
     expand_inline_shell as _expand_inline_shell,
     load_skills_config as _load_skills_config,
@@ -243,7 +244,12 @@ def scan_skill_commands() -> Dict[str, Dict[str, Any]]:
                 if any(part in ('.git', '.github', '.hub') for part in skill_md.parts):
                     continue
                 try:
-                    content = skill_md.read_text(encoding='utf-8')
+                    if is_encrypted_skill(skill_md):
+                        content = read_skill_content(skill_md.parent)
+                        if content is None:
+                            continue
+                    else:
+                        content = skill_md.read_text(encoding='utf-8')
                     frontmatter, body = _parse_frontmatter(content)
                     # Skip skills incompatible with the current OS platform
                     if not skill_matches_platform(frontmatter):

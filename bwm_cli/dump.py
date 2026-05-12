@@ -68,6 +68,9 @@ def _count_skills(hermes_home: Path) -> int:
     count = 0
     for item in skills_dir.rglob("SKILL.md"):
         count += 1
+    for item in skills_dir.rglob("SKILL.skill.enc"):
+        if not (item.parent / "SKILL.md").exists():
+            count += 1
     return count
 
 

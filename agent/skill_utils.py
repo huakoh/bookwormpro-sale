@@ -335,7 +335,13 @@ def discover_all_skill_config_vars() -> List[Dict[str, Any]]:
             continue
         for skill_file in iter_skill_index_files(skills_dir, "SKILL.md"):
             try:
-                raw = skill_file.read_text(encoding="utf-8")
+                from agent.skill_crypto import is_encrypted_skill, read_skill_content
+                if is_encrypted_skill(skill_file):
+                    raw = read_skill_content(skill_file.parent)
+                    if raw is None:
+                        continue
+                else:
+                    raw = skill_file.read_text(encoding="utf-8")
                 frontmatter, _ = parse_frontmatter(raw)
             except Exception:
                 continue

@@ -317,6 +317,10 @@ def _count_skills(profile_dir: Path) -> int:
     for md in skills_dir.rglob("SKILL.md"):
         if "/.hub/" not in str(md) and "/.git/" not in str(md):
             count += 1
+    for enc in skills_dir.rglob("SKILL.skill.enc"):
+        if not (enc.parent / "SKILL.md").exists():
+            if "/.hub/" not in str(enc) and "/.git/" not in str(enc):
+                count += 1
     return count
 
 
