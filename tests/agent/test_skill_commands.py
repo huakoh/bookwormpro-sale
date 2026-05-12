@@ -168,6 +168,47 @@ class TestScanSkillCommands:
         assert "/sonarr-v3v4-api" in result
         assert any("/" in k[1:] for k in result) is False  # no unescaped /
 
+    def test_finds_encrypted_skills(self, tmp_path):
+        """scan_skill_commands discovers .skill.enc files via transparent decryption."""
+        plaintext = (
+            "---\nname: enc-sale-skill\n"
+            "description: Sale encrypted skill\n---\n\nBody.\n"
+        )
+        skill_dir = tmp_path / "enc-sale-skill"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.skill.enc").write_bytes(b"\x01" + b"\x00" * 50)
+
+        with (
+            patch("tools.skills_tool.SKILLS_DIR", tmp_path),
+            patch(
+                "agent.skill_commands.is_encrypted_skill", return_value=True,
+            ),
+            patch(
+                "agent.skill_commands.read_skill_content", return_value=plaintext,
+            ),
+        ):
+            result = scan_skill_commands()
+        assert "/enc-sale-skill" in result
+        assert result["/enc-sale-skill"]["name"] == "enc-sale-skill"
+
+    def test_encrypted_skill_decrypt_failure_skipped(self, tmp_path):
+        """Skills that fail to decrypt are silently skipped."""
+        skill_dir = tmp_path / "broken-enc"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.skill.enc").write_bytes(b"\x01" + b"\x00" * 50)
+
+        with (
+            patch("tools.skills_tool.SKILLS_DIR", tmp_path),
+            patch(
+                "agent.skill_commands.is_encrypted_skill", return_value=True,
+            ),
+            patch(
+                "agent.skill_commands.read_skill_content", return_value=None,
+            ),
+        ):
+            result = scan_skill_commands()
+        assert result == {}
+
 
 class TestResolveSkillCommandKey:
     """Telegram bot-command names disallow hyphens, so the menu registers

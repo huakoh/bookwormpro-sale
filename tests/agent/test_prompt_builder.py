@@ -216,6 +216,43 @@ class TestParseSkillFile:
         _, frontmatter, _ = _parse_skill_file(skill_file)
         assert frontmatter["prerequisites"]["env_vars"] == ["NONEXISTENT_KEY_ABC"]
 
+    def test_encrypted_skill_decrypted_transparently(self, tmp_path):
+        """_parse_skill_file should decrypt .skill.enc and parse frontmatter."""
+        from agent.skill_crypto import encrypt_skill
+
+        plaintext = "---\nname: enc-test\ndescription: Encrypted skill\n---\n\nBody"
+        license_key = "test-key-for-unit-tests-only-1234"
+        enc_data = encrypt_skill(plaintext, license_key)
+
+        skill_dir = tmp_path / "enc-test"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.skill.enc").write_bytes(enc_data)
+
+        from unittest.mock import patch
+        with patch("agent.prompt_builder.read_skill_content", return_value=plaintext):
+            is_compat, frontmatter, desc = _parse_skill_file(
+                skill_dir / "SKILL.skill.enc"
+            )
+        assert is_compat is True
+        assert frontmatter.get("name") == "enc-test"
+        assert desc == "Encrypted skill"
+
+    def test_encrypted_skill_decrypt_failure_returns_defaults(self, tmp_path, caplog):
+        """_parse_skill_file returns defaults when decryption fails."""
+        skill_dir = tmp_path / "bad-enc"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.skill.enc").write_bytes(b"\x01" + b"\x00" * 50)
+
+        from unittest.mock import patch
+        with patch("agent.prompt_builder.read_skill_content", return_value=None):
+            with caplog.at_level(logging.DEBUG, logger="agent.prompt_builder"):
+                is_compat, frontmatter, desc = _parse_skill_file(
+                    skill_dir / "SKILL.skill.enc"
+                )
+        assert is_compat is True
+        assert frontmatter == {}
+        assert desc == ""
+
 
 class TestPromptBuilderImports:
     def test_module_import_does_not_eagerly_import_skills_tool(self, monkeypatch):
