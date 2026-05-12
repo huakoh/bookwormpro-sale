@@ -13,11 +13,11 @@ if (-not (Test-Path $InstallDir)) {
     exit 1
 }
 
-Write-Host "  [1/3] Pulling latest code..." -ForegroundColor Yellow
+Write-Host "  [1/3] Fetching latest code..." -ForegroundColor Yellow
 Push-Location $InstallDir
 try {
-    git pull origin master 2>&1 | ForEach-Object { Write-Host "    $_" }
-    if ($LASTEXITCODE -ne 0) { throw "git pull failed" }
+    git fetch origin 2>&1 | ForEach-Object { Write-Host "    $_" }
+    git reset --hard origin/master 2>&1 | ForEach-Object { Write-Host "    $_" }
     Write-Host "  [OK] Code updated" -ForegroundColor Green
 } catch {
     Write-Host "  [FAIL] $_" -ForegroundColor Red
