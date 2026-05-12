@@ -56,11 +56,22 @@ INTERNAL_FILES = [
     "scripts/publish-sale.ps1",
     "scripts/publish-sale.sh",
     "scripts/encrypt_skills.py",
+    "scripts/trial_server.py",
+    "scripts/contributor_audit.py",
+    "scripts/hermes_audit.py",
+    "scripts/release.py",
+    "scripts/rebrand_hermes_to_bookworm.py",
+    "scripts/rebrand_docs.py",
+    "scripts/rebrand_p0_p1.py",
+    "scripts/discord-voice-doctor.py",
+    "scripts/provider_health_probe.py",
+    "scripts/sample_and_compress.py",
+    "scripts/patches/patch_enc_support.py",
 ]
 
 # 源码中需要脱敏的替换对
 SANITIZE_PAIRS = [
-    ("bwm_constants.py", '"bww.letcareme.com",', "# relay endpoint removed for distribution"),
+    ("bwm_constants.py", '    "bww.letcareme.com",', "    # relay endpoint removed for distribution"),
     ("agent/credential_pool.py", "# relay endpoints (bww.letcareme.com et al)", "# relay endpoints"),
 ]
 
