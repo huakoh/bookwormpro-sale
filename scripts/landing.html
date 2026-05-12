@@ -122,6 +122,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
 <div style="position:absolute;top:0;left:0;right:0;padding:16px 24px;z-index:10;display:flex;align-items:center;gap:8px">
   <span style="font-weight:700;font-size:.95em;color:#888">BookwormPRO</span>
   <span style="color:var(--a);font-size:.7em">v7.0.0</span>
+  <span style="margin-left:auto"><a href="/quick-start" style="color:var(--m);font-size:.85em">快速上手</a></span>
 </div>
 
 <header class="hero">
@@ -193,7 +194,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
     <div class="step-block">
       <h4><span class="step-num">2</span> 一键安装 BookwormPRO</h4>
       <p>在 PowerShell 中执行：</p>
-      <pre><span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.ps1 | iex</span></pre>
+      <pre><span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.ps1 | iex</span></pre>
       <p style="margin-top:12px">安装脚本会自动完成：</p>
       <ul style="color:var(--m);font-size:.88em;margin:8px 0 0 20px">
         <li>安装 uv (Python 包管理器) + Python 3.11</li>
@@ -225,7 +226,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
 
     <div class="step-block">
       <h4><span class="step-num">2</span> 一键安装</h4>
-      <pre><span class="cmd">curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.sh | bash</span></pre>
+      <pre><span class="cmd">curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.sh | bash</span></pre>
       <p style="margin-top:8px;color:var(--m);font-size:.88em">macOS / Linux 原生用户同样执行此命令。</p>
     </div>
 
@@ -389,6 +390,11 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
     <p>运行 <code>bookworm gateway status</code> 检查各平台连接状态。<br>重新运行 <code>bookworm gateway setup</code> 更新 Token。</p>
   </div>
   <div class="troubleshoot">
+    <h4>已有旧版本，想重新安装</h4>
+    <p>先运行 <code>bookworm uninstall</code> 卸载旧版，然后重新按安装指南操作。<br>如果旧版本太早没有 uninstall 命令，手动清理：<br>
+    <code>Remove-Item -Recurse -Force "$env:LOCALAPPDATA\bookworm","$HOME\.bookwormpro","$HOME\.hermes" -ErrorAction SilentlyContinue</code></p>
+  </div>
+  <div class="troubleshoot">
     <h4>Python/Node 版本冲突</h4>
     <p>BookwormPRO 使用独立虚拟环境，不影响系统 Python。<br>如遇冲突，删除 <code>%LOCALAPPDATA%\bookworm\bookwormpro\venv</code> 目录后重新安装。</p>
   </div>
@@ -436,10 +442,10 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
     <div class="step-block" style="text-align:left">
       <h4><span class="step-num">1</span> 安装 BookwormPRO</h4>
       <pre><span class="comment"># Windows PowerShell</span>
-<span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.ps1 | iex</span>
+<span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.ps1 | iex</span>
 
 <span class="comment"># Linux / macOS</span>
-<span class="cmd">curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.sh | bash</span></pre>
+<span class="cmd">curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.sh | bash</span></pre>
     </div>
 
     <div class="step-block" style="text-align:left">
@@ -458,7 +464,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
     </div>
 
     <p style="margin-top:32px;color:var(--m);font-size:.9em">
-      试用到期后技能将锁定。<a href="#pricing">升级为个人版</a> 即可永久使用。<br>
+      试用到期后技能将锁定。<a href="#pricing">升级为个人版</a> 即可解锁全部技能 (按年订阅)。<br>
       每台机器仅可试用一次 (HWID 绑定)。
     </p>
   </div>
@@ -529,7 +535,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
 <!-- ═══════ 定价 ═══════ -->
 <section id="pricing"><div class="container">
   <h2>获取 BookwormPRO</h2>
-  <p class="section-sub">HWID 机器绑定 · Ed25519 签名授权 · 7 天无理由退款</p>
+  <p class="section-sub">HWID 机器绑定 · Ed25519 签名授权 · 质量保障退款</p>
 
   <div class="g2" style="align-items:stretch;max-width:800px;margin:0 auto">
     <div class="price-card" style="border-color:var(--a);position:relative">
@@ -544,7 +550,7 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
         <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 每周同步国际社区更新</li>
         <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 安装诊断 + 智能路由</li>
         <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 48 小时邮件支持</li>
-        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 7 天无理由退款</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 质量问题 7 天退款 (<a href="/terms.html#退款" style="font-size:.85em">详情</a>)</li>
         <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 一键版本更新 (<code>bookworm update</code>)</li>
       </ul>
     </div>
@@ -592,13 +598,14 @@ footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-
   <h3 style="color:var(--m);margin:32px 0 16px">安全与支付</h3>
   <div class="faq"><h4>我的 API Key 安全吗?</h4><p>Key 只存储在本地 ~/.bookwormpro/.env 文件，不上传任何服务器。技能文件采用 AES-256-GCM 加密，License 采用 Ed25519 数字签名，防篡改防拷贝。</p></div>
   <div class="faq"><h4>可以开发票吗?</h4><p>可以。提供电子普通发票。联系客服告知开票信息即可。</p></div>
-  <div class="faq"><h4>7 天无理由退款怎么操作?</h4><p>购买 7 天内联系客服申请退款，全额退还，无需理由。</p></div>
+  <div class="faq"><h4>退款怎么操作?</h4><p>2 小时内未下载可全额退款；下载后如遇文件损坏等质量问题，7 天内可退款或免费更换。详见 <a href="/terms.html">服务条款</a> 第四条。</p></div>
 </div></section>
 
 <footer>
   <p><strong>BookwormPRO</strong> &mdash; AI 助手的工匠级技能包</p>
   <p style="margin-top:6px"><a href="/terms.html">服务条款</a> &middot; <a href="/privacy.html">隐私政策</a></p>
-  <p style="margin-top:12px;color:var(--a)">善读者，必善造。</p>
+  <p style="margin-top:8px;font-size:.75em">鑫霖科技（广东）有限公司 &middot; <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2026011564号</a></p>
+  <p style="margin-top:10px;color:var(--a)">善读者，必善造。</p>
 </footer>
 
 <script>
