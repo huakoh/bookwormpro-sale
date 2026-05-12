@@ -442,7 +442,7 @@ function Install-Repository {
         Write-Info "Trying SSH clone..."
         $env:GIT_SSH_COMMAND = "ssh -o BatchMode=yes -o ConnectTimeout=5"
         try {
-            git -c windows.appendAtomically=false clone --branch $Branch --recurse-submodules $RepoUrlSsh $InstallDir
+            git -c windows.appendAtomically=false clone --branch $Branch --no-recurse-submodules $RepoUrlSsh $InstallDir
             if ($LASTEXITCODE -eq 0) { $cloneSuccess = $true }
         } catch { }
         $env:GIT_SSH_COMMAND = $null
@@ -451,7 +451,7 @@ function Install-Repository {
             if (Test-Path $InstallDir) { Remove-Item -Recurse -Force $InstallDir -ErrorAction SilentlyContinue }
             Write-Info "SSH failed, trying HTTPS..."
             try {
-                git -c windows.appendAtomically=false clone --branch $Branch --recurse-submodules $RepoUrlHttps $InstallDir
+                git -c windows.appendAtomically=false clone --branch $Branch --no-recurse-submodules $RepoUrlHttps $InstallDir
                 if ($LASTEXITCODE -eq 0) { $cloneSuccess = $true }
             } catch { }
         }
@@ -504,14 +504,8 @@ function Install-Repository {
     Push-Location $InstallDir
     git -c windows.appendAtomically=false config windows.appendAtomically false 2>$null
 
-    # Ensure submodules are initialized and updated
-    Write-Info "Initializing submodules..."
-    git -c windows.appendAtomically=false submodule update --init --recursive 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Warn "Submodule init failed (terminal/RL tools may need manual setup)"
-    } else {
-        Write-Success "Submodules ready"
-    }
+    # Submodules (tinker-atropos etc.) are optional — skip for faster install
+    Write-Success "Repository ready"
     Pop-Location
     
     Write-Success "Repository ready"
@@ -559,17 +553,15 @@ function Install-Dependencies {
     
     Write-Success "Main package installed"
     
-    # Install optional submodules
-    Write-Info "Installing tinker-atropos (RL training backend)..."
-    if (Test-Path "tinker-atropos\pyproject.toml") {
+    # Skip tinker-atropos for sale distribution (RL training backend, not needed)
+    if ($env:BOOKWORM_INSTALL_ATROPOS -eq "1" -and (Test-Path "tinker-atropos\pyproject.toml")) {
+        Write-Info "Installing tinker-atropos (RL training backend)..."
         try {
             & $UvCmd pip install -e ".\tinker-atropos" 2>&1 | Out-Null
             Write-Success "tinker-atropos installed"
         } catch {
             Write-Warn "tinker-atropos install failed (RL tools may not work)"
         }
-    } else {
-        Write-Warn "tinker-atropos not found (run: git submodule update --init)"
     }
     
     Pop-Location
