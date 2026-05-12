@@ -544,14 +544,20 @@ function Install-Dependencies {
         $env:VIRTUAL_ENV = "$InstallDir\venv"
     }
     
-    # Install main package with all extras
-    try {
-        & $UvCmd pip install -e ".[all]" 2>&1 | Out-Null
-    } catch {
-        & $UvCmd pip install -e "." 2>&1 | Out-Null
+    # Install main package — retry with verbose output on failure
+    $installOk = $false
+    foreach ($spec in @(".[all]", ".")) {
+        try {
+            $output = & $UvCmd pip install -e $spec 2>&1
+            if ($LASTEXITCODE -eq 0) { $installOk = $true; break }
+        } catch {}
     }
-    # Ensure critical runtime deps are present (fallback install may miss extras)
-    & $UvCmd pip install pyyaml rich httpx 2>&1 | Out-Null
+    if (-not $installOk) {
+        Write-Warn "editable install failed, trying direct pip..."
+        & ".\venv\Scripts\python.exe" -m pip install -e "." 2>&1 | Out-Null
+    }
+    # Safety net: ensure critical deps are present regardless of install method
+    & $UvCmd pip install python-dotenv pyyaml rich httpx fire openai cryptography prompt_toolkit requests jinja2 pydantic 2>&1 | Out-Null
 
     Write-Success "Main package installed"
     
