@@ -624,9 +624,16 @@ function Set-PathVariable {
     }
     $env:BOOKWORMPRO_HOME = $HermesHome
     
+    # Fix GBK encoding issues on Chinese Windows
+    $currentUtf8 = [Environment]::GetEnvironmentVariable("PYTHONUTF8", "User")
+    if (-not $currentUtf8) {
+        [Environment]::SetEnvironmentVariable("PYTHONUTF8", "1", "User")
+    }
+    $env:PYTHONUTF8 = "1"
+
     # Update current session
     $env:Path = "$hermesBin;$env:Path"
-    
+
     Write-Success "bookworm command ready"
 }
 

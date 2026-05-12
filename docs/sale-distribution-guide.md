@@ -270,14 +270,79 @@ $env:BOOKWORMPRO_LICENSE_KEY = "your-aes-key"
 
 ## 故障排查
 
+### 安装阶段
+
 | 症状 | 原因 | 解决 |
 |------|------|------|
-| `bookworm: not recognized` | PATH 未生效 | 关闭终端重开。仍不行: `$env:PATH += ";$env:LOCALAPPDATA\bookworm\bookwormpro\venv\Scripts"` |
-| `No module named 'yaml'` | 依赖安装不完整 | `& "$env:LOCALAPPDATA\bookworm\bookwormpro\venv\Scripts\python.exe" -m pip install pyyaml` |
-| `irm ... 404` | sale 仓分支名错误 | URL 必须用 `/master/` 不是 `/main/` |
-| `License required for skill` | 未激活或 key 错误 | `bookworm activate <file>` |
+| `irm ... 404` | sale 仓 Private 或分支名错误 | 确认仓库 Public + URL 用 `/master/` 不是 `/main/` |
+| `Repository not found` (HTTPS clone) | install.ps1 仓库 URL 未替换 | 必须先跑 `publish-sale.ps1` 构建，不能手动复制 install.ps1 |
+| 安装卡住不动 | tinker-atropos 拉 PyTorch (~2GB) | 最新 install.ps1 已跳过此步 |
+| `No module named 'yaml'` / `'dotenv'` | `uv pip install -e .` 静默失败 | install.ps1 安全网已覆盖 12 个核心包；手动: `python -m pip install pyyaml python-dotenv` |
+| `No module named 'bwm_cli'` | sale 仓缺少应用代码 | 必须跑 `publish-sale.ps1` 构建完整 sale 仓 |
+| `SyntaxError: invalid character '─'` | Cython .pyd 是 cp312 但 venv 是 3.11 | install.ps1 的 `$PythonVersion` 必须与构建时的 Python 版本一致 |
+| `bookworm: not recognized` | PATH 未生效 | 关闭终端重新打开。仍不行: `$env:PATH += ";$env:LOCALAPPDATA\bookworm\bookwormpro\venv\Scripts"` |
+
+### 运行阶段
+
+| 症状 | 原因 | 解决 |
+|------|------|------|
+| `'gbk' codec can't decode` | 中文 Windows 默认 GBK 编码 | `[Environment]::SetEnvironmentVariable("PYTHONUTF8","1","User")` 后重开终端 |
+| `HTTP 401: Authentication Fails` | API Key 无效/过期/粘贴重复 | 检查 `$env:LOCALAPPDATA\bookworm\.env` 中 Key 是否正确且只出现一次 |
+| `ValueError: unexpected '{'` | setup summary 格式化 bug | 不影响功能，忽略即可 |
+| `UnboundLocalError: '_'` | setup wizard i18n bug | 绕过: 直接编辑 `.env` 文件配置 Key |
+| `License required for skill` | 未激活或 key 错误 | `bookworm activate <file>` 或 `bookworm trial` |
 | `HWID mismatch` | 换了机器或虚拟机 | 重新运行 `bookworm license hwid` 联系供应商 |
 | `License expired` | 过期 | 联系供应商续期 |
-| `Invalid license signature` | 文件被篡改 | 重新获取原始 license 文件 |
 | Skills 列表为空 | 加密文件存在但无法解密 | 检查 license 状态: `bookworm license status` |
-| 安装卡在 tinker-atropos | 拉 PyTorch 太慢 | `Ctrl+C` 中断，重新用最新 install.ps1 安装 (已跳过此步) |
+
+---
+
+## 发行方避坑指南 (2026-05-12 实测总结)
+
+> 以下所有坑均来自首次真机装机测试，已逐一修复。
+
+### 1. 必须跑 publish-sale.ps1，不能手动同步
+
+sale 仓与主仓是**完全不同的代码**。`publish-sale.ps1` 负责:
+- 脱敏 (删内部文档 + 替换敏感 URL)
+- Cython 编译 6 核心模块 → .pyd
+- AES-256 加密 135 SKILL.md → .skill.enc
+- 替换 install.ps1 中的仓库 URL (`BookwormPRO` → `bookwormpro-sale`)
+- 推送到 sale remote
+
+**手动复制 install.ps1 到 sale 仓会导致仓库 URL 未替换 → 客户克隆私有仓 → 404。**
+
+### 2. Python 版本必须对齐
+
+Cython `.pyd` 绑定 Python minor version (`cp312` 只能在 3.12 上加载)。
+代码中 f-string 嵌套语法也要求 3.12+。
+
+| 环节 | 必须一致 |
+|------|---------|
+| `build_sale.py` 构建环境 | Python 3.12 |
+| `install.ps1` 中 `$PythonVersion` | `"3.12"` |
+| 客户机 venv | Python 3.12 (由 uv 自动安装) |
+
+### 3. sale 仓分支是 master
+
+sale 仓默认分支是 `master`，`build_sale.py` 推送目标是 `sale-build:master`。
+所有 raw.githubusercontent.com URL 必须用 `/master/` 而不是 `/main/`。
+
+### 4. 中文 Windows GBK 编码
+
+中文 Windows 的 Python 默认 GBK 编码，遇到 UTF-8 文件会报 `UnicodeDecodeError`。
+install.ps1 应在创建 venv 后自动设置 `PYTHONUTF8=1`。
+
+### 5. 发布 checklist
+
+每次发布新版本前:
+
+```
+1. [ ] 构建: .\scripts\publish-sale.ps1 -LicenseKey "xxx"
+2. [ ] 验证 Python 版本对齐 (3.12)
+3. [ ] 验证 sale 仓 install.ps1 中 URL 指向 bookwormpro-sale
+4. [ ] 验证 sale 仓 install.ps1 中 $Branch = "master"
+5. [ ] 验证 sale 仓 Public 可见
+6. [ ] 全新机器测试: irm ... | iex → bookworm version → bookworm trial → bookworm
+7. [ ] 部署落地页: scp landing.html + quick-start.html 到服务器
+```
