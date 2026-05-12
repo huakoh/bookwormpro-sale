@@ -5,7 +5,7 @@
 # Uses uv for fast Python provisioning and package management.
 #
 # Usage:
-#   irm https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.ps1 | iex
 #
 # Or download and run with options:
 #   .\install.ps1 -NoVenv -SkipSetup
@@ -15,7 +15,7 @@
 param(
     [switch]$NoVenv,
     [switch]$SkipSetup,
-    [string]$Branch = "main",
+    [string]$Branch = "master",
     [string]$HermesHome = "$env:LOCALAPPDATA\bookworm",
     [string]$InstallDir = "$env:LOCALAPPDATA\bookworm\bookwormpro"
 )
@@ -26,8 +26,8 @@ $ErrorActionPreference = "Stop"
 # Configuration
 # ============================================================================
 
-$RepoUrlSsh = "git@github.com:huakoh/BookwormPRO.git"
-$RepoUrlHttps = "https://github.com/huakoh/BookwormPRO.git"
+$RepoUrlSsh = "git@github.com:huakoh/bookwormpro-sale.git"
+$RepoUrlHttps = "https://github.com/huakoh/bookwormpro-sale.git"
 $PythonVersion = "3.11"
 $NodeVersion = "22"
 
@@ -461,7 +461,7 @@ function Install-Repository {
             if (Test-Path $InstallDir) { Remove-Item -Recurse -Force $InstallDir -ErrorAction SilentlyContinue }
             Write-Warn "Git clone failed — downloading ZIP archive instead..."
             try {
-                $zipUrl = "https://github.com/huakoh/BookwormPRO/archive/refs/heads/$Branch.zip"
+                $zipUrl = "https://github.com/huakoh/bookwormpro-sale/archive/refs/heads/$Branch.zip"
                 $zipPath = "$env:TEMP\bookwormpro-$Branch.zip"
                 $extractPath = "$env:TEMP\bookwormpro-extract"
                 
@@ -554,10 +554,23 @@ function Install-Dependencies {
     }
     if (-not $installOk) {
         Write-Warn "editable install failed, trying direct pip..."
-        & ".\venv\Scripts\python.exe" -m pip install -e "." 2>&1 | Out-Null
+        try {
+            & ".\venv\Scripts\python.exe" -m pip install -e "." 2>&1 | Out-Null
+            $installOk = $true
+        } catch {}
     }
-    # Safety net: ensure critical deps are present regardless of install method
-    & $UvCmd pip install python-dotenv pyyaml rich httpx fire openai cryptography prompt_toolkit requests jinja2 pydantic 2>&1 | Out-Null
+    # Fallback: if all editable installs failed, add project root to Python path
+    # so bwm_cli and other project modules are importable
+    if (-not $installOk) {
+        Write-Warn "All editable installs failed, adding project to Python path directly..."
+    }
+    $sitePackages = & ".\venv\Scripts\python.exe" -c "import site; print(site.getsitepackages()[0])" 2>$null
+    if ($sitePackages -and (Test-Path $sitePackages)) {
+        $pthFile = Join-Path $sitePackages "bookwormpro.pth"
+        $pwd.Path | Set-Content -Path $pthFile -Encoding UTF8
+    }
+    # Safety net: ensure critical third-party deps are present
+    & $UvCmd pip install python-dotenv pyyaml rich httpx fire openai anthropic cryptography prompt_toolkit requests jinja2 pydantic tenacity edge-tts 2>&1 | Out-Null
 
     Write-Success "Main package installed"
     
@@ -929,7 +942,7 @@ try {
     Write-Err "Installation failed: $_"
     Write-Host ""
     Write-Info "If the error is unclear, try downloading and running the script directly:"
-    Write-Host "  Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.ps1' -OutFile install.ps1" -ForegroundColor Yellow
+    Write-Host "  Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.ps1' -OutFile install.ps1" -ForegroundColor Yellow
     Write-Host "  .\install.ps1" -ForegroundColor Yellow
     Write-Host ""
 }
