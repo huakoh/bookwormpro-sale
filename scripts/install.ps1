@@ -548,9 +548,11 @@ function Install-Dependencies {
     try {
         & $UvCmd pip install -e ".[all]" 2>&1 | Out-Null
     } catch {
-        & $UvCmd pip install -e "." | Out-Null
+        & $UvCmd pip install -e "." 2>&1 | Out-Null
     }
-    
+    # Ensure critical runtime deps are present (fallback install may miss extras)
+    & $UvCmd pip install pyyaml rich httpx 2>&1 | Out-Null
+
     Write-Success "Main package installed"
     
     # Skip tinker-atropos for sale distribution (RL training backend, not needed)
