@@ -147,6 +147,15 @@ def _discover_bundled_skills(bundled_dir: Path) -> List[Tuple[str, Path]]:
         skill_name = _read_skill_name(skill_md, skill_dir.name)
         skills.append((skill_name, skill_dir))
 
+    for skill_enc in bundled_dir.rglob("SKILL.skill.enc"):
+        path_str = str(skill_enc)
+        if "/.git/" in path_str or "/.github/" in path_str or "/.hub/" in path_str:
+            continue
+        skill_dir = skill_enc.parent
+        if (skill_dir / "SKILL.md").exists():
+            continue
+        skills.append((skill_dir.name, skill_dir))
+
     return skills
 
 
