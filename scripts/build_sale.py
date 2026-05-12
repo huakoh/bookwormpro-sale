@@ -315,7 +315,7 @@ def main():
 
         if args.push:
             print("\n  推送到 sale 仓...")
-            run(f"git push {SALE_REMOTE} sale-build:main --force-with-lease")
+            run(f"git push {SALE_REMOTE} sale-build:master --force-with-lease")
             print("  [OK] sale 仓已更新")
 
         run("git checkout main")
