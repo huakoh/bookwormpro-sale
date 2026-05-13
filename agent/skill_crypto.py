@@ -336,10 +336,10 @@ def _load_and_validate_license() -> dict | None:
     if lic is None:
         return None
 
-    # 兼容旧格式: 纯字符串 key → 无签名/HWID 校验
+    # 必须有签名字段，否则拒绝（防止构造无签名 JSON 绕过校验）
     if "signature" not in lic:
-        _cached_license = lic
-        return lic
+        logger.warning("License rejected: missing signature field")
+        return None
 
     valid, reason = validate_license(lic)
     if not valid:

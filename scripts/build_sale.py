@@ -67,10 +67,14 @@ INTERNAL_FILES = [
     "scripts/provider_health_probe.py",
     "scripts/sample_and_compress.py",
     "scripts/patches/patch_enc_support.py",
+    ".plans",
+    "docs/business-plan.html",
 ]
 
 # 源码中需要脱敏的替换对 (relay 域名保留, 客户需要通过 relay 访问多模型)
-SANITIZE_PAIRS = []
+SANITIZE_PAIRS = [
+    ("docker-compose.yml", "C:\\Users\\leesu\\Desktop", "C:\\Users\\<username>\\Desktop"),
+]
 
 # install 脚本中仓库 URL 替换
 INSTALL_REPO_REPLACE = ("huakoh/BookwormPRO", "huakoh/bookwormpro-sale")
@@ -81,6 +85,8 @@ INSTALL_PYTHON_REPLACE_SH = ('PYTHON_VERSION="3.11"', 'PYTHON_VERSION="3.12"')
 # install 脚本默认分支替换 (sale 仓默认 master)
 INSTALL_BRANCH_REPLACE_PS1 = ('$Branch = "main"', '$Branch = "master"')
 INSTALL_BRANCH_REPLACE_SH = ('BRANCH="main"', 'BRANCH="master"')
+# install 脚本注释中 raw URL 分支替换
+INSTALL_URL_BRANCH_REPLACE = ("BookwormPRO/main/scripts", "bookwormpro-sale/master/scripts")
 
 
 def run(cmd, **kwargs):
@@ -196,6 +202,9 @@ def sanitize_files(workdir: Path, dry_run: bool = False):
         if f.exists():
             if dry_run:
                 print(f"  [dry-run] 会删除: {rel_path}")
+            elif f.is_dir():
+                shutil.rmtree(f)
+                print(f"  [del-dir] {rel_path}")
             else:
                 f.unlink()
                 print(f"  [del] {rel_path}")
@@ -218,6 +227,7 @@ def sanitize_files(workdir: Path, dry_run: bool = False):
             replacements = [
                 (INSTALL_REPO_REPLACE, "repo-url"),
             ]
+            replacements.append((INSTALL_URL_BRANCH_REPLACE, "url-branch"))
             if script_name.endswith(".ps1"):
                 replacements.append((INSTALL_PYTHON_REPLACE_PS1, "python-ver"))
                 replacements.append((INSTALL_BRANCH_REPLACE_PS1, "branch"))
@@ -321,36 +331,38 @@ def main():
         subprocess.run(f"git branch -D sale-build 2>{DEV_NULL}", shell=True, capture_output=True)
         run("git checkout -b sale-build")
 
-    step("3/6 脱敏")
-    sanitize_files(PROJECT_ROOT, args.dry_run)
+    try:
+        step("3/6 脱敏")
+        sanitize_files(PROJECT_ROOT, args.dry_run)
 
-    step("4/6 Cython 编译核心模块")
-    compiled = cython_compile(PROJECT_ROOT, COMPILE_TARGETS, args.dry_run)
-    print(f"\n  编译完成: {len(compiled)}/{len(COMPILE_TARGETS)} 个模块")
+        step("4/6 Cython 编译核心模块")
+        compiled = cython_compile(PROJECT_ROOT, COMPILE_TARGETS, args.dry_run)
+        print(f"\n  编译完成: {len(compiled)}/{len(COMPILE_TARGETS)} 个模块")
 
-    step("5/6 加密 SKILL.md 文件")
-    enc_count = encrypt_skills(PROJECT_ROOT, license_key, args.dry_run)
-    print(f"\n  加密完成: {enc_count} 个技能文件")
+        step("5/6 加密 SKILL.md 文件")
+        enc_count = encrypt_skills(PROJECT_ROOT, license_key, args.dry_run)
+        print(f"\n  加密完成: {enc_count} 个技能文件")
 
-    if not args.dry_run:
-        step("6/6 提交")
-        run("git add agent/ bwm_constants.py scripts/install.ps1 scripts/install.sh")
-        run("git add skills/ optional-skills/")
-        for f in INTERNAL_FILES:
-            if not (PROJECT_ROOT / f).exists():
-                subprocess.run(f"git rm --cached -f {f}", shell=True, capture_output=True)
-        run("git add -u")
-        run('git commit -m "chore: sale build — sanitized + compiled + encrypted"')
+        if not args.dry_run:
+            step("6/6 提交")
+            run("git add agent/ bwm_constants.py scripts/install.ps1 scripts/install.sh")
+            run("git add skills/ optional-skills/")
+            for f in INTERNAL_FILES:
+                if not (PROJECT_ROOT / f).exists():
+                    subprocess.run(f"git rm --cached -f {f}", shell=True, capture_output=True)
+            run("git add -u")
+            run('git commit -m "chore: sale build — sanitized + compiled + encrypted"')
 
-        if args.push:
-            print("\n  推送到 sale 仓...")
-            run(f"git push {SALE_REMOTE} sale-build:master --force-with-lease")
-            print("  [OK] sale 仓已更新")
-
-        run("git checkout main")
-        run("git branch -D sale-build")
-    else:
-        print("\n  [dry-run] 完成预览，未执行任何修改")
+            if args.push:
+                print("\n  推送到 sale 仓...")
+                run(f"git push {SALE_REMOTE} sale-build:master --force-with-lease")
+                print("  [OK] sale 仓已更新")
+        else:
+            print("\n  [dry-run] 完成预览，未执行任何修改")
+    finally:
+        if not args.dry_run:
+            subprocess.run("git checkout main", shell=True, capture_output=True)
+            subprocess.run("git branch -D sale-build", shell=True, capture_output=True)
 
     step("完成")
     print(f"  脱敏: {len(INTERNAL_FILES)} 文件 + {len(SANITIZE_PAIRS)} 处文本")
