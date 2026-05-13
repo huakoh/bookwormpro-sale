@@ -570,7 +570,11 @@ function Install-Dependencies {
         $pwd.Path | Set-Content -Path $pthFile -Encoding UTF8
     }
     # Safety net: ensure critical third-party deps are present
-    & $UvCmd pip install python-dotenv pyyaml rich httpx fire openai anthropic cryptography prompt_toolkit requests jinja2 pydantic tenacity edge-tts 2>&1 | Out-Null
+    try {
+        & $UvCmd pip install python-dotenv pyyaml rich httpx fire openai anthropic cryptography prompt_toolkit requests jinja2 pydantic tenacity edge-tts 2>&1 | Out-Null
+    } catch {
+        Write-Warn "Some dependencies may not have installed: $_"
+    }
 
     Write-Success "Main package installed"
     
@@ -935,10 +939,27 @@ function Main {
     
     Install-Repository
     Install-Venv
-    Install-Dependencies
-    Install-NodeDeps
+    # Environment vars and config FIRST — must succeed even if deps fail
     Set-PathVariable
     Copy-ConfigTemplates
+    # Dependencies are non-fatal — partial install is usable
+    try {
+        Install-Dependencies
+    } catch {
+        Write-Warn "Dependency install had errors: $_"
+        Write-Warn "You can fix later with: uv pip install --python .\venv\Scripts\python.exe -r requirements.txt"
+    }
+    Install-NodeDeps
+    # Create start.py fallback entry point (works even without editable install)
+    $startPy = "$InstallDir\start.py"
+    if (-not (Test-Path $startPy)) {
+        "import sys;sys.path.insert(0,r'$InstallDir');from bwm_cli.main import main;main()" | Set-Content -Path $startPy -Encoding UTF8
+    }
+    # Create bookworm.bat fallback (works even without console_scripts)
+    $batPath = "$InstallDir\bookworm.bat"
+    if (-not (Test-Path $batPath)) {
+        "@echo off`r`n`"%~dp0venv\Scripts\python.exe`" `"%~dp0start.py`" %*" | Set-Content -Path $batPath -Encoding ASCII
+    }
     Invoke-SetupWizard
     Start-GatewayIfConfigured
     
