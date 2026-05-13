@@ -28,6 +28,8 @@ INTERNAL_FILES = {
     "scripts/rebrand_docs.py", "scripts/rebrand_p0_p1.py",
     "scripts/discord-voice-doctor.py", "scripts/provider_health_probe.py",
     "scripts/sample_and_compress.py", "scripts/patches/patch_enc_support.py",
+    ".plans/openai-api-server.md", ".plans/streaming-support.md",
+    "docs/business-plan.html",
 }
 
 only_origin = origin - sale
