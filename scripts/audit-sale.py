@@ -18,6 +18,7 @@ INTERNAL_FILES = {
     "docs/BookwormPRO_v7_Architecture_Comparison.html",
     "docs/gateway-hardening.md", "docs/gateway-hardening-rollback.md",
     "docs/p2-1-god-class-split-plan.md", "docs/p2-2-layer-violation-plan.md",
+    "docs/business-plan.html", "docs/sale-distribution-guide.md",
     "scripts/generate_license.py", "scripts/build_sale.py",
     "scripts/publish-sale.ps1", "scripts/publish-sale.sh",
     "scripts/encrypt_skills.py", "scripts/trial_server.py",
@@ -27,8 +28,13 @@ INTERNAL_FILES = {
     "scripts/discord-voice-doctor.py", "scripts/provider_health_probe.py",
     "scripts/sample_and_compress.py", "scripts/patches/patch_enc_support.py",
     ".plans/openai-api-server.md", ".plans/streaming-support.md",
-    "docs/business-plan.html",
+    "task_plan.md", "progress.md", ".envrc",
 }
+
+# 被删除的目录前缀（tests/, plans/, hermes_agent.egg-info/ 等整个目录删除）
+INTERNAL_DIR_PREFIXES = (
+    "tests/", "plans/", "hermes_agent.egg-info/",
+)
 
 
 def git_files(ref):
@@ -58,7 +64,7 @@ def run_audit(origin_ref="HEAD", sale_ref="sale/master"):
     for f in only_origin:
         if f in COMPILE_TARGETS:
             expected_gone.add(f"[COMPILE] {f}")
-        elif f in INTERNAL_FILES:
+        elif f in INTERNAL_FILES or f.startswith(INTERNAL_DIR_PREFIXES):
             expected_gone.add(f"[INTERNAL] {f}")
         elif f.endswith("/SKILL.md"):
             expected_gone.add(f"[ENCRYPT] {f}")
