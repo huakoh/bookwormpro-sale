@@ -415,6 +415,18 @@ def main():
         print("  推送: sale/master ✓")
 
     if args.push and not args.dry_run:
+        # 更新 post-commit hook 基线标记
+        marker = PROJECT_ROOT / ".git" / "sale-last-build-commit"
+        try:
+            head = subprocess.run(
+                "git rev-parse HEAD", shell=True, capture_output=True, text=True,
+            ).stdout.strip()
+            if head:
+                marker.write_text(head)
+                print(f"  sale-sync 基线已更新: {head[:10]}")
+        except Exception:
+            pass
+
         step("7/7 后置审查")
         print("  获取 sale/master 最新状态...")
         subprocess.run(f"git fetch {SALE_REMOTE}", shell=True, capture_output=True)
