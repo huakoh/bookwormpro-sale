@@ -68,12 +68,27 @@ INTERNAL_FILES = [
     "scripts/sample_and_compress.py",
     "scripts/patches/patch_enc_support.py",
     ".plans",
+    "plans",
     "docs/business-plan.html",
+    "docs/sale-distribution-guide.md",
+    "task_plan.md",
+    "progress.md",
+    ".envrc",
+    "tests",
+    "hermes_agent.egg-info",
 ]
 
 # 源码中需要脱敏的替换对 (relay 域名保留, 客户需要通过 relay 访问多模型)
 SANITIZE_PAIRS = [
     ("docker-compose.yml", "C:\\Users\\leesu\\Desktop", "C:\\Users\\<username>\\Desktop"),
+    ("README.md", "huakoh/BookwormPRO.git", "huakoh/bookwormpro-sale.git"),
+    ("README.md", "huakoh/BookwormPRO/main", "huakoh/bookwormpro-sale/master"),
+]
+
+# golden-set.json 中需要脱敏的 PII 模式
+GOLDEN_SET_PII_REPLACEMENTS = [
+    ("梁雄新", "user-001"),
+    ("E:\\\\test资料", "E:\\\\sample-data"),
 ]
 
 # install 脚本中仓库 URL 替换
@@ -246,6 +261,31 @@ def sanitize_files(workdir: Path, dry_run: bool = False):
                         print(f"  [{label}] {script_name}")
             if changed and not dry_run:
                 f.write_text(content, encoding="utf-8")
+
+    # golden-set.json PII 脱敏
+    gs = workdir / "routing" / "golden-set.json"
+    if gs.exists() and GOLDEN_SET_PII_REPLACEMENTS:
+        content = gs.read_text(encoding="utf-8")
+        changed = False
+        for old_pii, new_pii in GOLDEN_SET_PII_REPLACEMENTS:
+            if old_pii in content:
+                content = content.replace(old_pii, new_pii)
+                changed = True
+                if not dry_run:
+                    print(f"  [pii] golden-set.json: {old_pii[:4]}*** -> {new_pii}")
+        if changed and not dry_run:
+            gs.write_text(content, encoding="utf-8")
+
+    # GitHub Actions workflow 仓库名替换
+    wf_dir = workdir / ".github" / "workflows"
+    if wf_dir.exists():
+        for wf in wf_dir.glob("*.yml"):
+            content = wf.read_text(encoding="utf-8")
+            if "huakoh/BookwormPRO'" in content or 'huakoh/BookwormPRO"' in content:
+                new_content = content.replace("huakoh/BookwormPRO", "huakoh/bookwormpro-sale")
+                if new_content != content and not dry_run:
+                    wf.write_text(new_content, encoding="utf-8")
+                    print(f"  [sanitize] .github/workflows/{wf.name}")
 
 
 def _find_all_skill_files(root: Path) -> list[Path]:
