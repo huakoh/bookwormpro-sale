@@ -40,7 +40,7 @@ def _load_ensure_ssl():
                 return
     """)
     mod = ModuleType("_ssl_helper")
-    exec(code, mod.__dict__)
+    exec(code, mod.__dict__)  # nosec B102 - test loads ssl_certs module via exec to isolate fixture
     return mod._ensure_ssl_certs
 
 

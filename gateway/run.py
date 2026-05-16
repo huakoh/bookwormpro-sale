@@ -1103,11 +1103,11 @@ class GatewayRunner:
                 "api_mode": override.get("api_mode"),
             }
             if override_runtime.get("api_key"):
-                logger.debug(
-                    "Session model override (fast): session=%s config_model=%s -> override_model=%s provider=%s",
-                    (resolved_session_key or "")[:30], model, override_model,
-                    override_runtime.get("provider"),
-                )
+                if override_model != model:
+                    logger.info(
+                        "model_override: %s -> %s (session=%s)",
+                        model, override_model, (resolved_session_key or "")[:30],
+                    )
                 return override_model, override_runtime
             # Override exists but has no api_key — fall through to env-based
             # resolution and apply model/provider from the override on top.
@@ -1117,15 +1117,18 @@ class GatewayRunner:
             )
         else:
             logger.debug(
-                "No session model override: session=%s config_model=%s override_keys=%s",
+                "No session model override: session=%s config_model=%s",
                 (resolved_session_key or "")[:30], model,
-                list(self._session_model_overrides.keys())[:5] if self._session_model_overrides else "[]",
             )
 
         runtime_kwargs = _resolve_runtime_agent_kwargs()
         if override and resolved_session_key:
             model, runtime_kwargs = self._apply_session_model_override(
                 resolved_session_key, model, runtime_kwargs
+            )
+            logger.info(
+                "model_override (no-key fallback): %s (session=%s)",
+                model, (resolved_session_key or "")[:30],
             )
 
         # When the config has no model.default but a provider was resolved
@@ -5769,6 +5772,10 @@ class GatewayRunner:
             "base_url": result.base_url,
             "api_mode": result.api_mode,
         }
+        logger.info(
+            "model_switch stored: %s via %s (session=%s)",
+            result.new_model, result.target_provider, (session_key or "")[:30],
+        )
 
         # Evict cached agent so the next turn creates a fresh agent from the
         # override rather than relying on cache signature mismatch detection.
@@ -9905,6 +9912,10 @@ class GatewayRunner:
                     logger.debug("interim_assistant_callback error: %s", _e)
 
             turn_route = self._resolve_turn_agent_config(message, model, runtime_kwargs)
+            logger.debug(
+                "turn_config: model=%s provider=%s",
+                turn_route["model"], turn_route["runtime"].get("provider"),
+            )
 
             # Check agent cache — reuse the AIAgent from the previous message
             # in this session to preserve the frozen system prompt and tool

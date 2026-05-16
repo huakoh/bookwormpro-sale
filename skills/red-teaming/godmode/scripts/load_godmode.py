@@ -23,10 +23,13 @@ _gm_old_argv = sys.argv
 sys.argv = ["_godmode_loader"]
 
 def _gm_load(path):
+    # Intentional exec: load a known godmode skill script into a fresh namespace.
+    # 'path' is restricted to a hardcoded list (parseltongue/godmode_race/auto_jailbreak).
+    # Reviewed 2026-05-14 (audit-baseline-2026-05-14): bandit B102 acknowledged.
     ns = dict(globals())
     ns["__name__"] = "_godmode_module"
     ns["__file__"] = str(path)
-    exec(compile(open(path).read(), str(path), 'exec'), ns)
+    exec(compile(open(path).read(), str(path), 'exec'), ns)  # nosec B102 - intentional skill loader
     return ns
 
 for _gm_script in ["parseltongue.py", "godmode_race.py", "auto_jailbreak.py"]:

@@ -532,13 +532,20 @@ def resolve_custom_provider(
     name: str,
     custom_providers: Optional[List[Dict[str, Any]]],
 ) -> Optional[ProviderDef]:
-    """Resolve a provider from the user's config.yaml ``custom_providers`` list."""
+    """Resolve a provider from the user's config.yaml ``custom_providers`` list.
+
+    Handles both full entry names (``中转站 — gpt-5.4-pro``) and grouped
+    slugs produced by the model picker (``custom:中转站``, ``custom:中转站-2``).
+    """
     if not custom_providers or not isinstance(custom_providers, list):
         return None
 
     requested = (name or "").strip().lower()
     if not requested:
         return None
+
+    import re
+    base_requested = re.sub(r"-\d+$", "", requested)
 
     for entry in custom_providers:
         if not isinstance(entry, dict):
@@ -555,12 +562,30 @@ def resolve_custom_provider(
             continue
 
         slug = custom_provider_slug(display_name)
-        if requested not in {display_name.lower(), slug}:
+
+        grouped_name = display_name
+        for sep in ("—", " - "):
+            if sep in grouped_name:
+                grouped_name = grouped_name.split(sep)[0].strip()
+                break
+        grouped_slug = custom_provider_slug(grouped_name)
+
+        candidates = {
+            display_name.lower(),
+            slug,
+            grouped_name.lower(),
+            grouped_slug,
+        }
+        if requested not in candidates and base_requested not in candidates:
             continue
 
+        matched_via_group = (
+            requested in {grouped_name.lower(), grouped_slug}
+            or base_requested in {grouped_name.lower(), grouped_slug}
+        )
         return ProviderDef(
-            id=slug,
-            name=display_name,
+            id=grouped_slug if matched_via_group else slug,
+            name=grouped_name if matched_via_group else display_name,
             transport="openai_chat",
             api_key_env_vars=(),
             base_url=api_url,

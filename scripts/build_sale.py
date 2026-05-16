@@ -267,6 +267,7 @@ def encrypt_skills(workdir: Path, license_key: str, dry_run: bool = False) -> in
 
     skill_files = _find_all_skill_files(workdir)
     encrypted = 0
+    batch_salt = os.urandom(16)
 
     for skill_md in skill_files:
         rel = skill_md.relative_to(workdir)
@@ -280,7 +281,7 @@ def encrypt_skills(workdir: Path, license_key: str, dry_run: bool = False) -> in
                 encrypted += 1
                 continue
 
-            enc_data = encrypt_skill(plaintext, license_key)
+            enc_data = encrypt_skill(plaintext, license_key, salt=batch_salt)
             enc_path = skill_md.parent / "SKILL.skill.enc"
             enc_path.write_bytes(enc_data)
             skill_md.unlink()
@@ -331,6 +332,8 @@ def main():
         subprocess.run(f"git branch -D sale-build 2>{DEV_NULL}", shell=True, capture_output=True)
         run("git checkout -b sale-build")
 
+    compiled = []
+    enc_count = 0
     try:
         step("3/6 脱敏")
         sanitize_files(PROJECT_ROOT, args.dry_run)
@@ -349,7 +352,7 @@ def main():
             run("git add skills/ optional-skills/")
             for f in INTERNAL_FILES:
                 if not (PROJECT_ROOT / f).exists():
-                    subprocess.run(f"git rm --cached -f {f}", shell=True, capture_output=True)
+                    subprocess.run(["git", "rm", "--cached", "-rf", f], capture_output=True)
             run("git add -u")
             run('git commit -m "chore: sale build — sanitized + compiled + encrypted"')
 
@@ -369,7 +372,26 @@ def main():
     print(f"  编译: {len(compiled)} 个 .pyd/.so")
     print(f"  加密: {enc_count} 个 SKILL.md → .skill.enc")
     if args.push:
-        print("  推送: sale/main ✓")
+        print("  推送: sale/master ✓")
+
+    if args.push and not args.dry_run:
+        step("7/7 后置审查")
+        print("  获取 sale/master 最新状态...")
+        subprocess.run(f"git fetch {SALE_REMOTE}", shell=True, capture_output=True)
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(
+                "audit_sale", PROJECT_ROOT / "scripts" / "audit-sale.py",
+            )
+            audit = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(audit)
+            verdict, lines, ug, un = audit.run_audit("HEAD", f"{SALE_REMOTE}/master")
+            for line in lines:
+                print(line)
+            if verdict != "PASS":
+                print(f"\n  [WARN] 审查未通过 — {len(ug)} 非预期丢失, {len(un)} 非预期新增")
+        except Exception as e:
+            print(f"  [skip] 审查模块加载失败: {e}")
 
 
 if __name__ == "__main__":

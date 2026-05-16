@@ -8686,6 +8686,11 @@ class HermesCLI:
                 if _msn:
                     agent_message = _msn + "\n\n" + agent_message
                     self._pending_model_switch_note = None
+                if getattr(self.agent, 'model', None) != self.model:
+                    logging.getLogger(__name__).warning(
+                        "model drift: agent=%s cli=%s",
+                        getattr(self.agent, 'model', '?'), self.model,
+                    )
                 try:
                     result = self.agent.run_conversation(
                         user_message=agent_message,

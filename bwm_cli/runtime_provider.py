@@ -397,6 +397,11 @@ def _get_named_custom_provider(requested_provider: str) -> Optional[Dict[str, An
     if not custom_providers:
         return None
 
+    # When matching via provider_key (grouped), prefer entry whose model
+    # matches config model.default; otherwise first match wins.
+    default_model = str((config.get("model") or {}).get("default", "") or "").strip()
+    fallback_match = None
+
     for entry in custom_providers:
         if not isinstance(entry, dict):
             continue
@@ -425,11 +430,20 @@ def _get_named_custom_provider(requested_provider: str) -> Optional[Dict[str, An
         if api_mode:
             result["api_mode"] = api_mode
         model_name = str(entry.get("model", "") or "").strip()
-        if model_name:
-            result["model"] = model_name
-        return result
 
-    return None
+        # Exact name match → propagate entry model, return immediately
+        if requested_norm in {name_norm, menu_key}:
+            if model_name:
+                result["model"] = model_name
+            return result
+        # provider_key (grouped) match → do NOT propagate entry model,
+        # let session override / config default decide the model
+        if fallback_match is None:
+            fallback_match = result
+        if default_model and model_name == default_model:
+            return result
+
+    return fallback_match
 
 
 def _resolve_named_custom_runtime(
@@ -753,6 +767,8 @@ def resolve_runtime_provider(
     )
     if custom_runtime:
         custom_runtime["requested_provider"] = requested_provider
+        if target_model:
+            custom_runtime["model"] = target_model
         return custom_runtime
 
     provider = resolve_provider(

@@ -1,0 +1,229 @@
+name: Build Sale (Dual Platform)
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_push:
+        description: "Skip pushing to sale repo (dry run)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            ext: pyd
+          - os: ubuntu-latest
+            ext: so
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build deps
+        run: pip install cython setuptools
+
+      - name: Compile core modules
+        shell: python
+        run: |
+          import subprocess, sys
+          from pathlib import Path
+
+          TARGETS = [
+              "agent/prompt_builder.py",
+              "agent/skill_preprocessing.py",
+              "agent/context_compressor.py",
+              "agent/prompt_caching.py",
+              "agent/redact.py",
+              "agent/skill_crypto.py",
+          ]
+
+          for rel in TARGETS:
+              src = Path(rel)
+              if not src.exists():
+                  print(f"[skip] {rel}")
+                  continue
+              module_name = src.stem
+              setup_py = Path("_cython_setup.py")
+              setup_py.write_text(f'''
+          from setuptools import setup, Extension
+          from Cython.Build import cythonize
+          setup(ext_modules=cythonize(
+              Extension("{rel.replace('/', '.').removesuffix('.py')}",
+                        ["{rel}"]),
+              language_level="3",
+          ))
+          ''')
+              r = subprocess.run([sys.executable, str(setup_py), "build_ext", "--inplace"],
+                                 capture_output=True, text=True, timeout=120)
+              setup_py.unlink(missing_ok=True)
+              if r.returncode != 0:
+                  print(f"[FAIL] {rel}: {r.stderr[-200:]}")
+                  sys.exit(1)
+              found = list(src.parent.glob(f"{module_name}*.${{ matrix.ext }}"))
+              if found:
+                  print(f"[OK] {found[0].name}")
+              else:
+                  print(f"[FAIL] {rel}: no .${{ matrix.ext }} produced")
+                  sys.exit(1)
+
+          import shutil
+          shutil.rmtree("build", ignore_errors=True)
+
+      - name: Upload compiled artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-${{ matrix.ext }}
+          path: agent/*.${{ matrix.ext }}
+          retention-days: 1
+
+  assemble:
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install cryptography
+
+      - name: Download .pyd artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-pyd
+          path: agent/
+
+      - name: Download .so artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: compiled-so
+          path: agent/
+
+      - name: Sanitize + Encrypt + Commit
+        env:
+          LICENSE_KEY: ${{ secrets.BOOKWORMPRO_LICENSE_KEY }}
+        shell: python
+        run: |
+          import json, os, struct, hashlib, subprocess, sys
+          from pathlib import Path
+
+          if not os.environ.get("LICENSE_KEY"):
+              print("[ERROR] BOOKWORMPRO_LICENSE_KEY secret not set")
+              sys.exit(1)
+
+          root = Path(".")
+
+          # --- Sanitize: remove internal files ---
+          INTERNAL = [
+              ".bookworm-progress.md", "findings.md", "apply_audit_fixes.py",
+              "bookworm-already-has-routines.md",
+              "docs/audit-sprint-2026-05-06.md",
+              "docs/BookwormPRO_v7_Architecture_Comparison.html",
+              "docs/gateway-hardening.md", "docs/gateway-hardening-rollback.md",
+              "docs/p2-1-god-class-split-plan.md", "docs/p2-2-layer-violation-plan.md",
+              "scripts/generate_license.py", "scripts/build_sale.py",
+              "scripts/publish-sale.ps1", "scripts/publish-sale.sh",
+              "scripts/encrypt_skills.py", "scripts/trial_server.py",
+              "scripts/contributor_audit.py", "scripts/hermes_audit.py",
+              "scripts/release.py", "scripts/rebrand_hermes_to_bookworm.py",
+              "scripts/rebrand_docs.py", "scripts/rebrand_p0_p1.py",
+              "scripts/discord-voice-doctor.py", "scripts/provider_health_probe.py",
+              "scripts/sample_and_compress.py", "scripts/patches/patch_enc_support.py",
+              ".plans", "docs/business-plan.html",
+          ]
+          import shutil
+          for f in INTERNAL:
+              p = root / f
+              if p.is_dir():
+                  shutil.rmtree(p)
+                  print(f"[del-dir] {f}")
+              elif p.exists():
+                  p.unlink()
+                  print(f"[del] {f}")
+
+          # --- Remove compiled .py source (both .pyd and .so now exist) ---
+          COMPILE_TARGETS = [
+              "agent/prompt_builder.py", "agent/skill_preprocessing.py",
+              "agent/context_compressor.py", "agent/prompt_caching.py",
+              "agent/redact.py", "agent/skill_crypto.py",
+          ]
+          for t in COMPILE_TARGETS:
+              p = root / t
+              if p.exists():
+                  p.unlink()
+                  print(f"[del-src] {t}")
+
+          # --- Fix install scripts ---
+          for script in ["scripts/install.ps1", "scripts/install.sh"]:
+              p = root / script
+              if not p.exists():
+                  continue
+              content = p.read_text()
+              content = content.replace("huakoh/BookwormPRO", "huakoh/bookwormpro-sale")
+              content = content.replace("BookwormPRO/main/scripts", "bookwormpro-sale/master/scripts")
+              if script.endswith(".ps1"):
+                  content = content.replace('$PythonVersion = "3.11"', '$PythonVersion = "3.12"')
+                  content = content.replace('$Branch = "main"', '$Branch = "master"')
+              else:
+                  content = content.replace('PYTHON_VERSION="3.11"', 'PYTHON_VERSION="3.12"')
+                  content = content.replace('BRANCH="main"', 'BRANCH="master"')
+              p.write_text(content)
+              print(f"[fix] {script}")
+
+          # --- Encrypt skills ---
+          sys.path.insert(0, ".")
+          from agent.skill_crypto import encrypt_skill
+          license_key = os.environ["LICENSE_KEY"]
+          batch_salt = os.urandom(16)
+          enc_count = 0
+          for subdir in ["skills", "optional-skills"]:
+              base = root / subdir
+              if not base.exists():
+                  continue
+              for skill_md in base.rglob("SKILL.md"):
+                  text = skill_md.read_text("utf-8").strip()
+                  if not text:
+                      continue
+                  enc_data = encrypt_skill(text, license_key, salt=batch_salt)
+                  enc_path = skill_md.parent / "SKILL.skill.enc"
+                  enc_path.write_bytes(enc_data)
+                  skill_md.unlink()
+                  enc_count += 1
+          print(f"[enc] {enc_count} skills encrypted")
+
+          # --- List what we have ---
+          pyd = list(Path("agent").glob("*.pyd"))
+          so = list(Path("agent").glob("*.so"))
+          print(f"[artifacts] {len(pyd)} .pyd + {len(so)} .so")
+
+      - name: Push to sale repo
+        if: ${{ !inputs.skip_push }}
+        env:
+          SALE_TOKEN: ${{ secrets.SALE_REPO_TOKEN }}
+        run: |
+          git config user.name "BookwormPRO CI"
+          git config user.email "ci@bookwormpro.local"
+          git remote add sale "https://x-access-token:${SALE_TOKEN}@github.com/huakoh/bookwormpro-sale.git" 2>/dev/null || true
+          git fetch sale
+          git add -A
+          git commit -m "chore: sale build (dual platform) — win .pyd + linux .so"
+          git push sale HEAD:master --force
+
+      - name: Summary
+        run: |
+          echo "### Sale Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- .pyd files: $(find agent -name '*.pyd' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- .so files: $(find agent -name '*.so' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- .skill.enc files: $(find skills optional-skills -name '*.skill.enc' 2>/dev/null | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- Push: ${{ inputs.skip_push && 'skipped' || 'done' }}" >> $GITHUB_STEP_SUMMARY

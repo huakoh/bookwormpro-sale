@@ -202,7 +202,10 @@ def verify_license_signature(lic: dict, public_key_b64: str | None = None) -> bo
         sig = base64.b64decode(lic["signature"])
         public_key.verify(sig, payload)
         return True
-    except (InvalidSignature, Exception):
+    except InvalidSignature:
+        return False
+    except Exception as e:
+        logger.warning("Signature verification error: %s", e)
         return False
 
 
@@ -247,11 +250,15 @@ def _derive_key(license_key: str, salt: bytes) -> bytes:
     )
 
 
-def encrypt_skill(plaintext: str, license_key: str) -> bytes:
-    """Encrypt a SKILL.md content string. Returns binary .skill.enc payload."""
+def encrypt_skill(plaintext: str, license_key: str, salt: bytes | None = None) -> bytes:
+    """Encrypt a SKILL.md content string. Returns binary .skill.enc payload.
+
+    Pass a shared `salt` across batch encrypts so decryption only derives the key once.
+    """
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-    salt = os.urandom(_SALT_LEN)
+    if salt is None:
+        salt = os.urandom(_SALT_LEN)
     nonce = os.urandom(_NONCE_LEN)
     key = _derive_key(license_key, salt)
 

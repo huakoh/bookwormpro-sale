@@ -9,7 +9,7 @@ Write-Host ""
 
 if (-not (Test-Path $InstallDir)) {
     Write-Host "  [FAIL] BookwormPRO not installed at $InstallDir" -ForegroundColor Red
-    Read-Host "  Press Enter to exit"
+    if ([Environment]::UserInteractive) { Read-Host "  Press Enter to exit" }
     exit 1
 }
 
@@ -22,12 +22,23 @@ try {
 } catch {
     Write-Host "  [FAIL] $_" -ForegroundColor Red
     Pop-Location
-    Read-Host "  Press Enter to exit"
+    if ([Environment]::UserInteractive) { Read-Host "  Press Enter to exit" }
     exit 1
 }
 Pop-Location
 
-Write-Host "  [2/3] Syncing skills..." -ForegroundColor Yellow
+Write-Host "  [2/4] Updating dependencies..." -ForegroundColor Yellow
+Push-Location $InstallDir
+try {
+    & python -m pip install -r requirements.txt --quiet 2>&1 | ForEach-Object { Write-Host "    $_" }
+    Write-Host "  [OK] Dependencies up to date" -ForegroundColor Green
+} catch {
+    Write-Host "  [WARN] Dependency update failed: $_" -ForegroundColor Yellow
+    Write-Host "         Run manually: pip install -r requirements.txt" -ForegroundColor Yellow
+}
+Pop-Location
+
+Write-Host "  [3/4] Syncing skills..." -ForegroundColor Yellow
 if (-not (Test-Path $SkillsDest)) { New-Item -ItemType Directory -Path $SkillsDest -Force | Out-Null }
 Copy-Item -Recurse -Force "$InstallDir\skills\*" $SkillsDest -ErrorAction SilentlyContinue
 if (Test-Path "$InstallDir\optional-skills") {
@@ -36,8 +47,8 @@ if (Test-Path "$InstallDir\optional-skills") {
 $encCount = (Get-ChildItem $SkillsDest -Recurse -Filter "*.enc" -ErrorAction SilentlyContinue).Count
 Write-Host "  [OK] $encCount encrypted skills synced" -ForegroundColor Green
 
-Write-Host "  [3/3] Done!" -ForegroundColor Green
+Write-Host "  [4/4] Done!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Restart bookworm to apply changes." -ForegroundColor Cyan
 Write-Host ""
-Read-Host "  Press Enter to exit"
+if ([Environment]::UserInteractive) { Read-Host "  Press Enter to exit" }
