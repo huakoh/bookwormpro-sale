@@ -35,7 +35,7 @@ services:
       # Host bridge: expose the user's Desktop and a generic workspace into the
       # container so the agent can read/write/delete real local files (no longer
       # purely server-side-sandboxed). Override paths via .env on host:
-      #   HOST_DESKTOP=C:\Users\leesu\Desktop      (Windows / Docker Desktop)
+      #   HOST_DESKTOP=C:\Users\<username>\Desktop      (Windows / Docker Desktop)
       #   HOST_DESKTOP=/Users/<you>/Desktop        (macOS)
       #   HOST_DESKTOP=/home/<you>/Desktop         (Linux)
       #   HOST_WORKSPACE=D:\repos                  (any project root)

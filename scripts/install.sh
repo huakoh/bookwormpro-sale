@@ -6,7 +6,7 @@
 # Uses uv for desktop/server installs and Python's stdlib venv + pip on Termux.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.sh | bash
 #
 # Or with options:
 #   curl -fsSL ... | bash -s -- --no-venv --skip-setup
@@ -26,17 +26,17 @@ NC='\033[0m' # No Color
 BOLD='\033[1m'
 
 # Configuration
-REPO_URL_SSH="git@github.com:huakoh/BookwormPRO.git"
-REPO_URL_HTTPS="https://github.com/huakoh/BookwormPRO.git"
+REPO_URL_SSH="git@github.com:huakoh/bookwormpro-sale.git"
+REPO_URL_HTTPS="https://github.com/huakoh/bookwormpro-sale.git"
 BOOKWORMPRO_HOME="${BOOKWORMPRO_HOME:-$HOME/.bookwormpro}"
 INSTALL_DIR="${BOOKWORMPRO_INSTALL_DIR:-$BOOKWORMPRO_HOME/bookwormpro}"
-PYTHON_VERSION="3.11"
+PYTHON_VERSION="3.12"
 NODE_VERSION="22"
 
 # Options
 USE_VENV=true
 RUN_SETUP=true
-BRANCH="main"
+BRANCH="master"
 
 # Detect non-interactive mode (e.g. curl | bash)
 # When stdin is not a terminal, read -p will fail with EOF,
@@ -217,7 +217,7 @@ detect_os() {
             OS="windows"
             DISTRO="windows"
             log_error "Windows detected. Please use the PowerShell installer:"
-            log_info "  irm https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.ps1 | iex"
+            log_info "  irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/main/scripts/install.ps1 | iex"
             exit 1
             ;;
         *)

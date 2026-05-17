@@ -28,7 +28,7 @@ $ErrorActionPreference = "Stop"
 
 $RepoUrlSsh = "git@github.com:huakoh/bookwormpro-sale.git"
 $RepoUrlHttps = "https://github.com/huakoh/bookwormpro-sale.git"
-$PythonVersion = "3.11"
+$PythonVersion = "3.12"
 $NodeVersion = "22"
 
 # ============================================================================

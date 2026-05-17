@@ -170,7 +170,7 @@ jobs:
               if not p.exists():
                   continue
               content = p.read_text()
-              content = content.replace("huakoh/BookwormPRO", "huakoh/bookwormpro-sale")
+              content = content.replace("huakoh/bookwormpro-sale", "huakoh/bookwormpro-sale")
               content = content.replace("BookwormPRO/main/scripts", "bookwormpro-sale/master/scripts")
               if script.endswith(".ps1"):
                   content = content.replace('$PythonVersion = "3.11"', '$PythonVersion = "3.12"')

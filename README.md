@@ -48,7 +48,7 @@ pip install "bookwormpro[web]"        # bookworm dashboard (localhost SPA)
 ### Option 2: install script
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/huakoh/BookwormPRO/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.sh | bash
 ```
 
 Works on Linux, macOS, WSL2, and Android via Termux. The installer handles the platform-specific setup for you.
@@ -74,7 +74,7 @@ project files instead of an isolated sandbox.
 **Linux / macOS / WSL:**
 
 ```bash
-git clone https://github.com/huakoh/BookwormPRO.git
+git clone https://github.com/huakoh/bookwormpro-sale.git
 cd BookwormPRO
 ./scripts/setup-host-bridge.sh    # writes .env with detected host paths
 docker compose up -d --build
@@ -83,7 +83,7 @@ docker compose up -d --build
 **Windows (Docker Desktop):**
 
 ```powershell
-git clone https://github.com/huakoh/BookwormPRO.git
+git clone https://github.com/huakoh/bookwormpro-sale.git
 cd BookwormPRO
 .\scripts\setup-host-bridge.ps1
 docker compose up -d --build
@@ -198,7 +198,7 @@ We welcome contributions! See the [Contributing Guide](https://bookwormpro.local
 Quick start for contributors — clone and go with `setup-bookworm.sh`:
 
 ```bash
-git clone https://github.com/huakoh/BookwormPRO.git
+git clone https://github.com/huakoh/bookwormpro-sale.git
 cd bookwormpro
 ./setup-bookworm.sh     # installs uv, creates venv, installs .[all], symlinks ~/.local/bin/bookworm
 ./bookworm              # auto-detects the venv, no need to `source` first
