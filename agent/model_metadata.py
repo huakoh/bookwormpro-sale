@@ -101,6 +101,8 @@ def _strip_provider_prefix(model: str) -> str:
 _model_metadata_cache: Dict[str, Dict[str, Any]] = {}
 _model_metadata_cache_time: float = 0
 _MODEL_CACHE_TTL = 3600
+_MODEL_FETCH_FAIL_BACKOFF = 60  # 失败后冷却秒数，避免无网络时高频重试
+_model_metadata_consecutive_failures: int = 0
 _endpoint_model_metadata_cache: Dict[str, Dict[str, Dict[str, Any]]] = {}
 _endpoint_model_metadata_cache_time: Dict[str, float] = {}
 _ENDPOINT_MODEL_CACHE_TTL = 300
@@ -509,10 +511,14 @@ def _add_model_aliases(cache: Dict[str, Dict[str, Any]], model_id: str, entry: D
 
 def fetch_model_metadata(force_refresh: bool = False) -> Dict[str, Dict[str, Any]]:
     """Fetch model metadata from OpenRouter (cached for 1 hour)."""
-    global _model_metadata_cache, _model_metadata_cache_time
+    global _model_metadata_cache, _model_metadata_cache_time, _model_metadata_consecutive_failures
 
-    if not force_refresh and _model_metadata_cache and (time.time() - _model_metadata_cache_time) < _MODEL_CACHE_TTL:
-        return _model_metadata_cache
+    # 负缓存: 连续失败时按指数退避冷却，避免无网络时高频重试
+    backoff = min(_MODEL_FETCH_FAIL_BACKOFF * (2 ** min(_model_metadata_consecutive_failures, 6)), 3600)
+    cache_ttl = _MODEL_CACHE_TTL if _model_metadata_consecutive_failures == 0 else backoff
+
+    if not force_refresh and _model_metadata_cache_time > 0 and (time.time() - _model_metadata_cache_time) < cache_ttl:
+        return _model_metadata_cache or {}
 
     try:
         response = requests.get(OPENROUTER_MODELS_URL, timeout=10, verify=_resolve_requests_verify())
@@ -535,11 +541,17 @@ def fetch_model_metadata(force_refresh: bool = False) -> Dict[str, Dict[str, Any
 
         _model_metadata_cache = cache
         _model_metadata_cache_time = time.time()
+        _model_metadata_consecutive_failures = 0
         logger.debug("Fetched metadata for %s models from OpenRouter", len(cache))
         return cache
 
     except Exception as e:
-        logging.warning(f"Failed to fetch model metadata from OpenRouter: {e}")
+        _model_metadata_consecutive_failures += 1
+        _model_metadata_cache_time = time.time()
+        if _model_metadata_consecutive_failures <= 2:
+            logging.warning(f"Failed to fetch model metadata from OpenRouter: {e}")
+        else:
+            logging.debug(f"Failed to fetch model metadata from OpenRouter (attempt {_model_metadata_consecutive_failures}): {e}")
         return _model_metadata_cache or {}
 
 

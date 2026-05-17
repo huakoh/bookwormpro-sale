@@ -11365,23 +11365,76 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     return True
 
 
+def _wait_for_network(timeout: int = 60) -> bool:
+    """Block until basic internet is reachable, or timeout expires.
+
+    Tries connecting to common DNS/HTTPS endpoints. Returns True if
+    network is available, False if timed out. Used by gateway startup
+    to avoid entering the main loop when VPN/proxy is not yet ready.
+    """
+    import socket
+    targets = [("1.1.1.1", 443), ("8.8.8.8", 53), ("223.5.5.5", 53)]
+    deadline = time.time() + timeout
+    attempt = 0
+    while time.time() < deadline:
+        for host, port in targets:
+            try:
+                s = socket.create_connection((host, port), timeout=3)
+                s.close()
+                if attempt > 0:
+                    logging.info("Network ready after %d attempts", attempt)
+                return True
+            except OSError:
+                continue
+        attempt += 1
+        remaining = deadline - time.time()
+        if remaining > 0:
+            time.sleep(min(5, remaining))
+    return False
+
+
+def _setup_file_logging() -> None:
+    """Add a RotatingFileHandler so logs persist even under pythonw.exe."""
+    from logging.handlers import RotatingFileHandler
+    try:
+        from bwm_constants import get_hermes_home
+        log_dir = Path(get_hermes_home()) / "logs"
+    except ImportError:
+        log_dir = Path.home() / ".bookwormpro" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    handler = RotatingFileHandler(
+        log_dir / "gateway.log", maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
+    )
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    logging.getLogger().addHandler(handler)
+
+
 def main():
     """CLI entry point for the gateway."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="BookwormPRO Gateway - Multi-platform messaging")
     parser.add_argument("--config", "-c", help="Path to gateway config file")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
-    
+    parser.add_argument("--no-network-wait", action="store_true", help="Skip network readiness check")
+
     args = parser.parse_args()
-    
+
+    _setup_file_logging()
+
+    if not args.no_network_wait:
+        if not _wait_for_network(timeout=90):
+            logging.error("Network not available after 90s — exiting for retry")
+            sys.exit(1)
+
     config = None
     if args.config:
         import yaml
         with open(args.config, encoding="utf-8") as f:
             data = yaml.safe_load(f)
             config = GatewayConfig.from_dict(data)
-    
+
     # Run the gateway - exit with code 1 if no platforms connected,
     # so systemd Restart=on-failure will retry on transient errors (e.g. DNS)
     success = asyncio.run(start_gateway(config))
