@@ -1,0 +1,1302 @@
+{
+  "version": "v7.0",
+  "generated": "2026-05-01T13:57:31.159Z",
+  "entries": [
+    {
+      "query": "E:\\test资料，现在根据拜访记录汇报内容2026-01-01~2026-01-31(1).xlsx的时间/地市为准确信息，对梁雄新-电话清单(20260101--20260131）.xlsx对应时间的地市/通讯类型/套餐名称进行对应修改，不增加不删减原则。只是修正梁雄新-电话清单(20260101--20260131）.xlsx的信息，让它能与拜访记录汇报内容2026-01-01~2026-0",
+      "expectedSkill": "data-analyst-expert",
+      "source": "feedback-correction"
+    },
+    {
+      "query": "整个系统的工作逻辑，调用产品架构专家分析，还有更好的建议吗",
+      "expectedSkill": "architect-expert",
+      "source": "feedback-correction"
+    },
+    {
+      "query": "不使用机场的话，如何通过clash verge+静态住宅IP实现中国——日本的翻墙上网？",
+      "expectedSkill": "devops-expert",
+      "source": "feedback-correction"
+    },
+    {
+      "query": " ⎿  Authentication successful, but server reconnection failed. You may need to manually restart Claude Code for the changes to take effect.已更新token还失败，查找原因",
+      "expectedSkill": "debugger-expert",
+      "source": "feedback-correction"
+    },
+    {
+      "query": "> /mcp\n  ⎿  Authentication successful, but server reconnection failed. You may need to manually restart Claude Code for the\n     changes to take effect.\n\n──────────────────────────────────────────────",
+      "expectedSkill": "debugger-expert",
+      "source": "feedback-correction"
+    },
+    {
+      "query": "在bookworm系统中清理screenpipe所有信息",
+      "expectedSkill": "browser-automation-expert",
+      "source": "feedback-correction"
+    },
+    {
+      "query": "将上下文设置拉到最高上限",
+      "expectedSkill": "planning-with-files",
+      "source": "feedback-correction"
+    },
+    {
+      "query": "config",
+      "expectedSkill": "planning-with-files",
+      "source": "feedback-correction"
+    },
+    {
+      "query": "PyTorch 模型训练 loss 不收敛怎么办",
+      "expectedSkill": "ai-ml-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "深度学习神经网络训练",
+      "expectedSkill": "ai-ml-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "LLM 大语言模型 RAG 检索增强",
+      "expectedSkill": "ai-ml-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Angular 组件懒加载 NgModule",
+      "expectedSkill": "angular-architect",
+      "source": "synthetic"
+    },
+    {
+      "query": "Angular 依赖注入 RxJS",
+      "expectedSkill": "angular-architect",
+      "source": "synthetic"
+    },
+    {
+      "query": "REST API 接口设计 OpenAPI",
+      "expectedSkill": "api-designer",
+      "source": "synthetic"
+    },
+    {
+      "query": "Swagger API 文档规范设计",
+      "expectedSkill": "api-designer",
+      "source": "synthetic"
+    },
+    {
+      "query": "第三方 API 对接 API Key 配置",
+      "expectedSkill": "api-integration-specialist",
+      "source": "synthetic"
+    },
+    {
+      "query": "Webhook 回调接口集成",
+      "expectedSkill": "api-integration-specialist",
+      "source": "synthetic"
+    },
+    {
+      "query": "系统架构设计方案评审",
+      "expectedSkill": "architect-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "微服务架构设计策略",
+      "expectedSkill": "architect-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "产品架构专家分析建议",
+      "expectedSkill": "architect-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Node.js Express 后端路由实现",
+      "expectedSkill": "backend-builder",
+      "source": "synthetic"
+    },
+    {
+      "query": "gRPC 微服务后端通信",
+      "expectedSkill": "backend-builder",
+      "source": "synthetic"
+    },
+    {
+      "query": "Playwright 自动化浏览器测试",
+      "expectedSkill": "browser-automation-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Selenium 浏览器自动化脚本",
+      "expectedSkill": "browser-automation-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "浏览器自动化 UI 测试验证",
+      "expectedSkill": "browser-automation-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "AWS 云架构设计方案",
+      "expectedSkill": "cloud-architect",
+      "source": "synthetic"
+    },
+    {
+      "query": "多云架构 GCP Azure",
+      "expectedSkill": "cloud-architect",
+      "source": "synthetic"
+    },
+    {
+      "query": "K8s 集群云原生部署",
+      "expectedSkill": "cloud-native-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "容器编排 Kubernetes Helm",
+      "expectedSkill": "cloud-native-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "pandas 数据分析处理",
+      "expectedSkill": "data-analyst-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "SQL 数据查询分析报表",
+      "expectedSkill": "data-analyst-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "ETL 数据管道 Spark",
+      "expectedSkill": "data-engineer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "数据仓库建模 Airflow",
+      "expectedSkill": "data-engineer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "PostgreSQL 查询优化索引",
+      "expectedSkill": "database-tuning-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "数据库性能调优慢查询",
+      "expectedSkill": "database-tuning-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "MySQL 索引优化执行计划",
+      "expectedSkill": "database-tuning-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "bug 报错 error 排查修复",
+      "expectedSkill": "debugger-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "程序崩溃 crash 调试定位",
+      "expectedSkill": "debugger-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "stack trace 错误日志排查",
+      "expectedSkill": "debugger-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "代码报错 exception 排查",
+      "expectedSkill": "debugger-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "UI 界面设计 Figma",
+      "expectedSkill": "designer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "用户界面交互设计",
+      "expectedSkill": "designer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "帮我写一段代码",
+      "expectedSkill": "developer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "通用开发编程问题",
+      "expectedSkill": "developer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Docker 容器部署 Nginx 配置",
+      "expectedSkill": "devops-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "CI/CD 流水线 Jenkins GitHub Actions",
+      "expectedSkill": "devops-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "SSH 服务器运维部署",
+      "expectedSkill": "devops-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "docker compose 部署配置",
+      "expectedSkill": "devops-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "DevSecOps 安全流水线扫描",
+      "expectedSkill": "devsecops-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Mermaid 流程图绘制",
+      "expectedSkill": "diagram-as-code-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "PlantUML 架构图代码",
+      "expectedSkill": "diagram-as-code-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "边缘计算 CDN 节点部署",
+      "expectedSkill": "edge-computing-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Flutter Widget Dart 组件",
+      "expectedSkill": "flutter-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Flutter 列表滚动卡顿优化",
+      "expectedSkill": "flutter-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "React 组件状态管理 hooks",
+      "expectedSkill": "frontend-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "CSS 样式布局 flexbox",
+      "expectedSkill": "frontend-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "前端页面开发 JavaScript",
+      "expectedSkill": "frontend-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "帮我写一个React组件",
+      "expectedSkill": "frontend-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "从零搭建新项目脚手架",
+      "expectedSkill": "genesis-engine",
+      "source": "synthetic"
+    },
+    {
+      "query": "Git 分支合并冲突解决",
+      "expectedSkill": "git-operation-master",
+      "source": "synthetic"
+    },
+    {
+      "query": "GitHub 仓库 git push",
+      "expectedSkill": "git-operation-master",
+      "source": "synthetic"
+    },
+    {
+      "query": "Git 版本控制 commit",
+      "expectedSkill": "git-operation-master",
+      "source": "synthetic"
+    },
+    {
+      "query": "Go 语言 goroutine channel 并发",
+      "expectedSkill": "golang-pro",
+      "source": "synthetic"
+    },
+    {
+      "query": "Golang 接口 struct 编程",
+      "expectedSkill": "golang-pro",
+      "source": "synthetic"
+    },
+    {
+      "query": "GraphQL Schema 查询设计",
+      "expectedSkill": "graphql-architect",
+      "source": "synthetic"
+    },
+    {
+      "query": "增长黑客 AARRR 用户增长",
+      "expectedSkill": "growth-hacker",
+      "source": "synthetic"
+    },
+    {
+      "query": "变更影响分析评估范围",
+      "expectedSkill": "impact-analyst",
+      "source": "synthetic"
+    },
+    {
+      "query": "K8s Pod 重启故障排查",
+      "expectedSkill": "kubernetes-specialist",
+      "source": "synthetic"
+    },
+    {
+      "query": "Kubernetes Helm Chart 部署",
+      "expectedSkill": "kubernetes-specialist",
+      "source": "synthetic"
+    },
+    {
+      "query": "法律合规审查隐私政策",
+      "expectedSkill": "legal-review-skill",
+      "source": "synthetic"
+    },
+    {
+      "query": "微信小程序开发组件",
+      "expectedSkill": "miniprogram-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Android ADB 调试移动端",
+      "expectedSkill": "mobile-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "iOS 移动应用开发",
+      "expectedSkill": "mobile-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Next.js SSR App Router",
+      "expectedSkill": "nextjs-developer",
+      "source": "synthetic"
+    },
+    {
+      "query": "Next.js 服务端渲染页面",
+      "expectedSkill": "nextjs-developer",
+      "source": "synthetic"
+    },
+    {
+      "query": "推送通知 FCM 消息系统",
+      "expectedSkill": "notification-system-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "页面加载慢性能优化",
+      "expectedSkill": "performance-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "响应慢加载慢怎么优化",
+      "expectedSkill": "performance-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "内存泄漏性能分析定位",
+      "expectedSkill": "performance-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "项目规划文件进度管理",
+      "expectedSkill": "planning-with-files",
+      "source": "synthetic"
+    },
+    {
+      "query": "产品需求 PRD 路线图",
+      "expectedSkill": "product-manager-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "项目审计全面审查检查",
+      "expectedSkill": "project-audit-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "上线前检查安全审计",
+      "expectedSkill": "project-audit-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "优化提示词 prompt 改进",
+      "expectedSkill": "prompt-optimizer",
+      "source": "synthetic"
+    },
+    {
+      "query": "Python pytest 类型提示",
+      "expectedSkill": "python-pro",
+      "source": "synthetic"
+    },
+    {
+      "query": "Python 异步编程 asyncio",
+      "expectedSkill": "python-pro",
+      "source": "synthetic"
+    },
+    {
+      "query": "正则表达式 regex 编写",
+      "expectedSkill": "regex-shell-wizard",
+      "source": "synthetic"
+    },
+    {
+      "query": "Shell 脚本 bash 命令",
+      "expectedSkill": "regex-shell-wizard",
+      "source": "synthetic"
+    },
+    {
+      "query": "代码评审审查代码质量",
+      "expectedSkill": "reviewer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "代码 review 审查规范",
+      "expectedSkill": "reviewer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Rust 所有权生命周期 borrow",
+      "expectedSkill": "rust-engineer",
+      "source": "synthetic"
+    },
+    {
+      "query": "Rust cargo 编译优化",
+      "expectedSkill": "rust-engineer",
+      "source": "synthetic"
+    },
+    {
+      "query": "SQL 注入 XSS 安全漏洞",
+      "expectedSkill": "security-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "安全审计权限认证 OWASP",
+      "expectedSkill": "security-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "SRE SLO 可靠性事故响应",
+      "expectedSkill": "sre-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "postmortem 错误预算监控",
+      "expectedSkill": "sre-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Swift SwiftUI iOS 界面",
+      "expectedSkill": "swift-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "技术文档撰写 markdown",
+      "expectedSkill": "tech-writer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Terraform IaC 基础设施编排",
+      "expectedSkill": "terraform-engineer",
+      "source": "synthetic"
+    },
+    {
+      "query": "自动化测试用例 unit test",
+      "expectedSkill": "tester-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "集成测试回归测试编写",
+      "expectedSkill": "tester-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "TypeScript 类型泛型 interface",
+      "expectedSkill": "typescript-pro",
+      "source": "synthetic"
+    },
+    {
+      "query": "终极代码审查双重审查",
+      "expectedSkill": "ultimate-code-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "高质量模式自动优化代码",
+      "expectedSkill": "ultimate-code-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Vue ref reactive computed 组件",
+      "expectedSkill": "vue-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Vue3 Composition API Pinia",
+      "expectedSkill": "vue-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "WebSocket 实时通信连接",
+      "expectedSkill": "websocket-engineer",
+      "source": "synthetic"
+    },
+    {
+      "query": "Socket.io 长连接开发",
+      "expectedSkill": "websocket-engineer",
+      "source": "synthetic"
+    },
+    {
+      "query": "Zapier n8n 工作流自动化",
+      "expectedSkill": "workflow-automation-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "零缺陷修复防退化",
+      "expectedSkill": "zero-defect-guardian",
+      "source": "synthetic"
+    },
+    {
+      "query": "代码修复 bug fix 验证",
+      "expectedSkill": "zero-defect-guardian",
+      "source": "synthetic"
+    },
+    {
+      "query": "营销文案广告创意撰写",
+      "expectedSkill": "copywriter-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "客户成功用户留存策略",
+      "expectedSkill": "customer-success-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "商务邮件模板撰写",
+      "expectedSkill": "email-communicator",
+      "source": "synthetic"
+    },
+    {
+      "query": "财务分析成本核算",
+      "expectedSkill": "finance-advisor",
+      "source": "synthetic"
+    },
+    {
+      "query": "行业研究市场竞争分析",
+      "expectedSkill": "industry-research-cn",
+      "source": "synthetic"
+    },
+    {
+      "query": "投资人融资路演 BP",
+      "expectedSkill": "investor-review-guide",
+      "source": "synthetic"
+    },
+    {
+      "query": "定价策略产品价格方案",
+      "expectedSkill": "pricing-strategist",
+      "source": "synthetic"
+    },
+    {
+      "query": "项目协调任务分配跟踪",
+      "expectedSkill": "project-coordinator",
+      "source": "synthetic"
+    },
+    {
+      "query": "销售咨询客户关系管理",
+      "expectedSkill": "sales-consultant",
+      "source": "synthetic"
+    },
+    {
+      "query": "社交媒体运营内容发布",
+      "expectedSkill": "social-media-manager",
+      "source": "synthetic"
+    },
+    {
+      "query": "商业计划书创业 BP",
+      "expectedSkill": "business-plan-skill",
+      "source": "synthetic"
+    },
+    {
+      "query": "技术团队管理指导",
+      "expectedSkill": "tech-lead-mentor",
+      "source": "synthetic"
+    },
+    {
+      "query": "SEO 搜索引擎优化技术",
+      "expectedSkill": "technical-seo-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "用户体验研究 UX 调研",
+      "expectedSkill": "ux-researcher",
+      "source": "synthetic"
+    },
+    {
+      "query": "JavaScript 前端开发代码",
+      "expectedSkill": "frontend-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "HTML CSS 页面样式调整",
+      "expectedSkill": "frontend-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "服务器部署运维 Linux",
+      "expectedSkill": "devops-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Nginx 负载均衡反向代理",
+      "expectedSkill": "devops-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "debug 调试代码错误问题",
+      "expectedSkill": "debugger-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "排查故障定位 bug",
+      "expectedSkill": "debugger-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "TensorFlow 模型训练推理",
+      "expectedSkill": "ai-ml-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Hugging Face NLP 模型",
+      "expectedSkill": "ai-ml-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Node.js 后端 API 服务",
+      "expectedSkill": "backend-builder",
+      "source": "synthetic"
+    },
+    {
+      "query": "Express 路由中间件开发",
+      "expectedSkill": "backend-builder",
+      "source": "synthetic"
+    },
+    {
+      "query": "OWASP 安全检查漏洞扫描",
+      "expectedSkill": "security-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "认证授权 JWT Token 安全",
+      "expectedSkill": "security-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Redis 缓存策略优化",
+      "expectedSkill": "database-tuning-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "git rebase merge 操作",
+      "expectedSkill": "git-operation-master",
+      "source": "synthetic"
+    },
+    {
+      "query": "代码质量审查代码评审",
+      "expectedSkill": "reviewer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "加载慢响应慢优化方案",
+      "expectedSkill": "performance-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "修复代码 zero defect",
+      "expectedSkill": "zero-defect-guardian",
+      "source": "synthetic"
+    },
+    {
+      "query": "全面审查帮我审一下项目",
+      "expectedSkill": "project-audit-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "架构设计方案整体规划",
+      "expectedSkill": "architect-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "ECharts 数据可视化图表",
+      "expectedSkill": "data-analyst-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "n8n Zapier 自动化流程",
+      "expectedSkill": "workflow-automation-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "Python 脚本编写 pip",
+      "expectedSkill": "python-pro",
+      "source": "synthetic"
+    },
+    {
+      "query": "SLO 监控告警 SRE 运维",
+      "expectedSkill": "sre-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "微信小程序 WXML WXSS",
+      "expectedSkill": "miniprogram-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "ADB 移动端调试设备",
+      "expectedSkill": "mobile-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "API 技术文档 markdown 撰写",
+      "expectedSkill": "tech-writer-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "bash shell 正则表达式匹配",
+      "expectedSkill": "regex-shell-wizard",
+      "source": "synthetic"
+    },
+    {
+      "query": "提示词 prompt 优化改进",
+      "expectedSkill": "prompt-optimizer",
+      "source": "synthetic"
+    },
+    {
+      "query": "FCM 推送通知短信系统",
+      "expectedSkill": "notification-system-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "代码变更影响范围评估",
+      "expectedSkill": "impact-analyst",
+      "source": "synthetic"
+    },
+    {
+      "query": "Mermaid 图表代码 diagram",
+      "expectedSkill": "diagram-as-code-expert",
+      "source": "synthetic"
+    },
+    {
+      "query": "安全守护模式限制编辑范围",
+      "expectedSkill": "guardian",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "freeze 冻结编辑目录",
+      "expectedSkill": "guardian",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "careful 破坏性命令警告",
+      "expectedSkill": "guardian",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "系统进化时间线版本历史",
+      "expectedSkill": "evolution-tracker",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "查看 evolution-log 变更记录",
+      "expectedSkill": "evolution-tracker",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "只报告 bug 不修复 report-only",
+      "expectedSkill": "qa",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "QA 测试但不要修改代码",
+      "expectedSkill": "qa",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "brainstorm 这个想法值不值得做",
+      "expectedSkill": "plan-ceo-review",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "office hours 验证创业想法",
+      "expectedSkill": "plan-ceo-review",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "guard mode 全量安全防护",
+      "expectedSkill": "guardian",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "unfreeze 解除编辑限制",
+      "expectedSkill": "guardian",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "upgrade gstack 更新版本",
+      "expectedSkill": "gstack",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "系统健康评分趋势分析",
+      "expectedSkill": "evolution-tracker",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "qa-only 只测不修",
+      "expectedSkill": "qa",
+      "source": "synthetic-v6.5"
+    },
+    {
+      "query": "不使用机场通过clash+静态住宅IP实现翻墙",
+      "skill": "devops-expert"
+    },
+    {
+      "query": "terminator mcp是什么功能",
+      "skill": "mcp-probe"
+    },
+    {
+      "query": "MCP服务器全量体检",
+      "skill": "mcp-probe"
+    },
+    {
+      "query": "mcp prune 剪枝分析",
+      "skill": "mcp-prune"
+    },
+    {
+      "query": "Vue3组合式API怎么写",
+      "skill": "vue-expert"
+    },
+    {
+      "query": "Flutter列表性能优化",
+      "skill": "flutter-expert"
+    },
+    {
+      "query": "Kubernetes部署配置怎么写",
+      "skill": "kubernetes-specialist"
+    },
+    {
+      "query": "Terraform管理阿里云资源",
+      "skill": "terraform-engineer"
+    },
+    {
+      "query": "Git冲突怎么解决rebase报错",
+      "skill": "git-operation-master"
+    },
+    {
+      "query": "Next.js SSR App Router 服务端渲染",
+      "expectedSkill": "nextjs-developer",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Python pytest 类型提示测试",
+      "expectedSkill": "python-pro",
+      "source": "manual-fix"
+    },
+    {
+      "query": "TypeScript 类型泛型 interface 编程",
+      "expectedSkill": "typescript-pro",
+      "source": "manual-fix"
+    },
+    {
+      "query": "SQL 数据查询分析报表生成",
+      "expectedSkill": "data-analyst-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "项目规划文件进度管理跟踪",
+      "expectedSkill": "planning-with-files",
+      "source": "manual-fix"
+    },
+    {
+      "query": "终极代码审查双重审查机制",
+      "expectedSkill": "ultimate-code-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "clash verge 静态住宅IP 翻墙上网配置",
+      "expectedSkill": "devops-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "terminator mcp 是什么功能",
+      "expectedSkill": "mcp-probe",
+      "source": "manual-fix"
+    },
+    {
+      "query": "MCP 服务器全量体检",
+      "expectedSkill": "mcp-probe",
+      "source": "manual-fix"
+    },
+    {
+      "query": "mcp prune 剪枝分析工具",
+      "expectedSkill": "mcp-prune",
+      "source": "manual-fix"
+    },
+    {
+      "query": "React 组件状态管理",
+      "expectedSkill": "frontend-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Vue3 组合式 API 怎么写",
+      "expectedSkill": "vue-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Flutter 列表性能优化",
+      "expectedSkill": "flutter-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Kubernetes 部署配置",
+      "expectedSkill": "kubernetes-specialist",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Terraform 管理阿里云资源",
+      "expectedSkill": "terraform-engineer",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Git 冲突 rebase 报错解决",
+      "expectedSkill": "git-operation-master",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Rust 异步编程 tokio",
+      "expectedSkill": "rust-engineer",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Swift iOS App SwiftUI",
+      "expectedSkill": "swift-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "小程序微信支付集成",
+      "expectedSkill": "miniprogram-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "React Native 跨平台开发",
+      "expectedSkill": "mobile-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "WebSocket 实时通信",
+      "expectedSkill": "websocket-engineer",
+      "source": "manual-fix"
+    },
+    {
+      "query": "通知系统推送设计",
+      "expectedSkill": "notification-system-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Cloudflare Workers 部署",
+      "expectedSkill": "edge-computing-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "GraphQL schema 设计",
+      "expectedSkill": "graphql-architect",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Angular 17 Signals 使用",
+      "expectedSkill": "angular-architect",
+      "source": "manual-fix"
+    },
+    {
+      "query": "CSS Grid Flexbox 布局",
+      "expectedSkill": "designer-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "正则表达式匹配邮箱格式",
+      "expectedSkill": "regex-shell-wizard",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Shell 脚本批量处理文件",
+      "expectedSkill": "regex-shell-wizard",
+      "source": "manual-fix"
+    },
+    {
+      "query": "PPT 制作演示文稿",
+      "expectedSkill": "powerpoint",
+      "source": "manual-fix"
+    },
+    {
+      "query": "PDF 文档编辑修改",
+      "expectedSkill": "nano-pdf",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Google Calendar 日历管理",
+      "expectedSkill": "google-workspace",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Notion 数据库页面管理",
+      "expectedSkill": "notion",
+      "source": "manual-fix"
+    },
+    {
+      "query": "邮件商务沟通客户跟进",
+      "expectedSkill": "email-communicator",
+      "source": "manual-fix"
+    },
+    {
+      "query": "SaaS 定价模型设计",
+      "expectedSkill": "pricing-strategist",
+      "source": "manual-fix"
+    },
+    {
+      "query": "商业计划书融资 BP",
+      "expectedSkill": "business-plan-skill",
+      "source": "manual-fix"
+    },
+    {
+      "query": "销售策略 CRM 客户管理",
+      "expectedSkill": "sales-consultant",
+      "source": "manual-fix"
+    },
+    {
+      "query": "社交媒体运营内容策略",
+      "expectedSkill": "social-media-manager",
+      "source": "manual-fix"
+    },
+    {
+      "query": "财务记账税务筹划",
+      "expectedSkill": "finance-advisor",
+      "source": "manual-fix"
+    },
+    {
+      "query": "用户增长 AARRR 漏斗",
+      "expectedSkill": "growth-hacker",
+      "source": "manual-fix"
+    },
+    {
+      "query": "用户体验研究可用性测试",
+      "expectedSkill": "ux-researcher",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Docker 容器化部署",
+      "expectedSkill": "devops-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "GitHub Actions CI/CD 流水线",
+      "expectedSkill": "devops-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Prometheus Grafana 监控配置",
+      "expectedSkill": "sre-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "数据库索引优化慢查询",
+      "expectedSkill": "database-tuning-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "数据仓库 ETL 管道设计",
+      "expectedSkill": "data-engineer-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "PyTorch 神经网络训练",
+      "expectedSkill": "ai-ml-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "LLM 微调 LoRA 训练",
+      "expectedSkill": "ai-ml-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "RAG 检索增强生成系统",
+      "expectedSkill": "ai-ml-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "AI 伦理偏见对齐审计",
+      "expectedSkill": "ai-philosophy-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "SEO 百度优化收录",
+      "expectedSkill": "technical-seo-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "JWT OAuth 2.0 认证实现",
+      "expectedSkill": "security-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "XSS SQL 注入防护",
+      "expectedSkill": "security-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "代码审计漏洞扫描",
+      "expectedSkill": "devsecops-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "容器安全镜像扫描 Trivy",
+      "expectedSkill": "devsecops-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "供应链安全 SBOM 生成",
+      "expectedSkill": "devsecops-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "AWS 云架构设计",
+      "expectedSkill": "cloud-architect",
+      "source": "manual-fix"
+    },
+    {
+      "query": "K8s 编排微服务",
+      "expectedSkill": "cloud-native-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "DDD 领域驱动设计",
+      "expectedSkill": "architect-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Mermaid 流程图架构图",
+      "expectedSkill": "diagram-as-code-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "行业研究市场调研 TAM SAM SOM",
+      "expectedSkill": "industry-research-cn",
+      "source": "manual-fix"
+    },
+    {
+      "query": "投资分析项目估值",
+      "expectedSkill": "investor-review-guide",
+      "source": "manual-fix"
+    },
+    {
+      "query": "客户成功 SLA 设计",
+      "expectedSkill": "customer-success-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "暗色主题 SVG 架构图",
+      "expectedSkill": "architecture-diagram",
+      "source": "manual-fix"
+    },
+    {
+      "query": "ASCII art 文字艺术",
+      "expectedSkill": "ascii-art",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Spotify 音乐控制播放",
+      "expectedSkill": "spotify",
+      "source": "manual-fix"
+    },
+    {
+      "query": "YouTube 视频字幕提取",
+      "expectedSkill": "youtube-content",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Hugging Face 模型下载",
+      "expectedSkill": "huggingface-hub",
+      "source": "manual-fix"
+    },
+    {
+      "query": "llama.cpp 本地 GGUF 推理",
+      "expectedSkill": "llama-cpp",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Jupyter 交互式数据分析",
+      "expectedSkill": "jupyter-live-kernel",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Windows 桌面自动化 RPA",
+      "expectedSkill": "windows-mcp",
+      "source": "manual-fix"
+    },
+    {
+      "query": "浏览器自动化 Playwright 测试",
+      "expectedSkill": "browser-automation-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Minecraft 模组服务器搭建",
+      "expectedSkill": "minecraft-modpack-server",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Obsidian 笔记管理搜索",
+      "expectedSkill": "obsidian",
+      "source": "manual-fix"
+    },
+    {
+      "query": "GIF 动图搜索下载",
+      "expectedSkill": "gif-search",
+      "source": "manual-fix"
+    },
+    {
+      "query": "学术论文 arXiv 检索",
+      "expectedSkill": "arxiv",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Polymarket 预测市场数据",
+      "expectedSkill": "polymarket",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Philips Hue 智能灯控制",
+      "expectedSkill": "openhue",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Linear 项目管理事务跟踪",
+      "expectedSkill": "linear",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Slack 消息频道操作",
+      "expectedSkill": "developer-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Atlassian Jira 项目管理",
+      "expectedSkill": "developer-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Supabase 数据库实时订阅",
+      "expectedSkill": "developer-expert",
+      "source": "manual-fix"
+    },
+    {
+      "query": "Figma 设计文件操作",
+      "expectedSkill": "developer-expert",
+      "source": "manual-fix"
+    }
+  ]
+}

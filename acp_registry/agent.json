@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "bookwormpro",
+  "display_name": "BookwormPRO",
+  "description": "AI agent by BookwormPRO Project with 90+ tools, persistent memory, and multi-platform support",
+  "icon": "icon.svg",
+  "distribution": {
+    "type": "command",
+    "command": "bookworm",
+    "args": ["acp"]
+  }
+}

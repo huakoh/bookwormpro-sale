@@ -1,0 +1,57 @@
+{
+  "_comment": "技能→domain 映射，与 SKILL-REGISTRY.md 分组同步。用于 IDF 分段归一化。",
+  "_version": "6.5.1",
+  "domains": {
+    "ai-data": [
+      "ai-ml-expert", "data-analyst-expert", "data-engineer-expert", "video-agent-expert"
+    ],
+    "development": [
+      "frontend-expert", "backend-builder", "mobile-expert", "miniprogram-expert",
+      "developer-expert", "debugger-expert", "api-integration-specialist",
+      "regex-shell-wizard", "ultimate-code-expert", "browser-automation-expert",
+      "workflow-automation-expert", "notification-system-expert",
+      "typescript-pro", "python-pro", "golang-pro", "rust-engineer",
+      "angular-architect", "vue-expert", "nextjs-developer",
+      "flutter-expert", "swift-expert", "websocket-engineer",
+      "review", "codex", "investigate", "browse", "gstack"
+    ],
+    "architecture": [
+      "architect-expert", "database-tuning-expert", "cloud-native-expert",
+      "edge-computing-expert", "performance-expert", "impact-analyst",
+      "diagram-as-code-expert", "zero-defect-guardian",
+      "api-designer", "graphql-architect", "cloud-architect"
+    ],
+    "devops": [
+      "devops-expert", "devsecops-expert", "git-operation-master", "sre-expert",
+      "kubernetes-specialist", "terraform-engineer",
+      "ship", "land-and-deploy", "setup-deploy", "canary"
+    ],
+    "security": [
+      "security-expert"
+    ],
+    "quality": [
+      "tester-expert", "reviewer-expert", "project-audit-expert",
+      "qa", "benchmark"
+    ],
+    "product-design": [
+      "product-manager-expert", "designer-expert", "ux-researcher", "project-coordinator",
+      "design-consultation", "design-review"
+    ],
+    "business": [
+      "business-plan-skill", "finance-advisor", "sales-consultant",
+      "pricing-strategist", "customer-success-expert", "growth-hacker",
+      "investor-review-guide", "industry-research-cn", "legal-review-skill"
+    ],
+    "content": [
+      "tech-writer-expert", "copywriter-expert", "email-communicator",
+      "social-media-manager", "technical-seo-expert",
+      "document-release", "retro"
+    ],
+    "meta": [
+      "genesis-engine", "prompt-optimizer", "tech-lead-mentor", "planning-with-files",
+      "setup-browser-cookies",
+      "plan-ceo-review", "plan-design-review", "plan-eng-review",
+      "guardian", "evolution-tracker", "mcp-probe"
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+# ~/.bookwormpro/.gitignore — DO NOT REMOVE these lines
+#
+# Auto-seeded by BookwormPRO installer to prevent accidental commit of
+# secrets if you ever run `git init` in this directory (e.g. for personal
+# backup to a private repo).
+#
+# Even with a PRIVATE git remote, committing these files is unsafe:
+#   - GitHub PRIVATE repos retain packfile cache for hours/days after force-push
+#   - Account compromise / accidental visibility flip = full credential leak
+#   - Collaborators or deploy keys can extract everything
+#
+# If you remove these rules, you accept the risk.
+
+# ─── Credentials & API keys ───────────────────────────────────────────
+.env
+.env.*
+auth.json
+auth.json.*
+*.plaintext-backup
+
+# ─── Conversation / session logs (LLM tool args may echo API keys) ────
+sessions/
+.bookwormpro_history
+
+# ─── Cache (may contain encrypted or plaintext secrets) ───────────────
+cache/
+*_secret.*
+.webhook-secret-temp.txt
+
+# ─── Platform-specific tokens ─────────────────────────────────────────
+weixin/accounts/*context-tokens*
+weixin/accounts/*token*
+pastes/
+
+# ─── Locks / pids / corruption (transient) ────────────────────────────
+*.pid
+*.lock
+*.corrupt
+auth.lock
+
+# ─── Logs ─────────────────────────────────────────────────────────────
+logs/
+*.log
+interrupt_debug.log
+
+# ─── Build / runtime artifacts ────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+node_modules/
+*.tmp
+audio_cache/
+image_cache/
+state-snapshots/
+checkpoints/
+.skills_prompt_snapshot.json
+.update_check
+.tirith-install-failed
+.restart_last_processed.json
+audit.db*
+gateway_state.json
+processes.json
+channel_directory.json
+models_dev_cache.json
+ollama_cloud_models_cache.json
