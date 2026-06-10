@@ -441,6 +441,23 @@ function Install-SystemPackages {
     }
 }
 
+function Test-ChinaNetwork {
+    # Proactively detect Chinese locale → enable Tuna PyPI + npmmirror
+    $locale = (Get-Culture).Name
+    if ($locale -like "zh-*") {
+        $script:UseChinaMirrors = $true
+        Write-Info "Chinese locale detected ($locale), using China mirrors"
+        return
+    }
+    # Non-Chinese locale: quick connectivity test (catches VPN-in-China, etc.)
+    try {
+        Invoke-WebRequest -Uri "https://pypi.org/simple/" -Method Head -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop | Out-Null
+    } catch {
+        $script:UseChinaMirrors = $true
+        Write-Info "PyPI unreachable, enabling China mirrors"
+    }
+}
+
 # ============================================================================
 # Installation
 # ============================================================================
@@ -567,21 +584,39 @@ function Install-Venv {
         Write-Info "Skipping virtual environment (-NoVenv)"
         return
     }
-    
-    Write-Info "Creating virtual environment with Python $PythonVersion..."
-    
+
     Push-Location $InstallDir
-    
-    if (Test-Path "venv") {
-        Write-Info "Virtual environment already exists, recreating..."
-        Remove-Item -Recurse -Force "venv"
+
+    # Health check: venv exists AND python.exe actually runs
+    if (Test-Path "venv\Scripts\python.exe") {
+        try {
+            $ver = & ".\venv\Scripts\python.exe" --version 2>$null
+            if ($LASTEXITCODE -eq 0 -and $ver) {
+                Write-Success "Virtual environment healthy ($ver)"
+                Pop-Location
+                return
+            }
+        } catch {}
     }
-    
+
+    # Remove broken/incomplete venv before recreating
+    if (Test-Path "venv") {
+        Write-Info "Virtual environment missing or broken, recreating..."
+        Remove-Item -Recurse -Force "venv"
+    } else {
+        Write-Info "Creating virtual environment with Python $PythonVersion..."
+    }
+
     # uv creates the venv; --seed includes pip/setuptools for fallback installs
     & $UvCmd venv venv --python $PythonVersion --seed
-    
+
+    if (-not (Test-Path "venv\Scripts\python.exe")) {
+        Pop-Location
+        throw "Failed to create virtual environment (venv\Scripts\python.exe not found)"
+    }
+
     Pop-Location
-    
+
     Write-Success "Virtual environment ready (Python $PythonVersion)"
 }
 
@@ -845,12 +880,16 @@ function Install-NodeDeps {
     Push-Location $InstallDir
 
     if (Test-Path "package.json") {
-        Write-Info "Installing Node.js dependencies (browser tools)..."
+        Write-Info "Installing Node.js dependencies (browser tools, may take a minute)..."
         try {
-            npm install --silent @npmRegArgs 2>&1 | Out-Null
-            Write-Success "Node.js dependencies installed"
+            npm install --no-fund --no-audit @npmRegArgs
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "Node.js dependencies installed"
+            } else {
+                Write-Warn "npm install exited with code $LASTEXITCODE (browser tools may not work)"
+            }
         } catch {
-            Write-Warn "npm install failed (browser tools may not work)"
+            Write-Warn "npm install failed: $_ (browser tools may not work)"
         }
     }
 
@@ -860,10 +899,14 @@ function Install-NodeDeps {
         Write-Info "Installing TUI dependencies..."
         Push-Location $tuiDir
         try {
-            npm install --silent @npmRegArgs 2>&1 | Out-Null
-            Write-Success "TUI dependencies installed"
+            npm install --no-fund --no-audit @npmRegArgs
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "TUI dependencies installed"
+            } else {
+                Write-Warn "TUI npm exited with code $LASTEXITCODE (bookworm --tui may not work)"
+            }
         } catch {
-            Write-Warn "TUI npm install failed (bookworm --tui may not work)"
+            Write-Warn "TUI npm install failed: $_ (bookworm --tui may not work)"
         }
         Pop-Location
     }
@@ -1019,7 +1062,8 @@ function Write-Completion {
 
 function Main {
     Write-Banner
-    
+    Test-ChinaNetwork
+
     if (-not (Install-Uv)) { throw "uv installation failed — cannot continue" }
     if (-not (Test-Python)) { throw "Python $PythonVersion not available — cannot continue" }
     if (-not (Test-Git)) { throw "Git not found — install from https://git-scm.com/download/win" }
