@@ -1,0 +1,653 @@
+#!/usr/bin/env python3
+"""
+BookwormPRO Gateway — Standalone messaging platform integration.
+
+This is the proper entry point for running the gateway as a service.
+NOT tied to the CLI — runs independently.
+
+Usage:
+    # Run in foreground (for testing)
+    ./scripts/hermes-gateway
+
+    # Install as system service
+    ./scripts/hermes-gateway install
+
+    # Manage the service
+    ./scripts/hermes-gateway start
+    ./scripts/hermes-gateway stop
+    ./scripts/hermes-gateway restart
+    ./scripts/hermes-gateway status
+
+    # Uninstall
+    ./scripts/hermes-gateway uninstall
+
+Supported platforms:
+    Linux   — systemd (user service)
+    macOS   — launchd (LaunchAgent)
+    Windows — NSSM (Non-Sucking Service Manager)
+"""
+
+import argparse
+import asyncio
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+# Add parent directory to path
+SCRIPT_DIR = Path(__file__).parent.resolve()
+PROJECT_DIR = SCRIPT_DIR.parent
+sys.path.insert(0, str(PROJECT_DIR))
+
+# Load .env files (project root first, then user config)
+from dotenv import load_dotenv
+env_path = PROJECT_DIR / '.env'
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+user_env = Path.home() / '.bookwormpro' / '.env'
+if user_env.exists():
+    load_dotenv(dotenv_path=user_env, override=False)  # don't override project .env
+
+
+# =============================================================================
+# Service Configuration
+# =============================================================================
+
+SERVICE_NAME = "bookworm-gateway"
+SERVICE_DESCRIPTION = "BookwormPRO Gateway - Messaging Platform Integration"
+
+
+def get_systemd_unit_path() -> Path:
+    """Get the path for the systemd user service file."""
+    return Path.home() / ".config" / "systemd" / "user" / f"{SERVICE_NAME}.service"
+
+
+def get_launchd_plist_path() -> Path:
+    """Get the path for the launchd plist file (macOS)."""
+    return Path.home() / "Library" / "LaunchAgents" / "ai.bookwormpro.gateway.plist"
+
+
+def get_python_path() -> str:
+    """Get the path to the Python interpreter."""
+    # Prefer the venv if it exists
+    venv_python = PROJECT_DIR / "venv" / "bin" / "python"
+    if venv_python.exists():
+        return str(venv_python)
+    return sys.executable
+
+
+def get_gateway_script_path() -> str:
+    """Get the path to this script."""
+    return str(Path(__file__).resolve())
+
+
+def get_nssm_path() -> str:
+    """Locate nssm.exe on the system.
+
+    Search order:
+    1. <project>/scripts/nssm.exe (copied during setup)
+    2. PATH (winget / manual install)
+    3. Common winget package path
+    """
+    # 1. Bundled copy
+    bundled = PROJECT_DIR / "scripts" / "nssm.exe"
+    if bundled.exists():
+        return str(bundled)
+
+    # 2. PATH
+    import shutil
+    found = shutil.which("nssm")
+    if found:
+        return found
+
+    # 3. Winget default location
+    import glob
+    pkg_root = Path.home() / "AppData" / "Local" / "Microsoft" / "WinGet" / "Packages"
+    candidates = list(pkg_root.glob("NSSM.NSSM_*/**/win64/nssm.exe"))
+    if candidates:
+        return str(candidates[0])
+    candidates = list(pkg_root.glob("NSSM.NSSM_*/**/win32/nssm.exe"))
+    if candidates:
+        return str(candidates[0])
+
+    raise FileNotFoundError(
+        "nssm.exe not found. Install it with:\n"
+        "  winget install --id NSSM.NSSM -e\n"
+        "Or download from https://nssm.cc/download"
+    )
+
+
+def get_gateway_log_dir() -> Path:
+    """Ensure and return the gateway log directory."""
+    log_dir = Path.home() / ".bookwormpro" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir
+
+
+# =============================================================================
+# Systemd Service (Linux)
+# =============================================================================
+
+def generate_systemd_unit() -> str:
+    """Generate the systemd unit file content."""
+    python_path = get_python_path()
+    script_path = get_gateway_script_path()
+    working_dir = str(PROJECT_DIR)
+
+    return f"""[Unit]
+Description={SERVICE_DESCRIPTION}
+After=network.target
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart={python_path} {script_path} run
+WorkingDirectory={working_dir}
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
+"""
+
+
+def install_systemd():
+    """Install the systemd user service."""
+    unit_path = get_systemd_unit_path()
+    unit_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Installing systemd service to: {unit_path}")
+    unit_path.write_text(generate_systemd_unit())
+
+    subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
+    subprocess.run(["systemctl", "--user", "enable", SERVICE_NAME], check=True)
+
+    print(f"[成功] Service installed and enabled")
+    print()
+    print(f"To start the service:")
+    print(f"  systemctl --user start {SERVICE_NAME}")
+    print()
+    print(f"To view logs:")
+    print(f"  journalctl --user -u {SERVICE_NAME} -f")
+    print()
+    print(f"To enable lingering (keeps service running after logout):")
+    print(f"  sudo loginctl enable-linger $USER")
+
+
+def uninstall_systemd():
+    """Uninstall the systemd user service."""
+    unit_path = get_systemd_unit_path()
+
+    subprocess.run(["systemctl", "--user", "stop", SERVICE_NAME], check=False)
+    subprocess.run(["systemctl", "--user", "disable", SERVICE_NAME], check=False)
+
+    if unit_path.exists():
+        unit_path.unlink()
+        print(f"[成功] Removed {unit_path}")
+
+    subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
+    print(f"[成功] Service uninstalled")
+
+
+def systemd_status():
+    """Show systemd service status."""
+    subprocess.run(["systemctl", "--user", "status", SERVICE_NAME])
+
+
+def systemd_start():
+    """Start the systemd service."""
+    subprocess.run(["systemctl", "--user", "start", SERVICE_NAME], check=True)
+    print(f"[成功] Service started")
+
+
+def systemd_stop():
+    """Stop the systemd service."""
+    subprocess.run(["systemctl", "--user", "stop", SERVICE_NAME], check=True)
+    print(f"[成功] Service stopped")
+
+
+def systemd_restart():
+    """Restart the systemd service."""
+    subprocess.run(["systemctl", "--user", "restart", SERVICE_NAME], check=True)
+    print(f"[成功] Service restarted")
+
+
+# =============================================================================
+# Launchd Service (macOS)
+# =============================================================================
+
+def generate_launchd_plist() -> str:
+    """Generate the launchd plist file content."""
+    python_path = get_python_path()
+    script_path = get_gateway_script_path()
+    working_dir = str(PROJECT_DIR)
+    log_dir = get_gateway_log_dir()
+
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>ai.bookwormpro.gateway</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>{python_path}</string>
+        <string>{script_path}</string>
+        <string>run</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>{working_dir}</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>{log_dir}/gateway.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>{log_dir}/gateway.error.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>
+"""
+
+
+def install_launchd():
+    """Install the launchd service (macOS)."""
+    plist_path = get_launchd_plist_path()
+    plist_path.parent.mkdir(parents=True, exist_ok=True)
+
+    get_gateway_log_dir()  # ensure log dir exists
+
+    print(f"Installing launchd service to: {plist_path}")
+    plist_path.write_text(generate_launchd_plist())
+
+    subprocess.run(["launchctl", "load", str(plist_path)], check=True)
+
+    print(f"[成功] Service installed and loaded")
+    print()
+    print(f"To view logs:")
+    print(f"  tail -f ~/.bookwormpro/logs/gateway.log")
+    print()
+    print(f"To manage the service:")
+    print(f"  launchctl start ai.bookwormpro.gateway")
+    print(f"  launchctl stop ai.bookwormpro.gateway")
+
+
+def uninstall_launchd():
+    """Uninstall the launchd service (macOS)."""
+    plist_path = get_launchd_plist_path()
+
+    subprocess.run(["launchctl", "unload", str(plist_path)], check=False)
+
+    if plist_path.exists():
+        plist_path.unlink()
+        print(f"[成功] Removed {plist_path}")
+
+    print(f"[成功] Service uninstalled")
+
+
+def launchd_status():
+    """Show launchd service status."""
+    subprocess.run(["launchctl", "list", "ai.bookwormpro.gateway"])
+
+
+def launchd_start():
+    """Start the launchd service."""
+    subprocess.run(["launchctl", "start", "ai.bookwormpro.gateway"], check=True)
+    print(f"[成功] Service started")
+
+
+def launchd_stop():
+    """Stop the launchd service."""
+    subprocess.run(["launchctl", "stop", "ai.bookwormpro.gateway"], check=True)
+    print(f"[成功] Service stopped")
+
+
+def launchd_restart():
+    """Restart the launchd service."""
+    launchd_stop()
+    launchd_start()
+
+
+# =============================================================================
+# NSSM Service (Windows)
+# =============================================================================
+
+def _is_admin() -> bool:
+    """Check if running with Administrator privileges."""
+    import ctypes
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except Exception:
+        return False
+
+
+def _nssm(args: list) -> subprocess.CompletedProcess:
+    """Run nssm.exe with the given arguments."""
+    nssm = get_nssm_path()
+    return subprocess.run([nssm] + args, capture_output=True, text=True)
+
+
+def _ensure_admin():
+    """Exit if not running as Administrator (required for service management)."""
+    if not _is_admin():
+        print("[错误] 需要管理员权限来管理 Windows 服务。")
+        print()
+        print("请以管理员身份运行：")
+        print("  1. 右键点击 Git Bash / PowerShell → '以管理员身份运行'")
+        print("  2. 然后执行：")
+        print(f"     cd {PROJECT_DIR}")
+        print(f"     python scripts\\hermes-gateway install")
+        print()
+        print("或者使用一键提权运行:")
+        print(f'  powershell -Command "Start-Process python -ArgumentList \'scripts\\hermes-gateway install\' -Verb RunAs -WorkingDirectory \'{PROJECT_DIR}\'"')
+        sys.exit(1)
+
+
+def nssm_install():
+    """Install the gateway as a Windows service using NSSM."""
+    _ensure_admin()
+
+    python_path = get_python_path()
+    script_path = get_gateway_script_path()
+    working_dir = str(PROJECT_DIR)
+    log_dir = get_gateway_log_dir()
+    stdout_log = str(log_dir / "gateway.log")
+    stderr_log = str(log_dir / "gateway.error.log")
+
+    print(f"NSSM:     {get_nssm_path()}")
+    print(f"Python:   {python_path}")
+    print(f"Script:   {script_path}")
+    print(f"WorkDir:  {working_dir}")
+    print()
+
+    # Install the service
+    result = _nssm(["install", SERVICE_NAME, python_path, script_path, "run"])
+    if result.returncode != 0:
+        print(f"[错误] nssm install 失败:\n{result.stderr}")
+        sys.exit(1)
+    print("  install  →  完成")
+
+    # Apply all configuration (one batch to detect failures early)
+    config = [
+        ("AppDirectory", working_dir),
+        ("DisplayName", SERVICE_DESCRIPTION),
+        ("Description", SERVICE_DESCRIPTION),
+        ("Start", "SERVICE_AUTO_START"),
+        ("AppStdout", stdout_log),
+        ("AppStderr", stderr_log),
+        ("AppStdoutCreationDisposition", "4"),   # TRUNCATE_EXISTING
+        ("AppStderrCreationDisposition", "4"),
+        ("AppRotateFiles", "1"),
+        ("AppRotateOnline", "1"),
+        ("AppRotateBytes", "10485760"),          # 10 MB rotation
+    ]
+    for key, value in config:
+        r = _nssm(["set", SERVICE_NAME, key, value])
+        if r.returncode != 0:
+            print(f"[错误] nssm set {key} 失败: {r.stderr.strip()}")
+            # Try to clean up the half-installed service
+            _nssm(["remove", SERVICE_NAME, "confirm"])
+            sys.exit(1)
+        print(f"  set {key}  →  完成")
+
+    # AppExit requires 3-arg form: nssm set <svc> AppExit Default Restart
+    r = _nssm(["set", SERVICE_NAME, "AppExit", "Default", "Restart"])
+    if r.returncode != 0:
+        print(f"[错误] nssm set AppExit 失败: {r.stderr.strip()}")
+        _nssm(["remove", SERVICE_NAME, "confirm"])
+        sys.exit(1)
+    print("  set AppExit Default Restart  →  完成")
+
+    print()
+    print(f"[成功] Windows 服务已安装: {SERVICE_NAME}")
+    print()
+    print(f"开机自启: 已启用 (SERVICE_AUTO_START)")
+    print()
+    print(f"日志位置:")
+    print(f"  stdout: {stdout_log}")
+    print(f"  stderr: {stderr_log}")
+    print()
+    print(f"管理命令 (需管理员权限):")
+    print(f"  python scripts\\hermes-gateway start")
+    print(f"  python scripts\\hermes-gateway stop")
+    print(f"  python scripts\\hermes-gateway restart")
+    print(f"  python scripts\\hermes-gateway status")
+    print(f"  python scripts\\hermes-gateway uninstall")
+    print()
+    print(f"或通过 Windows 服务管理器: services.msc → {SERVICE_NAME}")
+
+
+def nssm_uninstall():
+    """Remove the Windows service."""
+    _ensure_admin()
+
+    # Stop first
+    _nssm(["stop", SERVICE_NAME])
+
+    # Remove
+    result = _nssm(["remove", SERVICE_NAME, "confirm"])
+    if result.returncode != 0:
+        print(f"[错误] 卸载失败:\n{result.stderr}")
+        sys.exit(1)
+
+    print(f"[成功] Windows 服务已卸载: {SERVICE_NAME}")
+
+
+def nssm_start():
+    """Start the Windows service."""
+    _ensure_admin()
+    result = _nssm(["start", SERVICE_NAME])
+    if result.returncode != 0:
+        print(f"[错误] 启动失败:\n{result.stderr}")
+        sys.exit(1)
+    print(f"[成功] 服务已启动")
+
+
+def nssm_stop():
+    """Stop the Windows service."""
+    _ensure_admin()
+    result = _nssm(["stop", SERVICE_NAME])
+    if result.returncode != 0:
+        print(f"[错误] 停止失败:\n{result.stderr}")
+        sys.exit(1)
+    print(f"[成功] 服务已停止")
+
+
+def nssm_restart():
+    """Restart the Windows service."""
+    _ensure_admin()
+    result = _nssm(["restart", SERVICE_NAME])
+    if result.returncode != 0:
+        print(f"[错误] 重启失败:\n{result.stderr}")
+        sys.exit(1)
+    print(f"[成功] 服务已重启")
+
+
+def nssm_status():
+    """Show Windows service status (does not require admin)."""
+    result = _nssm(["status", SERVICE_NAME])
+    out = result.stdout.strip()
+    err = result.stderr.strip()
+    if out:
+        print(out)
+    if err:
+        print(err)
+
+
+# =============================================================================
+# Platform Detection
+# =============================================================================
+
+def is_linux() -> bool:
+    return sys.platform.startswith('linux')
+
+
+def is_macos() -> bool:
+    return sys.platform == 'darwin'
+
+
+def is_windows() -> bool:
+    return sys.platform == 'win32'
+
+
+# =============================================================================
+# Gateway Runner
+# =============================================================================
+
+def run_gateway():
+    """Run the gateway in foreground."""
+    from gateway.run import start_gateway
+    print("Starting BookwormPRO Gateway...")
+    print("Press Ctrl+C to stop.")
+    print()
+    asyncio.run(start_gateway())
+
+
+# =============================================================================
+# Main CLI
+# =============================================================================
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="BookwormPRO Gateway - Messaging Platform Integration",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    # Run in foreground (for testing)
+    python scripts/hermes-gateway run
+
+    # Install as system service (auto-start on boot)
+    python scripts/hermes-gateway install
+
+    # Manage the service
+    python scripts/hermes-gateway start
+    python scripts/hermes-gateway stop
+    python scripts/hermes-gateway restart
+    python scripts/hermes-gateway status
+
+    # Uninstall
+    python scripts/hermes-gateway uninstall
+
+Supported platforms:
+    Linux   — systemd (user service)
+    macOS   — launchd (LaunchAgent)
+    Windows — NSSM (install via: winget install NSSM.NSSM -e)
+
+Configuration:
+    Set environment variables in .env file or system environment:
+    - TELEGRAM_BOT_TOKEN
+    - DISCORD_BOT_TOKEN
+    - WHATSAPP_ENABLED
+
+    Or create ~/.bookwormpro/gateway.json for advanced configuration.
+"""
+    )
+
+    parser.add_argument(
+        "command",
+        choices=["run", "install", "uninstall", "start", "stop", "restart", "status"],
+        nargs="?",
+        default="run",
+        help="Command to execute (default: run)"
+    )
+
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Verbose output"
+    )
+
+    args = parser.parse_args()
+
+    # Detect platform and dispatch command
+    if args.command == "run":
+        run_gateway()
+
+    elif args.command == "install":
+        if is_linux():
+            install_systemd()
+        elif is_macos():
+            install_launchd()
+        elif is_windows():
+            nssm_install()
+        else:
+            print("Service installation not supported on this platform.")
+            print("Please run manually: python scripts/hermes-gateway run")
+            sys.exit(1)
+
+    elif args.command == "uninstall":
+        if is_linux():
+            uninstall_systemd()
+        elif is_macos():
+            uninstall_launchd()
+        elif is_windows():
+            nssm_uninstall()
+        else:
+            print("Service uninstallation not supported on this platform.")
+            sys.exit(1)
+
+    elif args.command == "start":
+        if is_linux():
+            systemd_start()
+        elif is_macos():
+            launchd_start()
+        elif is_windows():
+            nssm_start()
+        else:
+            print("Not supported on this platform.")
+            sys.exit(1)
+
+    elif args.command == "stop":
+        if is_linux():
+            systemd_stop()
+        elif is_macos():
+            launchd_stop()
+        elif is_windows():
+            nssm_stop()
+        else:
+            print("Not supported on this platform.")
+            sys.exit(1)
+
+    elif args.command == "restart":
+        if is_linux():
+            systemd_restart()
+        elif is_macos():
+            launchd_restart()
+        elif is_windows():
+            nssm_restart()
+        else:
+            print("Not supported on this platform.")
+            sys.exit(1)
+
+    elif args.command == "status":
+        if is_linux():
+            systemd_status()
+        elif is_macos():
+            launchd_status()
+        elif is_windows():
+            nssm_status()
+        else:
+            print("Not supported on this platform.")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

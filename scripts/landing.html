@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookwormPRO — 安装指南 & 下载</title>
+<meta name="description" content="BookwormPRO 完整安装指南：从全新电脑到正常使用，3 种安装方式，5 分钟上手。">
+<meta property="og:title" content="BookwormPRO 安装指南">
+<meta property="og:description" content="BYOK AI 智能助手 · 135+ 技能 · License 加密 · 一键安装">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://portable.bookwormweb.com">
+<meta property="og:image" content="https://portable.bookwormweb.com/og-image.png">
+<link rel="canonical" href="https://portable.bookwormweb.com">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<style>
+:root{--bg:#0a0a12;--s:#12121e;--b:rgba(200,160,80,0.15);--t:#e0e0ea;--m:#8888a0;--a:#c8a050;--a2:#20e0c0;--blue:#4080ff;--green:#20c070;--red:#e04040;--code-bg:#1a1a2e}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t);line-height:1.7}
+a{color:var(--a);text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:960px;margin:0 auto;padding:0 20px}
+
+.hero{text-align:center;padding:100px 20px 80px;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(200,160,80,0.08) 0%,transparent 70%);border-bottom:1px solid var(--b)}
+.hero h1{font-size:3em;font-weight:900;background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
+.hero .sub{font-size:1.2em;color:var(--m);margin-top:16px;max-width:600px;margin-left:auto;margin-right:auto}
+.hero .cta{margin-top:36px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn{padding:16px 36px;border-radius:10px;font-size:1.05em;font-weight:700;cursor:pointer;border:none;transition:all .2s;display:inline-block}
+.btn-gold{background:linear-gradient(135deg,var(--a),#e0b860);color:#0a0a12}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,160,80,0.3)}
+.btn-outline{border:2px solid var(--a);color:var(--a);background:transparent}
+.btn-outline:hover{background:rgba(200,160,80,0.1);transform:translateY(-2px)}
+.stats{display:flex;justify-content:center;gap:56px;margin-top:48px;flex-wrap:wrap}
+.stat .n{font-size:2.4em;font-weight:900;color:var(--a)}
+.stat .l{font-size:.82em;color:var(--m)}
+
+section{padding:80px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+h2{font-size:1.8em;color:#fff;text-align:center;margin-bottom:12px}
+h3{font-size:1.3em;color:var(--a);margin:32px 0 16px}
+.section-sub{text-align:center;color:var(--m);margin-bottom:48px;font-size:1.05em}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:28px 22px;transition:all .2s}
+.card:hover{border-color:var(--a);transform:translateY(-2px)}
+.card .icon{font-size:2em;margin-bottom:12px}
+.card h4{color:#fff;margin-bottom:8px;font-size:1.05em}
+.card p{color:var(--m);font-size:.9em;line-height:1.6}
+
+.feat-row{display:flex;align-items:center;gap:48px;margin:32px 0;padding:24px;background:var(--s);border:1px solid var(--b);border-radius:16px}
+.feat-row .icon{font-size:3em;flex-shrink:0}
+.feat-row h4{color:#fff;margin-bottom:6px}
+.feat-row p{color:var(--m);font-size:.9em}
+
+.skill-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:24px 0}
+.tag{background:var(--s);border:1px solid var(--b);border-radius:20px;padding:8px 16px;font-size:.82em;color:var(--m)}
+
+.price-card{background:var(--s);border:2px solid var(--a);border-radius:20px;padding:48px 36px;text-align:center;max-width:480px;margin:0 auto;box-shadow:0 0 60px rgba(200,160,80,0.06)}
+.price-card .amount{font-size:3.5em;font-weight:900;color:#fff;margin:20px 0 8px}
+.price-card .per{color:var(--m);font-size:1em}
+.price-card ul{list-style:none;margin:32px 0;text-align:left;display:inline-block}
+.price-card li{padding:6px 0;font-size:.95em;color:var(--m)}
+.price-card li::before{content:"\2713 ";color:var(--a2)}
+.qr-box{margin-top:28px;padding:20px;background:rgba(200,160,80,0.04);border-radius:12px}
+.qr-box img{width:140px;height:140px;border-radius:8px;margin:12px 0}
+.qr-box .step{color:var(--m);font-size:.85em;margin:6px 0}
+
+.faq{margin:16px 0;padding:16px 20px;background:var(--s);border:1px solid var(--b);border-radius:10px}
+.faq h4{color:#fff;margin-bottom:6px;font-size:.95em}
+.faq p{color:var(--m);font-size:.88em}
+
+/* Install guide styles */
+.install-nav{display:flex;gap:0;margin:32px 0 24px;border-radius:12px;overflow:hidden;border:1px solid var(--b)}
+.install-tab{flex:1;padding:16px;text-align:center;cursor:pointer;background:var(--s);color:var(--m);font-weight:600;font-size:.95em;border:none;transition:all .2s}
+.install-tab.active{background:linear-gradient(135deg,var(--a),#e0b860);color:#0a0a12}
+.install-tab:hover:not(.active){background:rgba(200,160,80,0.1)}
+.install-panel{display:none;animation:fadeIn .3s}
+.install-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+pre{background:var(--code-bg);border:1px solid var(--b);border-radius:10px;padding:20px 48px 20px 20px;overflow-x:auto;font-family:"JetBrains Mono","Fira Code","Cascadia Code",Consolas,monospace;font-size:.88em;line-height:1.8;margin:16px 0;position:relative;cursor:pointer;transition:border-color .2s}
+pre:hover{border-color:var(--a)}
+pre .copy-btn{position:absolute;top:8px;right:8px;background:rgba(200,160,80,0.15);border:1px solid var(--b);border-radius:6px;color:var(--m);font-size:.75em;padding:4px 10px;cursor:pointer;opacity:0;transition:opacity .2s;font-family:-apple-system,"PingFang SC",sans-serif}
+pre:hover .copy-btn{opacity:1}
+pre .copy-btn:hover{background:var(--a);color:#0a0a12}
+pre .copy-btn.copied{background:var(--a2);color:#0a0a12;opacity:1}
+pre .comment{color:#6a6a8a}
+pre .cmd{color:var(--a2)}
+pre .output{color:#6a8a6a}
+code{font-family:inherit;background:rgba(200,160,80,0.1);padding:2px 8px;border-radius:4px;font-size:.9em}
+
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--a);color:#0a0a12;font-weight:900;font-size:.9em;margin-right:8px}
+.step-block{margin:24px 0;padding:24px;background:var(--s);border:1px solid var(--b);border-radius:12px}
+.step-block h4{color:#fff;display:flex;align-items:center;margin-bottom:12px}
+.step-block p{color:var(--m);font-size:.9em}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:.75em;font-weight:700;margin-left:8px}
+.badge-rec{background:rgba(32,224,192,0.15);color:var(--a2)}
+.badge-adv{background:rgba(64,128,255,0.15);color:var(--blue)}
+.badge-time{background:rgba(200,160,80,0.15);color:var(--a)}
+
+.prereq-table{width:100%;border-collapse:collapse;margin:16px 0}
+.prereq-table th{text-align:left;padding:10px 12px;color:var(--a);font-size:.85em;border-bottom:1px solid var(--b)}
+.prereq-table td{padding:10px 12px;font-size:.88em;color:var(--m);border-bottom:1px solid rgba(255,255,255,0.03)}
+.prereq-table tr:hover td{background:rgba(200,160,80,0.03)}
+.check{color:var(--green)}
+.cross{color:var(--red)}
+
+.troubleshoot{margin:12px 0;padding:16px 20px;background:var(--s);border-left:3px solid var(--a);border-radius:0 10px 10px 0}
+.troubleshoot h4{color:#fff;font-size:.9em;margin-bottom:4px}
+.troubleshoot p{color:var(--m);font-size:.85em}
+
+.toc{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:24px 28px;margin:24px 0}
+.toc h4{color:var(--a);margin-bottom:12px;font-size:1em}
+.toc a{display:block;padding:4px 0;color:var(--m);font-size:.9em}
+.toc a:hover{color:var(--a)}
+
+footer{text-align:center;padding:40px 20px;color:var(--m);font-size:.8em;border-top:1px solid var(--b)}
+section[id]{scroll-margin-top:60px}
+@keyframes hashHighlight{0%{box-shadow:0 0 0 4px rgba(200,160,80,0.5)}100%{box-shadow:none}}
+section.hash-target{animation:hashHighlight 2s ease-out}
+.back-top{position:fixed;bottom:28px;right:28px;width:44px;height:44px;border-radius:50%;background:var(--a);color:#0a0a12;font-size:1.3em;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:99;border:none;transition:transform .2s}
+.back-top:hover{transform:scale(1.1)}
+@media(max-width:768px){.hero h1{font-size:2em}.g2,.g3,.g4{grid-template-columns:1fr}.stats{gap:28px}.feat-row{flex-direction:column;text-align:center}.install-nav{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div style="position:absolute;top:0;left:0;right:0;padding:16px 24px;z-index:10;display:flex;align-items:center;gap:8px">
+  <span style="font-weight:700;font-size:.95em;color:#888">BookwormPRO</span>
+  <span style="color:var(--a);font-size:.7em">v7.0.0</span>
+  <span style="margin-left:auto"><a href="/quick-start" style="color:var(--m);font-size:.85em">快速上手</a></span>
+</div>
+
+<header class="hero">
+  <h1>BookwormPRO <span style="font-size:.45em;color:var(--m);display:block;margin-top:4px">AI 助手的工匠级技能包</span></h1>
+  <p class="sub">135+ 专业技能 + 智能路由 + 多平台 Gateway + License 加密保护<br>从全新电脑到完整部署，5 分钟搞定</p>
+  <div class="stats">
+    <div class="stat"><div class="n">135+</div><div class="l">技能</div></div>
+    <div class="stat"><div class="n">17</div><div class="l">平台适配</div></div>
+    <div class="stat"><div class="n">28</div><div class="l">AI Provider</div></div>
+    <div class="stat"><div class="n">5 min</div><div class="l">安装</div></div>
+  </div>
+  <div class="cta">
+    <a href="#trial" class="btn btn-gold">免费试用 7 天</a>
+    <a href="#install-guide" class="btn btn-outline">安装指南</a>
+    <a href="#pricing" class="btn btn-outline">查看定价</a>
+  </div>
+</header>
+
+<!-- ═══════ 完整安装指南 ═══════ -->
+<section id="install-guide" style="background:var(--s)"><div class="container">
+  <h2>完整安装指南</h2>
+  <p class="section-sub">从全新电脑到正常使用的每一步</p>
+
+  <div class="toc">
+    <h4>目录</h4>
+    <a href="#prereq">0. 前置条件</a>
+    <a href="#method-select">1. 选择安装方式 (Windows / WSL2 / Docker)</a>
+    <a href="#setup-wizard">2. 配置向导 (选择 AI 模型)</a>
+    <a href="#first-run">3. 首次使用</a>
+    <a href="#gateway-setup">4. Gateway 多平台部署 (可选)</a>
+    <a href="#verify">5. 验证安装</a>
+    <a href="#troubleshoot">6. 故障排查</a>
+    <a href="#activate">7. 激活 License</a>
+  </div>
+
+  <!-- Step 0: Prerequisites -->
+  <h3 id="prereq"><span class="step-num">0</span> 前置条件</h3>
+
+  <table class="prereq-table">
+    <tr><th>依赖</th><th>要求</th><th>自动安装?</th><th>手动安装</th></tr>
+    <tr><td><strong>Git</strong></td><td>任意版本</td><td class="cross">否 (必须预装)</td><td><code>winget install Git.Git</code></td></tr>
+    <tr><td>Python</td><td>3.12+</td><td class="check">是 (via uv)</td><td><code>winget install Python.Python.3.12</code></td></tr>
+    <tr><td>Node.js</td><td>v22 LTS</td><td class="check">是</td><td><code>winget install OpenJS.NodeJS.LTS</code></td></tr>
+    <tr><td>uv</td><td>latest</td><td class="check">是</td><td><code>irm astral.sh/uv/install.ps1 | iex</code></td></tr>
+    <tr><td>ripgrep</td><td>任意</td><td class="check">是</td><td><code>winget install BurntSushi.ripgrep.MSVC</code></td></tr>
+    <tr><td>ffmpeg</td><td>任意</td><td class="check">是</td><td><code>winget install Gyan.FFmpeg</code></td></tr>
+    <tr><td><strong>API Key</strong></td><td>任一 AI 服务</td><td class="cross">否</td><td>推荐 <a href="https://platform.deepseek.com" target="_blank">DeepSeek</a> (支付宝充值, 1 元起)</td></tr>
+  </table>
+  <p style="color:var(--m);font-size:.85em;margin-top:12px">只有 <strong>Git</strong> 和 <strong>API Key</strong> 需要提前准备，其余依赖安装脚本会自动处理。</p>
+
+  <!-- Step 1: Install Methods -->
+  <h3 id="method-select"><span class="step-num">1</span> 选择安装方式</h3>
+
+  <div class="install-nav">
+    <button class="install-tab active" onclick="switchTab('win')">Windows 原生 <span class="badge badge-rec">推荐</span></button>
+    <button class="install-tab" onclick="switchTab('wsl')">WSL2 / Linux / macOS</button>
+    <button class="install-tab" onclick="switchTab('docker')">Docker</button>
+  </div>
+
+  <!-- Windows -->
+  <div id="panel-win" class="install-panel active">
+    <div class="step-block">
+      <h4><span class="step-num">1</span> 安装 Git (如未安装)</h4>
+      <p>打开 PowerShell (按 <code>Win+X</code> 选择 "终端")，执行：</p>
+      <pre><span class="cmd">winget install Git.Git</span>
+<span class="comment"># 安装完成后关闭并重新打开 PowerShell</span></pre>
+    </div>
+
+    <div class="step-block">
+      <h4><span class="step-num">2</span> 一键安装 BookwormPRO</h4>
+      <p>在 PowerShell 中执行：</p>
+      <pre><span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.ps1 | iex</span></pre>
+      <p style="margin-top:12px">安装脚本会自动完成：</p>
+      <ul style="color:var(--m);font-size:.88em;margin:8px 0 0 20px">
+        <li>安装 uv (Python 包管理器) + Python 3.12</li>
+        <li>安装 Node.js v22 + ripgrep + ffmpeg</li>
+        <li>克隆 BookwormPRO 到 <code>%LOCALAPPDATA%\bookworm\</code></li>
+        <li>创建虚拟环境并安装所有依赖</li>
+        <li>添加 PATH 环境变量</li>
+        <li>启动配置向导</li>
+      </ul>
+    </div>
+
+    <div class="step-block">
+      <h4><span class="step-num">3</span> 重启终端</h4>
+      <p>安装完成后<strong>关闭并重新打开</strong> PowerShell，使 PATH 生效。</p>
+      <pre><span class="comment"># 验证安装</span>
+<span class="cmd">bookworm version</span>
+<span class="output">BookwormPRO v7.0.0</span></pre>
+    </div>
+  </div>
+
+  <!-- WSL2 / Linux / macOS -->
+  <div id="panel-wsl" class="install-panel">
+    <div class="step-block">
+      <h4><span class="step-num">1</span> 安装 WSL2 (仅 Windows 用户)</h4>
+      <pre><span class="comment"># 管理员 PowerShell</span>
+<span class="cmd">wsl --install</span>
+<span class="comment"># 重启电脑，然后打开 Ubuntu 终端</span></pre>
+    </div>
+
+    <div class="step-block">
+      <h4><span class="step-num">2</span> 一键安装</h4>
+      <pre><span class="cmd">curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.sh | bash</span></pre>
+      <p style="margin-top:8px;color:var(--m);font-size:.88em">macOS / Linux 原生用户同样执行此命令。</p>
+    </div>
+
+    <div class="step-block">
+      <h4><span class="step-num">3</span> 加载环境</h4>
+      <pre><span class="cmd">source ~/.bashrc</span>
+<span class="cmd">bookworm version</span></pre>
+    </div>
+  </div>
+
+  <!-- Docker -->
+  <div id="panel-docker" class="install-panel">
+    <div class="step-block">
+      <h4><span class="step-num">1</span> 克隆仓库</h4>
+      <pre><span class="cmd">git clone https://github.com/huakoh/bookwormpro-sale.git</span>
+<span class="cmd">cd bookwormpro-sale</span></pre>
+    </div>
+
+    <div class="step-block">
+      <h4><span class="step-num">2</span> 配置主机桥接</h4>
+      <pre><span class="comment"># Windows</span>
+<span class="cmd">.\scripts\setup-host-bridge.ps1</span>
+
+<span class="comment"># Linux / macOS</span>
+<span class="cmd">bash scripts/setup-host-bridge.sh</span></pre>
+    </div>
+
+    <div class="step-block">
+      <h4><span class="step-num">3</span> 启动容器</h4>
+      <pre><span class="cmd">docker compose up -d --build</span>
+<span class="comment"># 首次构建约 3-5 分钟</span>
+
+<span class="comment"># 查看日志</span>
+<span class="cmd">docker compose logs -f bookworm</span></pre>
+    </div>
+  </div>
+
+  <!-- Step 2: Setup Wizard -->
+  <h3 id="setup-wizard"><span class="step-num">2</span> 配置向导</h3>
+  <p style="color:var(--m);margin-bottom:16px">安装脚本会自动启动配置向导。也可以手动运行：<code>bookworm setup</code></p>
+
+  <div class="step-block">
+    <h4>选择 AI Provider</h4>
+    <p>向导会列出所有支持的 AI 服务商。推荐选择：</p>
+    <div class="g2" style="margin-top:16px">
+      <div class="card" style="border-color:var(--a)">
+        <h4 style="color:var(--a)">源力AI 中转站 <span class="badge badge-rec">官方推荐</span></h4>
+        <p>一个 Key 调用 GPT-4o / Claude / DeepSeek / Gemini 全系列。注册 <a href="https://bww.letcareme.com" target="_blank">bww.letcareme.com</a>，OpenAI 兼容格式，无需翻墙。</p>
+      </div>
+      <div class="card">
+        <h4 style="color:var(--a2)">DeepSeek <span class="badge badge-rec">性价比首选</span></h4>
+        <p>注册 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a>，支付宝充值 1 元起。国产模型直连，无需代理。</p>
+      </div>
+      <div class="card">
+        <h4>OpenRouter</h4>
+        <p>200+ 模型一站式接入。注册 <a href="https://openrouter.ai" target="_blank">openrouter.ai</a>，需国际信用卡。</p>
+      </div>
+      <div class="card">
+        <h4>GitHub Copilot</h4>
+        <p>已有 Copilot 订阅？直接通过 <code>gh auth login</code> 认证，无需 API Key。</p>
+      </div>
+    </div>
+
+    <div class="step-block" style="margin-top:24px;border-color:var(--a)">
+      <h4 style="color:var(--a)">源力AI 中转站配置方法</h4>
+      <p style="margin-bottom:12px">运行 <code>bookworm setup model</code> 时选择 <strong>"Custom endpoint"</strong>，然后填入：</p>
+      <pre><span class="comment"># Base URL</span>
+<span class="cmd">https://bww.letcareme.com/v1</span>
+
+<span class="comment"># API Key (在 bww.letcareme.com 注册后获取)</span>
+<span class="cmd">sk-your-yuanforce-api-key</span></pre>
+      <p style="margin-top:12px;color:var(--m);font-size:.88em">或直接编辑 <code>~/.bookwormpro/.env</code>：</p>
+      <pre><span class="cmd">OPENAI_BASE_URL=https://bww.letcareme.com/v1</span>
+<span class="cmd">OPENAI_API_KEY=sk-your-yuanforce-api-key</span></pre>
+      <p style="margin-top:8px;color:var(--m);font-size:.85em">配置完成后，BookwormPRO 会自动通过源力AI 中转站调用各家模型，国内直连无需代理。</p>
+    </div>
+
+    <pre style="margin-top:16px"><span class="comment"># 向导子命令 (可单独运行)</span>
+<span class="cmd">bookworm setup model</span>      <span class="comment"># 只配置 AI 模型</span>
+<span class="cmd">bookworm setup gateway</span>    <span class="comment"># 只配置消息平台</span>
+<span class="cmd">bookworm setup tools</span>      <span class="comment"># 只配置工具 (TTS/搜索/图片生成)</span>
+<span class="cmd">bookworm setup --quick</span>    <span class="comment"># 快速模式 (只填必要项, 30 秒完成)</span></pre>
+  </div>
+
+  <!-- Step 3: First Run -->
+  <h3 id="first-run"><span class="step-num">3</span> 首次使用</h3>
+  <div class="step-block">
+    <h4>启动对话</h4>
+    <pre><span class="cmd">bookworm</span>              <span class="comment"># 经典 CLI 模式</span>
+<span class="cmd">bookworm --tui</span>         <span class="comment"># 现代 TUI (鼠标支持/模态窗口)</span>
+<span class="cmd">bookworm --continue</span>    <span class="comment"># 继续上次会话</span></pre>
+    <p style="margin-top:12px">进入对话后，试试这些命令：</p>
+    <pre><span class="cmd">/help</span>                  <span class="comment"># 查看所有命令</span>
+<span class="cmd">/model</span>                 <span class="comment"># 切换 AI 模型</span>
+<span class="cmd">/tools</span>                 <span class="comment"># 查看可用工具</span>
+<span class="cmd">/new</span>                   <span class="comment"># 开始新会话</span></pre>
+  </div>
+
+  <!-- Step 4: Gateway -->
+  <h3 id="gateway-setup"><span class="step-num">4</span> Gateway 多平台部署 <span class="badge badge-adv">可选</span></h3>
+  <p style="color:var(--m);margin-bottom:16px">Gateway 让你通过微信、Telegram、Discord、Slack 等 15+ 平台与 AI 对话。</p>
+
+  <div class="step-block">
+    <h4>配置并启动</h4>
+    <pre><span class="cmd">bookworm gateway setup</span>    <span class="comment"># 交互式配置 (选择平台、填 Token)</span>
+<span class="cmd">bookworm gateway start</span>    <span class="comment"># 后台启动</span>
+<span class="cmd">bookworm gateway status</span>   <span class="comment"># 检查状态</span></pre>
+    <p style="margin-top:12px">支持的平台：</p>
+    <div class="skill-tags">
+      <span class="tag">Telegram</span><span class="tag">Discord</span><span class="tag">Slack</span>
+      <span class="tag">微信</span><span class="tag">企业微信</span><span class="tag">钉钉</span>
+      <span class="tag">飞书</span><span class="tag">WhatsApp</span><span class="tag">Signal</span>
+      <span class="tag">Matrix</span><span class="tag">Email</span><span class="tag">SMS</span>
+      <span class="tag">QQ Bot</span><span class="tag">Home Assistant</span><span class="tag">Webhook API</span>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <h4>OpenAI 兼容 API <span class="badge badge-adv">高级</span></h4>
+    <p>Gateway 内置 OpenAI 兼容 API 服务，任何支持 OpenAI 格式的前端都能接入：</p>
+    <pre><span class="comment"># 启动后自动监听 http://localhost:8642/v1</span>
+<span class="comment"># 兼容 Open WebUI / LobeChat / NextChat / ChatBox 等</span>
+
+<span class="comment"># 测试连通</span>
+<span class="cmd">curl http://localhost:8642/health</span>
+<span class="cmd">curl http://localhost:8642/v1/models</span></pre>
+  </div>
+
+  <!-- Step 5: Verify -->
+  <h3 id="verify"><span class="step-num">5</span> 验证安装</h3>
+  <div class="step-block">
+    <h4>运行诊断</h4>
+    <pre><span class="comment"># 快速烟雾测试 (无网络)</span>
+<span class="cmd">bookworm canary</span>
+
+<span class="comment"># 含 API 连通验证</span>
+<span class="cmd">bookworm canary --live</span>
+
+<span class="comment"># 完整诊断报告</span>
+<span class="cmd">bookworm doctor</span>
+
+<span class="comment"># 查看系统状态</span>
+<span class="cmd">bookworm status --deep</span></pre>
+  </div>
+
+  <!-- Step 6: Troubleshoot -->
+  <h3 id="troubleshoot"><span class="step-num">6</span> 故障排查</h3>
+
+  <div class="troubleshoot">
+    <h4><code>bookworm: command not found</code></h4>
+    <p>关闭并重新打开终端。如果仍然不行，手动添加 PATH：<br>
+    Windows: <code>$env:PATH += ";$env:LOCALAPPDATA\bookworm\bookwormpro\venv\Scripts"</code><br>
+    Linux: <code>export PATH="$HOME/.bookwormpro/bookwormpro/venv/bin:$PATH"</code></p>
+  </div>
+  <div class="troubleshoot">
+    <h4>AI 回复为空或报错</h4>
+    <p>重新运行 <code>bookworm setup model</code> 检查 Provider 和 API Key 配置。<br>运行 <code>bookworm doctor</code> 查看详细诊断。</p>
+  </div>
+  <div class="troubleshoot">
+    <h4>Gateway 启动后平台无响应</h4>
+    <p>运行 <code>bookworm gateway status</code> 检查各平台连接状态。<br>重新运行 <code>bookworm gateway setup</code> 更新 Token。</p>
+  </div>
+  <div class="troubleshoot">
+    <h4>已有旧版本，想重新安装</h4>
+    <p>先运行 <code>bookworm uninstall</code> 卸载旧版，然后重新按安装指南操作。<br>如果旧版本太早没有 uninstall 命令，手动清理：<br>
+    <code>Remove-Item -Recurse -Force "$env:LOCALAPPDATA\bookworm","$HOME\.bookwormpro","$HOME\.hermes" -ErrorAction SilentlyContinue</code></p>
+  </div>
+  <div class="troubleshoot">
+    <h4>Python 安装失败 / 下载超时</h4>
+    <p>安装脚本会自动通过 uv 和 winget 两种方式安装 Python。如果都失败 (常见于网络受限环境)，手动安装后重试：<br>
+    <code>winget install Python.Python.3.12</code><br>
+    安装完成后关闭并重新打开终端，再次运行安装脚本即可。</p>
+  </div>
+  <div class="troubleshoot">
+    <h4>Python/Node 版本冲突</h4>
+    <p>BookwormPRO 使用独立虚拟环境，不影响系统 Python。<br>如遇冲突，删除 <code>%LOCALAPPDATA%\bookworm\bookwormpro\venv</code> 目录后重新安装。</p>
+  </div>
+  <div class="troubleshoot">
+    <h4>更多帮助</h4>
+    <p><code>bookworm dump</code> 生成完整调试摘要，发给技术支持。<br>
+    <code>bookworm update</code> 更新到最新版本。</p>
+  </div>
+
+</div></section>
+
+<!-- ═══════ 功能亮点 ═══════ -->
+<section><div class="container">
+  <h2>装完立刻能做什么</h2>
+  <p class="section-sub">不需要记技能名，正常对话即可 — AI 自动匹配最合适的专家</p>
+
+  <div class="feat-row"><div class="icon">🛡</div><div><h4>安全审查 — 说"审查这个项目安全性"</h4><p>AI 自动调用安全技能组合：OWASP Top 10 扫描、注入检测、凭证泄漏检查、依赖供应链审计、权限模型验证。一份命令，全面报告。</p></div></div>
+  <div class="feat-row"><div class="icon">🎨</div><div><h4>前端设计 — 说"设计一个登录页"</h4><p>不是千篇一律的 AI 模板。多种设计风格、配色方案和字体组合可选。出来的代码直接可用，暗色主题、响应式、无障碍全到位。</p></div></div>
+  <div class="feat-row"><div class="icon">📊</div><div><h4>数据分析 — 说"分析这份 CSV"</h4><p>AI 自动启动 Jupyter 内核，跑 Pandas/Matplotlib，出图表出结论。不懂 Python？没问题，你用中文描述需求，AI 写代码跑结果。</p></div></div>
+  <div class="feat-row"><div class="icon">🤖</div><div><h4>多 Agent 协作 — 复杂任务自动拆分</h4><p>超过 3 个领域的任务自动激活编排器：拆成子任务 → 并行分派给不同专家 Agent → 汇总结果。</p></div></div>
+</div></section>
+
+<!-- ═══════ 技能一览 ═══════ -->
+<section style="background:var(--s)"><div class="container">
+  <h2>技能领域一览</h2>
+  <p class="section-sub">135+ 技能覆盖开发、安全、运维、设计、商业等领域</p>
+  <div class="g4">
+    <div class="card"><div class="icon">🖥</div><h4>软件开发</h4><p>通用开发、调试侦探、代码审查、重构专家</p></div>
+    <div class="card"><div class="icon">🛡</div><h4>安全审计</h4><p>OWASP、红队对抗、凭证守护、零缺陷门控</p></div>
+    <div class="card"><div class="icon">🚀</div><h4>DevOps</h4><p>Docker、SSL 证书、网关加固、CI/CD</p></div>
+    <div class="card"><div class="icon">🎨</div><h4>创意设计</h4><p>UI/UX 设计、信息图、架构图</p></div>
+    <div class="card"><div class="icon">📊</div><h4>数据科学</h4><p>数据分析、机器学习、学术论文</p></div>
+    <div class="card"><div class="icon">🤖</div><h4>AI/ML</h4><p>模型微调、推理部署、提示词优化</p></div>
+    <div class="card"><div class="icon">💰</div><h4>商业财经</h4><p>商业计划书、定价策略、财务顾问</p></div>
+    <div class="card"><div class="icon">📱</div><h4>移动开发</h4><p>React Native、Flutter、微信小程序</p></div>
+  </div>
+</div></section>
+
+<!-- ═══════ 免费试用 ═══════ -->
+<section id="trial"><div class="container" style="text-align:center">
+  <h2>免费试用 7 天</h2>
+  <p class="section-sub">无需注册，无需信用卡 — 一行命令解锁 135+ 全部技能，体验 7 天</p>
+
+  <div style="max-width:640px;margin:0 auto">
+    <div class="step-block" style="text-align:left">
+      <h4><span class="step-num">1</span> 安装 BookwormPRO</h4>
+      <pre><span class="comment"># Windows PowerShell</span>
+<span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.ps1 | iex</span>
+
+<span class="comment"># Linux / macOS</span>
+<span class="cmd">curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.sh | bash</span></pre>
+    </div>
+
+    <div class="step-block" style="text-align:left">
+      <h4><span class="step-num">2</span> 一键激活试用</h4>
+      <pre><span class="cmd">bookworm trial</span>
+<span class="output"># ┌──────────── 7-Day Free Trial ────────────┐</span>
+<span class="output"># │ Trial activated!                         │</span>
+<span class="output"># │   Tier:      trial                       │</span>
+<span class="output"># │   Expires:   &lt;7 天后日期&gt;                 │</span>
+<span class="output"># └──────────────────────────────────────────┘</span></pre>
+    </div>
+
+    <div class="step-block" style="text-align:left">
+      <h4><span class="step-num">3</span> 开始使用</h4>
+      <pre><span class="cmd">bookworm</span>    <span class="comment"># 进入对话，135+ 技能自动匹配</span></pre>
+    </div>
+
+    <p style="margin-top:32px;color:var(--m);font-size:.9em">
+      试用到期后技能将锁定。<a href="#pricing">升级为个人版</a> 即可解锁全部技能 (按年订阅)。<br>
+      每台机器仅可试用一次 (HWID 绑定)。
+    </p>
+  </div>
+</div></section>
+
+<!-- ═══════ 激活 License ═══════ -->
+<section id="activate" style="background:var(--s)"><div class="container">
+  <h2>激活 License</h2>
+  <p class="section-sub">购买后收到 .license 文件，3 步完成激活</p>
+
+  <div class="step-block">
+    <h4><span class="step-num">1</span> 获取机器指纹 (HWID)</h4>
+    <p style="color:var(--m);margin-bottom:12px">首次激活需要采集机器硬件指纹，用于绑定 License。</p>
+    <pre><span class="cmd">bookworm license hwid</span>
+<span class="output"># 输出: Machine HWID: 24afab...4ac71c</span>
+<span class="comment"># 将此 HWID 发送给客服，客服据此生成专属 License</span></pre>
+  </div>
+
+  <div class="step-block">
+    <h4><span class="step-num">2</span> 激活 License 文件</h4>
+    <p style="color:var(--m);margin-bottom:12px">收到客服发来的 <code>.license</code> 文件后，一行命令激活。</p>
+    <pre><span class="cmd">bookworm activate /path/to/your.license</span>
+<span class="output"># ┌─────────── Activation Successful ───────────┐</span>
+<span class="output"># │ License activated                           │</span>
+<span class="output"># │   Licensee:  Your Company                   │</span>
+<span class="output"># │   Tier:      pro                            │</span>
+<span class="output"># │   Expires:   2027-06-01                     │</span>
+<span class="output"># └─────────────────────────────────────────────┘</span></pre>
+  </div>
+
+  <div class="step-block">
+    <h4><span class="step-num">3</span> 验证激活状态</h4>
+    <pre><span class="cmd">bookworm license status</span>
+<span class="output"># ┌────────────── License Status ──────────────┐</span>
+<span class="output"># │   Status:    VALID                         │</span>
+<span class="output"># │   Licensee:  Your Company                  │</span>
+<span class="output"># │   Tier:      pro                           │</span>
+<span class="output"># │   Expires:   2027-06-01                    │</span>
+<span class="output"># └────────────────────────────────────────────┘</span></pre>
+  </div>
+
+  <h3 style="margin-top:48px">License 管理命令</h3>
+  <div class="g2" style="margin-top:16px">
+    <div class="card">
+      <h4>查看状态</h4>
+      <pre style="margin:8px 0"><span class="cmd">bookworm license status</span></pre>
+      <p>查看当前 License 有效性、到期时间、绑定信息。</p>
+    </div>
+    <div class="card">
+      <h4>查看机器指纹</h4>
+      <pre style="margin:8px 0"><span class="cmd">bookworm license hwid</span></pre>
+      <p>显示当前机器 HWID。更换机器后需重新绑定。</p>
+    </div>
+    <div class="card">
+      <h4>移除 License</h4>
+      <pre style="margin:8px 0"><span class="cmd">bookworm license deactivate</span></pre>
+      <p>从本机移除已安装的 License 文件。</p>
+    </div>
+    <div class="card">
+      <h4>版本更新</h4>
+      <pre style="margin:8px 0"><span class="cmd">bookworm update</span></pre>
+      <p>更新到最新版本。License 和配置不受影响。</p>
+    </div>
+  </div>
+
+</div></section>
+
+<!-- ═══════ 定价 ═══════ -->
+<section id="pricing"><div class="container">
+  <h2>获取 BookwormPRO</h2>
+  <p class="section-sub">HWID 机器绑定 · Ed25519 签名授权 · 质量保障退款</p>
+
+  <div class="g2" style="align-items:stretch;max-width:800px;margin:0 auto">
+    <div class="price-card" style="border-color:var(--a);position:relative">
+      <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--a),#e0b860);color:#0a0a12;padding:4px 20px;border-radius:20px;font-size:.8em;font-weight:700">个人版</div>
+      <h3 style="color:var(--a);font-size:1.3em">BookwormPRO</h3>
+      <div class="amount">&yen;299</div>
+      <div class="per">/年 (续费 &yen;210/年)</div>
+      <ul style="list-style:none;margin:28px 0;text-align:left;font-size:.92em">
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> <strong>135+ 全部技能</strong> 解锁</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> CLI + TUI + Gateway 全平台</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 单机 HWID License 绑定</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 每周同步国际社区更新</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 安装诊断 + 智能路由</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 48 小时邮件支持</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 质量问题 7 天退款 (<a href="/terms.html#退款" style="font-size:.85em">详情</a>)</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--a)">&#10003;</span> 一键版本更新 (<code>bookworm update</code>)</li>
+      </ul>
+    </div>
+
+    <div class="card" style="text-align:center;padding:36px 24px;border-color:var(--blue)">
+      <h4 style="color:var(--blue);font-size:1.3em">团队 / 企业</h4>
+      <div style="font-size:2.8em;font-weight:900;color:#fff;margin:16px 0 4px">面议</div>
+      <div style="color:var(--m);font-size:.9em">按机器数量授权</div>
+      <ul style="list-style:none;margin:28px 0;text-align:left;font-size:.92em">
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 个人版全部功能</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> <strong>多机 License</strong> (每台独立 HWID 签发)</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 团队人数阶梯折扣</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 优先邮件技术支持</li>
+        <li style="padding:6px 0;color:var(--m)"><span style="color:var(--blue)">&#10003;</span> 发票 + 合同</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="qr-box" style="text-align:center;max-width:480px;margin:32px auto 0">
+    <p style="color:#fff;font-size:1.05em"><strong>QQ 扫码联系客服</strong></p>
+    <img src="/contact-qr.jpg" alt="QQ 联系客服">
+    <div class="step">1. 先按 <a href="#install-guide">安装指南</a> 部署 BookwormPRO</div>
+    <div class="step">2. 运行 <code style="color:var(--a2)">bookworm license hwid</code> 获取机器指纹</div>
+    <div class="step">3. QQ 扫码联系客服，发送 HWID + 选择套餐 + 支付</div>
+    <div class="step">4. 收到 .license 文件后 <a href="#activate" style="color:var(--a2)">bookworm activate</a> 激活</div>
+  </div>
+</div></section>
+
+<!-- ═══════ FAQ ═══════ -->
+<section id="faq"><div class="container">
+  <h2>常见问题</h2>
+
+  <h3 style="color:var(--a);margin-bottom:16px">安装与使用</h3>
+  <div class="faq"><h4>需要什么前置条件?</h4><p>只需要 Git 和一个 AI API Key。推荐 DeepSeek (platform.deepseek.com，支付宝充值 1 元起)。安装脚本自动处理 Python、Node.js 等其他依赖。</p></div>
+  <div class="faq"><h4>支持哪些 AI 助手?</h4><p>所有兼容 Skills 协议的 AI 编程助手：Claude Code、Cursor、Windsurf 等。同时内置独立 CLI / TUI 客户端和 Gateway 多平台服务。</p></div>
+  <div class="faq"><h4>和直接问 AI 有什么区别?</h4><p>AI 本身是通用模型。BookwormPRO 给它加载了 135+ 个专家级的提示词和工作流程。同样的 AI，加载技能后输出的代码质量、安全审查深度、设计水平显著提升。</p></div>
+  <div class="faq"><h4>怎么更新?</h4><p>运行 <code>bookworm update</code> 即可。更新不丢失你的 API Key、License 和个人配置。</p></div>
+
+  <h3 style="color:var(--a2);margin:32px 0 16px">License 与激活</h3>
+  <div class="faq"><h4>HWID mismatch 怎么办?</h4><p>License 绑定的机器与当前机器不同。运行 <code>bookworm license hwid</code> 获取新 HWID 联系客服重新绑定。更换电脑、重装系统、更换网卡都可能导致 HWID 变化。</p></div>
+  <div class="faq"><h4>License expired 怎么办?</h4><p>联系客服续费 (续费 &yen;210/年，7 折)。收到新 .license 文件后重新 <code>bookworm activate</code> 即可。</p></div>
+  <div class="faq"><h4>可以在多台机器上使用吗?</h4><p>个人版绑定单台机器 (HWID)。多台机器使用请联系客服获取团队/企业多机授权方案。</p></div>
+  <div class="faq"><h4>Skills 列表为空?</h4><p>可能 License 未激活或已过期。运行 <code>bookworm license status</code> 检查。加密技能需要有效 License 解锁。</p></div>
+
+  <h3 style="color:var(--m);margin:32px 0 16px">安全与支付</h3>
+  <div class="faq"><h4>我的 API Key 安全吗?</h4><p>Key 只存储在本地 ~/.bookwormpro/.env 文件，不上传任何服务器。技能文件采用 AES-256-GCM 加密，License 采用 Ed25519 数字签名，防篡改防拷贝。</p></div>
+  <div class="faq"><h4>可以开发票吗?</h4><p>可以。提供电子普通发票。联系客服告知开票信息即可。</p></div>
+  <div class="faq"><h4>退款怎么操作?</h4><p>2 小时内未下载可全额退款；下载后如遇文件损坏等质量问题，7 天内可退款或免费更换。详见 <a href="/terms.html">服务条款</a> 第四条。</p></div>
+</div></section>
+
+<footer>
+  <p><strong>BookwormPRO</strong> &mdash; AI 助手的工匠级技能包</p>
+  <p style="margin-top:6px"><a href="/terms.html">服务条款</a> &middot; <a href="/privacy.html">隐私政策</a></p>
+  <p style="margin-top:8px;font-size:.75em">鑫霖科技（广东）有限公司 &middot; <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2026011564号</a></p>
+  <p style="margin-top:10px;color:var(--a)">善读者，必善造。</p>
+</footer>
+
+<button class="back-top" onclick="scrollTo({top:0})" aria-label="返回顶部">↑</button>
+
+<script>
+function switchTab(id){
+  document.querySelectorAll('.install-tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.install-panel').forEach(function(p){p.classList.remove('active')});
+  var btn=event.target.closest('.install-tab');
+  if(btn)btn.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('pre').forEach(function(pre){
+    var btn=document.createElement('span');
+    btn.className='copy-btn';
+    btn.textContent='\u{1F4CB} 复制';
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var text=pre.textContent.replace(btn.textContent,'').replace(/^#.*$/gm,'').replace(/^\s*\n/gm,'').trim();
+      navigator.clipboard.writeText(text).then(function(){
+        btn.textContent='✓ 已复制';
+        btn.classList.add('copied');
+        setTimeout(function(){btn.textContent='\u{1F4CB} 复制';btn.classList.remove('copied')},2000);
+      });
+    });
+    pre.appendChild(btn);
+    pre.addEventListener('click',function(){btn.click()});
+  });
+  if(location.hash){var el=document.querySelector(location.hash);if(el&&el.tagName==='SECTION')el.classList.add('hash-target')}
+  var topBtn=document.querySelector('.back-top');
+  window.addEventListener('scroll',function(){topBtn.style.display=scrollY>600?'flex':'none'});
+});
+</script>
+
+</body>
+</html>

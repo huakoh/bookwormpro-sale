@@ -1,0 +1,1 @@
+# BookwormPRO plugins package

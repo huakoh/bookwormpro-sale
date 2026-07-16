@@ -1,0 +1,7 @@
+name: dashscope
+version: 1.0.0
+description: "Alibaba DashScope image generation backend (通义万相 / Qwen-Image). 国内直连，异步生成，支持支付宝/微信支付。"
+author: BookwormPRO
+kind: backend
+requires_env:
+  - DASHSCOPE_API_KEY

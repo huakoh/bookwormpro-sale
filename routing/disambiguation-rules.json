@@ -1,0 +1,1622 @@
+{
+  "_meta": {
+    "version": "v2.2",
+    "description": "消歧规则外部化 — v6.5.1 扩展至 93 条，R81-R83 新增路由精准度修复 (bookworm自检→self-auditor, 自动修复→self-healer, 裸字自动 BAE penalty) | v1.5 (2026-04-24): R84-R88 Bookworm 元词路由修复 | L1d (2026-04-25): R84/R86 追加无 bookworm 短词分支 (路由分析/钩子管线/系统自检 等) | L1d (2026-04-25): R84/R86 追加无 bookworm 短词分支 (路由分析/钩子管线/系统自检 等) | v1.5.1 (2026-04-25): R89 路由自愈场景修复 (D1 Q7) | v1.5.2 (2026-04-25): R87 penalty 清理 + R84 L1d 业务前缀扩展",
+    "generatedFrom": "route-analyzer.js DISAMBIGUATION_RULES (v6.5.1 消歧 83 条)",
+    "ruleCount": 133,
+    "changelog": [
+      "v2.2 (3 new rules): R130-R132 — v6.6.1 feedback transplant (handoff + devops/sre + context-inherit)",
+      "v1.6 (16 new rules): R94-R109 — golden-set accuracy fixes (api-designer, golang-pro, nextjs, python-pro, typescript-pro, legal, data-analyst, planning, ultimate-code, devops-vpn, flutter, vue, k8s, terraform, regex, mcp-probe)",
+      "R01: 添加 mutual_exclusion 注解，memory leak 场景排除 performance-expert 误触",
+      "R05: 添加 mutual_exclusion 注解，memory leak 由 R01 优先处理",
+      "R04: 增加 graphql-architect penalty，修复 '系统工作逻辑+架构分析' 误路由",
+      "R43: 新增 — 架构分析显式请求 → architect-expert (修复 graphql-architect 误触)",
+      "R44: 新增 — MCP/连接失败排查 → debugger-expert (修复 planning-with-files 误触)",
+      "R45: 新增 — Auth/OAuth/JWT 路由 → security-expert vs api-integration-specialist 消歧",
+      "R46: 新增 — Flutter 滚动/渲染性能 → flutter-expert (非 performance-expert)",
+      "R47: 新增 — 清理/删除系统组件 → devops-expert (修复 backend-builder 误触)",
+      "R48: 新增 — 网络/代理/VPN 配置 → devops-expert (修复 flutter-expert 误触)",
+      "R52: 新增 — Windows 桌面/RPA 自动化 → workflow-automation-expert (修复 browser-automation-expert 误触)",
+      "R53: 新增 — COM/Office 自动化 → workflow-automation-expert (修复 developer-expert 误触)",
+      "R54: 新增 — 视觉自动化/OCR 点击 → browser-automation-expert vs workflow-automation-expert 消歧",
+      "R55: 新增 — 网页截图/站点测试 → browse (Browserbase MCP, 区分桌面截图 R52)",
+      "R56: 新增 — Excel 数据分析 vs Excel 自动化 → data-analyst-expert 消歧 (R53 处理自动化场景)",
+      "R57: 新增 — guardian 统一安全守护 (careful/freeze/guard/unfreeze deprecated 重定向)",
+      "R58: 新增 — evolution-tracker vs retro 消歧 (系统进化 vs 工程周报)",
+      "R59: 新增 — qa report-only 模式 (qa-only deprecated 重定向)",
+      "R60: 新增 — office-hours deprecated → plan-ceo-review 重定向",
+      "R61: 新增 — AI 伦理/哲学/对齐/偏见 → ai-philosophy-expert (消歧 ai-ml-expert/security-expert/legal-review-skill)",
+      "R62: 新增 — Firecrawl 爬虫/站点抓取 → browser-automation-expert (MCP: firecrawl)",
+      "R63: 新增 — GitHub PR/Issue/仓库操作 → developer-expert (MCP: github, 区分 git-operation-master 本地操作)",
+      "R64: 新增 — Slack 消息/频道操作 → developer-expert (MCP: slack)",
+      "R65: 新增 — NotebookLM 笔记本操作 → developer-expert (MCP: notebooklm)",
+      "R66: 新增 — context7 实时文档查询 → developer-expert (MCP: context7)",
+      "R67: 新增 — sequential-thinking 深度推理 → developer-expert (MCP: sequential-thinking)",
+      "R68: 新增 — COM 对象精准触发 → workflow-automation-expert (MCP: mcp-com-server, 增强 R53 覆盖)",
+      "R69: 新增 — 浏览器性能/调试/DevTools → browser-automation-expert (preferred_mcp: chrome-devtools)",
+      "R70: 新增 — E2E/自动化测试/Playwright → browser-automation-expert (preferred_mcp: playwright)",
+      "R71: 新增 — 智能浏览代理/CUA/多步骤网页任务 → browse (preferred_mcp: browserbase, 区分 playwright 本地)",
+      "R72: 新增 — 网络请求监控/抓包/API调试 → browser-automation-expert (preferred_mcp: chrome-devtools, 区分 playwright)",
+      "R73: 新增 — MCP 全量体检/连通性探测 → mcp-probe (mutual_exclusion with R44: R44 单点 MCP 排查 vs R73 全量体检)",
+      "R74: 新增 — Google Workspace 操作 (Drive/Docs/Sheets/Slides/Calendar) → developer-expert (preferred_mcp: google-drive, 99 工具)",
+      "R52-R68: 补 preferred_mcp 字段 — orbination/mcp-com-server/askui-vision/firecrawl/github/slack/notebooklm/context7/sequential-thinking 共 10 条规则激活路由绑定",
+      "R75: 新增 — Linear 工单/issue 操作 → developer-expert (preferred_mcp: linear, 加固防 linear regression 误触)",
+      "R76: 新增 — Jira/Confluence 操作 → developer-expert (preferred_mcp: atlassian)",
+      "R77: 新增 — Supabase 数据库/BaaS → backend-builder (preferred_mcp: supabase, 收紧裸词)",
+      "R78: 新增 — Figma 设计稿操作 → designer-expert (preferred_mcp: figma, 扩展导入/拉取/转代码表达)",
+      "R79: 新增 — Cloudflare Workers/Pages/KV → edge-computing-expert (preferred_mcp: cloudflare, 加固防 service-worker 误触)",
+      "R80: 新增 — AI 文生图/图像生成 → designer-expert (preferred_mcp: mcp-image, 加固防流程图/图表误触)",
+      "R81: 新增 — Bookworm 系统自检/审计 → self-auditor agent (修复 bookkworm自检 误路由至 review)",
+      "R82: 新增 — 自动修复审计问题 → self-healer agent (修复 自动修复 误路由至 browser-automation-expert)",
+      "R83: 新增 — 裸字'自动' penalty browser-automation-expert (防 TF-IDF 过拟合)",
+      "R84: 新增 — Bookworm 元词 (路由/消歧/钩子/管线/注入器/分类器/引擎/遥测) → self-auditor (penalty vue-expert)",
+      "R85: 新增 — skill 矩阵/瘦身/提质/裁剪 → self-auditor (penalty canary)",
+      "R86: 新增 — Bookworm 系统梳理/全量梳理 → self-auditor (penalty project-audit-expert)",
+      "R87: 新增 — Bookworm 查询性问题 (在哪/什么是/如何) → developer-expert",
+      "R88: 新增 — 通用\"提质\" penalty canary 防 monitoring 误触",
+      "L1d: R84 追加 (路由分析|路由消歧|钩子管线|管线审查|路由引擎|意图分类器|权重学习器|消歧规则|消歧引擎|融合权重) 无 bookworm 短词分支",
+      "L1d: R86 追加 系统自检 无 bookworm 短词分支 (反回归: 边界字符前缀)",
+      "L1d: R84 追加 (路由分析|路由消歧|钩子管线|管线审查|路由引擎|意图分类器|权重学习器|消歧规则|消歧引擎|融合权重) 无 bookworm 短词分支",
+      "L1d: R86 追加 系统自检 无 bookworm 短词分支 (反回归: 边界字符前缀)",
+      "R89: 新增 — 路由/规则/计数 自愈 → self-healer (D1 Q7 修复, 与 R84/R86 对称, penalty vue-expert/api-integration-specialist/reviewer-expert)",
+      "R87: 修正 — 移除 penalty self-auditor (与 R86 boost 语义冲突, 导致查询型 self-auditor 场景误降权到 developer-expert)",
+      "R84: L1d 扩展 — trigger negative-lookbehind 增加 uniapp/uni-app/taro/svelte/solid/qwik 业务前缀排除, 防\"uniapp 路由消歧\"等误吸到 self-auditor",
+      "R27: 移除 bookworm|自检 关键词 (已由 R81-R89 覆盖)",
+      "R58: 补充 boost: evolution-tracker",
+      "R90: 新增 — SRE 专属场景 sre-expert (postmortem/on-call/runbook等)",
+      "R91: 新增 — 变更影响分析 impact-analyst (爆炸半径/依赖分析等)",
+      "R92: 新增 — Google Sheets 数据分析 data-analyst-expert (preferred_mcp: google-drive)",
+      "R93: 新增 — 浏览器MCP统一路由 browser-automation-expert (preferred_mcp: playwright)",
+      "v2.0 (4 new rules): R126-R129 — accuracy edge-case fixes (Excel数据, MCP认证, 上下文上限, config裸词)",
+      "v2.0.1: R127 trigger fixed ([^]* for newline crossing), R126 +impact-analyst penalty",
+      "v2.1: R127 weight→1.0 + broad penalty net for /mcp auth error → debugger-expert (100% accuracy)"
+    ],
+    "l1d_implicit_meta_applied": true,
+    "l1d_patched_at": "2026-04-25T02:11:52.010Z",
+    "l1d_implicit_meta_applied_v2": true,
+    "PATCH_ROUTE_PRECISION_10X_BATCH_A_APPLIED": true,
+    "patchedAt_batchA": "2026-04-27T13:06:05.369Z"
+  },
+  "rules": [
+    {
+      "id": "R01",
+      "note": "问题类型优先: Bug/报错/调试/leak → debugger-expert",
+      "trigger": "bug|报错|异常|崩溃|调试|错误|stack\\s*trace|不工作|为什么报|debug|leak|内存泄漏|fix\\b.*\\b(?:bug|error|issue)|not\\s+(?:working|rendering|loading)",
+      "boost": "debugger-expert",
+      "penalty": [
+        "tester-expert",
+        "frontend-expert",
+        "backend-builder",
+        "api-integration-specialist",
+        "browser-automation-expert"
+      ],
+      "weight": 0.35,
+      "mutual_exclusion": {
+        "with": "R05",
+        "on_keyword": "内存泄漏|memory\\s*leak|leak",
+        "resolution": "R01 优先 — 内存泄漏首先是 Bug 调试场景，仅当用户明确说'性能优化'时才路由 R05"
+      }
+    },
+    {
+      "id": "R02",
+      "note": "DevSecOps 优先于 security",
+      "trigger": "sast|dast|容器安全|sbom|镜像扫描|安全扫描|安全流水线|trivy|gatekeeper",
+      "boost": "devsecops-expert",
+      "penalty": [
+        "security-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R03",
+      "note": "安全问题优先: 渗透/漏洞/加密 → security-expert",
+      "trigger": "渗透|漏洞利用|xss|sql注入|owasp|加密|认证授权|安全审计|安全编码",
+      "boost": "security-expert",
+      "penalty": [
+        "tester-expert",
+        "backend-builder",
+        "api-integration-specialist"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R04",
+      "note": "架构问题优先: 架构/设计 → architect-expert (排除 graphql-architect 误触)",
+      "trigger": "架构|系统设计|技术选型|分布式",
+      "boost": "architect-expert",
+      "penalty": [
+        "database-tuning-expert",
+        "backend-builder"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R05",
+      "note": "性能问题路由 → performance-expert (memory leak 由 R01 优先)",
+      "trigger": "性能优化|加载慢|响应慢|卡顿|core web vitals",
+      "boost": "performance-expert",
+      "penalty": [
+        "browser-automation-expert",
+        "frontend-expert",
+        "devops-expert"
+      ],
+      "weight": 0.25,
+      "mutual_exclusion": {
+        "with": "R01",
+        "on_keyword": "内存泄漏|memory\\s*leak|leak",
+        "resolution": "当 R01 同时触发时，R05 不应 boost performance-expert；仅纯性能优化场景（无 bug/leak 语境）触发"
+      }
+    },
+    {
+      "id": "R06",
+      "note": "审查 vs 调试: Code Review → reviewer-expert",
+      "trigger": "代码评审|code review|pr review|审查代码|检查代码",
+      "boost": "reviewer-expert",
+      "penalty": [
+        "debugger-expert",
+        "project-audit-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R07",
+      "note": "K8s 路由 → cloud-native-expert",
+      "trigger": "k8s|kubernetes|helm|istio|服务网格|deploy.*(?:k8s|kubernetes|microservice)|(?:k8s|kubernetes).*deploy",
+      "boost": "cloud-native-expert",
+      "penalty": [
+        "devops-expert",
+        "architect-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R08",
+      "note": "全项目审计 vs 单文件审查",
+      "trigger": "全栈审计|全项目审计|全面检查|上线前审查|全面审计|上线前检查",
+      "boost": "project-audit-expert",
+      "penalty": [
+        "reviewer-expert",
+        "devops-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R09",
+      "note": "数据分析 vs 测试 → data-analyst-expert",
+      "trigger": "数据清洗|数据分析|可视化|pandas|matplotlib|统计分析",
+      "boost": "data-analyst-expert",
+      "penalty": [
+        "tester-expert",
+        "diagram-as-code-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R10",
+      "note": "定价路由 → pricing-strategist",
+      "trigger": "定价|怎么收费|定价模型|价格策略|提价",
+      "boost": "pricing-strategist",
+      "penalty": [
+        "finance-advisor"
+      ],
+      "weight": 0.2
+    },
+    {
+      "id": "R11",
+      "note": "SEO 路由 → technical-seo-expert",
+      "trigger": "seo|搜索优化|百度收录|sitemap|robots",
+      "boost": "technical-seo-expert",
+      "penalty": [
+        "growth-hacker",
+        "frontend-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R12",
+      "note": "CI/CD + Docker → devops-expert",
+      "trigger": "ci\\/cd|流水线|docker.*构建|镜像构建|github actions|gitlab ci",
+      "boost": "devops-expert",
+      "penalty": [
+        "performance-expert",
+        "architect-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R13",
+      "note": "用户研究 vs 测试 → ux-researcher",
+      "trigger": "用户访谈|可用性测试|persona|用户画像|用户旅程|痛点分析",
+      "penalty": [
+        "tester-expert",
+        "product-manager-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R14",
+      "note": "增长 vs 测试 → growth-hacker",
+      "trigger": "aarrr|增长模型|裂变|拉新|私域|转化率优化",
+      "boost": "growth-hacker",
+      "penalty": [
+        "tester-expert",
+        "data-analyst-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R15",
+      "note": "技术文档 vs 后端 → tech-writer-expert",
+      "trigger": "api文档|readme|用户手册|技术文档|写文档|文档编写",
+      "boost": "tech-writer-expert",
+      "penalty": [
+        "backend-builder",
+        "frontend-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R16",
+      "note": "React 框架实现 → frontend-expert (Vue 拆分至 R37)",
+      "trigger": "react.*(?:组件|hooks|zustand|redux|状态)|(?:组件|hooks|zustand|redux|状态).*react",
+      "boost": "frontend-expert",
+      "penalty": [
+        "backend-builder",
+        "api-integration-specialist"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R17",
+      "note": "零缺陷/安全重构 → zero-defect-guardian",
+      "trigger": "零缺陷|pinning\\s*test|安全重构|防退化|无损重构",
+      "boost": "zero-defect-guardian",
+      "penalty": [
+        "tester-expert",
+        "security-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R18",
+      "note": "gRPC/protobuf 实现 → backend-builder",
+      "trigger": "grpc|protobuf|gin|fastify|express.*路由|api.*实现",
+      "boost": "backend-builder",
+      "penalty": [
+        "architect-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R19",
+      "note": "安全测试 → security-expert (tester 消歧)",
+      "trigger": "渗透测试|安全测试|漏洞测试|fuzz.*test|模糊测试",
+      "boost": "security-expert",
+      "penalty": [
+        "tester-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R20",
+      "note": "用户测试 → ux-researcher (tester 消歧)",
+      "trigger": "用户测试|可用性.*测试|usability.*test|用户体验.*测试",
+      "penalty": [
+        "tester-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R21",
+      "note": "A/B测试 → data-analyst-expert (tester 消歧)",
+      "trigger": "a\\/b.*测试|ab.*测试|增长.*测试|实验设计.*转化|对照.*实验",
+      "boost": "data-analyst-expert",
+      "penalty": [
+        "tester-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R22",
+      "note": "增长实验 → growth-hacker (tester 消歧)",
+      "trigger": "增长.*实验|裂变.*测试|渠道.*测试|投放.*测试",
+      "boost": "growth-hacker",
+      "penalty": [
+        "tester-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R23",
+      "note": "API Key 配置 → api-integration-specialist (cloud-native 消歧)",
+      "trigger": "配置.*(?:api.?key|token|密钥|secret)|(?:gemini|deepseek|openai|claude|anthropic).*(?:key|密钥|token)",
+      "boost": "api-integration-specialist",
+      "penalty": [
+        "cloud-native-expert",
+        "devops-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R24",
+      "note": "SSH 远程操作 → devops-expert (performance 消歧)",
+      "trigger": "ssh\\s+.*@|ssh\\s+-[tpL]|远程连接.*服务器|远程服务器.*操作",
+      "boost": "devops-expert",
+      "penalty": [
+        "performance-expert",
+        "mobile-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R25",
+      "note": "Docker 容器操作 → devops-expert (非 K8s 场景)",
+      "trigger": "docker\\s+(?:attach|exec|logs|ps|run|start|stop|restart|rm|build|push|pull)",
+      "boost": "devops-expert",
+      "penalty": [
+        "performance-expert",
+        "mobile-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R26",
+      "note": "Shell/PowerShell 输出粘贴 → devops-expert",
+      "trigger": "PowerShell\\s+\\d+\\.\\d+|PS\\s+C:\\\\|\\$\\s+sudo|root@.*#",
+      "boost": "devops-expert",
+      "penalty": [
+        "mobile-expert",
+        "browser-automation-expert",
+        "miniprogram-expert",
+        "flutter-expert"
+      ],
+      "weight": 0.2
+    },
+    {
+      "id": "R27",
+      "note": "系统自检/健康检查 → project-audit-expert (避免误入 debugger/performance)",
+      "trigger": "系统自检|系统健康|健康检查|自审计|配置检查|一致性检查|self.?audit|health.?check|系统诊断",
+      "boost": "project-audit-expert",
+      "penalty": [
+        "debugger-expert",
+        "performance-expert",
+        "devops-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R28",
+      "note": "Android 设备控制 → mobile-expert (tester/browser-automation 消歧)",
+      "trigger": "android.*(?:设备|截图|模拟器|真机)|adb\\s+(?:devices|install|shell|push|pull|logcat)|设备截图|ui自动化.*(?:android|手机)|appium|uiautomator|mobile.*mcp",
+      "boost": "mobile-expert",
+      "penalty": [
+        "tester-expert",
+        "browser-automation-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R29",
+      "note": "工作流自动化 vs API 集成 → workflow-automation-expert",
+      "trigger": "zapier|n8n|make\\s+(?:scenario|工作流)|ifttt|工作流.*(?:自动化|编排|设计)|自动化.*(?:工作流|流程|场景)|低代码.*集成|跨平台.*同步|事件驱动.*自动化",
+      "boost": "workflow-automation-expert",
+      "penalty": [
+        "api-integration-specialist",
+        "devops-expert",
+        "browser-automation-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R30",
+      "note": "通知系统 vs 邮件沟通 → notification-system-expert",
+      "trigger": "推送通知|fcm|apns|web\\s*push|sendgrid|aws\\s*ses|mailgun|twilio|短信发送|slack\\s*bot|企业微信.*机器人|钉钉.*机器人|飞书.*机器人|站内信|通知.*(?:系统|中心|策略|模板)|消息.*(?:推送|分级|通道)",
+      "boost": "notification-system-expert",
+      "penalty": [
+        "backend-builder",
+        "api-integration-specialist"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R31",
+      "note": "浏览器自动化 vs 工作流自动化消歧",
+      "trigger": "playwright.*(?:自动化|测试)|selenium.*(?:自动化|脚本)|浏览器.*(?:自动化|抓取|截图)|网页.*(?:抓取|爬取|数据提取)",
+      "boost": "browser-automation-expert",
+      "penalty": [
+        "workflow-automation-expert"
+      ],
+      "weight": 0.25
+    },
+    {
+      "id": "R32",
+      "note": "测试优先: unit test/测试用例/TDD → tester-expert",
+      "trigger": "unit\\s*test|测试用例|测试覆盖|tdd|jest|vitest|pytest|test\\s+(?:case|suite|coverage)|写.*测试|测试.*(?:组件|函数|接口)|write.*test|test.*(?:component|function|api)",
+      "boost": "tester-expert",
+      "penalty": [
+        "frontend-expert",
+        "backend-builder",
+        "developer-expert",
+        "architect-expert"
+      ],
+      "weight": 0.5
+    },
+    {
+      "id": "R33",
+      "note": "数据库调优: SQL/慢查询/索引 → database-tuning-expert",
+      "trigger": "sql.*(?:优化|慢|索引|性能|optim|slow|index|perf)|慢查询|explain\\s+analyze|索引.*(?:优化|设计|失效)|查询.*(?:优化|慢|性能)|数据库.*(?:调优|优化|性能)|分库分表|读写分离|slow.*(?:sql|query|queries)|(?:query|queries).*(?:optim|slow|index|perf)",
+      "boost": "database-tuning-expert",
+      "penalty": [
+        "backend-builder",
+        "performance-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R34",
+      "note": "网页爬取/scraper → browser-automation-expert (非 workflow)",
+      "trigger": "scraper|scraping|爬虫|爬取|web\\s*scraping|数据采集|网页.*(?:抓取|提取)|crawl",
+      "boost": "browser-automation-expert",
+      "penalty": [
+        "workflow-automation-expert",
+        "developer-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R35",
+      "note": "React 路由 → frontend-expert (flutter/vue 消歧, 排除 test 场景)",
+      "trigger": "^(?!.*(?:test|测试|写测试)).*(?:react(?!\\s*native).*(?:component|hook|state|performance|优化)|(?:component|hook|state|performance|优化).*react(?!\\s*native))",
+      "boost": "frontend-expert",
+      "penalty": [
+        "flutter-expert",
+        "angular-architect"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R36",
+      "note": "ETL/数据管道 → data-engineer-expert (devops 消歧)",
+      "trigger": "etl|数据管道|data\\s*pipeline|spark|airflow|数据仓库|data\\s*warehouse|dbt|数据湖",
+      "boost": "data-engineer-expert",
+      "penalty": [
+        "devops-expert",
+        "backend-builder"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R37",
+      "note": "Vue/Pinia/Composition → vue-expert (frontend 消歧)",
+      "trigger": "vue.*(?:组件|状态|pinia|vuex|composition)|(?:pinia|vuex).*(?:store|state|组件|状态)|composition\\s*api.*(?:vue|pinia)",
+      "penalty": [
+        "frontend-expert",
+        "angular-architect",
+        "nextjs-developer"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R38",
+      "note": "K8s 配置/运维 → kubernetes-specialist (cloud-native 消歧)",
+      "trigger": "helm.*chart|rbac.*(?:k8s|kubernetes)|(?:k8s|kubernetes).*rbac|networkpolicy|pod.*(?:调度|安全|配置)|(?:k8s|kubernetes).*(?:operator|crd|namespace|admission)|kubectl",
+      "penalty": [
+        "cloud-native-expert",
+        "devops-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R39",
+      "note": "检查进度/日志/状态 → debugger-expert (不是法务审查)",
+      "trigger": "(?:检查|查看).*(?:进度|日志|状态|生成|运行|输出|结果)|(?:进度|日志|状态).*(?:检查|查看)",
+      "boost": "debugger-expert",
+      "penalty": [
+        "legal-review-skill",
+        "devsecops-expert",
+        "reviewer-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R40",
+      "note": "PowerShell/WMI/CIM 系统管理 → devops-expert",
+      "trigger": "powershell|wmi|cim|win32_|get-ciminstance|set-wmiinstance|get-wmiobject|虚拟内存|pagefile|系统管理|wmic",
+      "boost": "devops-expert",
+      "penalty": [
+        "flutter-expert",
+        "mobile-expert",
+        "browser-automation-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R41",
+      "note": "视频/图片生成质量+模型 → ai-ml-expert (不是提示词优化)",
+      "trigger": "(?:视频|图片|图像).*(?:质量|画质|分辨率|雪花|失败|模型|生成.*(?:差|烂|糊|模糊))|(?:质量|画质).*(?:视频|图片|图像|生成)|(?:模型|lora|checkpoint).*(?:加载|切换|选择|推荐)",
+      "boost": "ai-ml-expert",
+      "penalty": [
+        "prompt-optimizer",
+        "legal-review-skill",
+        "browser-automation-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R42",
+      "note": "短指令/确认类上下文延续 → 避免误路由到不相关 Skill",
+      "trigger": "^(?:需要|确认|好的|全部|下一步|开始|继续|执行|推进|批准|同意|可以|是的)$",
+      "boost": null,
+      "penalty": [
+        "flutter-expert",
+        "browser-automation-expert",
+        "legal-review-skill"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R43",
+      "note": "架构分析/系统逻辑显式请求 → architect-expert (修复 graphql-architect 误触)",
+      "trigger": "(?:系统|整个|整体|全局).*(?:工作逻辑|架构分析|技术架构|系统逻辑)|(?:架构|产品架构).*(?:专家|分析|评估)",
+      "boost": "architect-expert",
+      "penalty": [
+        "backend-builder",
+        "data-engineer-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R44",
+      "note": "MCP/连接失败/认证失败排查 → debugger-expert (修复 planning-with-files/api-integration 误触)",
+      "trigger": "(?:mcp|连接|认证|authentication).*(?:失败|failed|error|排查|修复)|reconnection\\s*failed|server.*(?:连接|断开|超时)",
+      "boost": "debugger-expert",
+      "penalty": [
+        "planning-with-files",
+        "api-integration-specialist",
+        "nextjs-developer"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R45",
+      "note": "Auth/OAuth/JWT 实现 → 消歧 security-expert vs api-integration-specialist",
+      "trigger": "(?:oauth|jwt|sso|rbac|oidc).*(?:实现|集成|配置|接入)|(?:认证|授权|权限).*(?:系统|模块|接口|设计)",
+      "boost": "api-integration-specialist",
+      "penalty": [
+        "security-expert",
+        "backend-builder"
+      ],
+      "weight": 0.25,
+      "note2": "纯实现/集成场景用 api-integration，安全审计/漏洞场景由 R03 路由到 security-expert"
+    },
+    {
+      "id": "R46",
+      "note": "Flutter 滚动/渲染性能 → flutter-expert (非通用 performance-expert)",
+      "trigger": "flutter.*(?:卡顿|滚动|列表|渲染|性能|优化)|(?:卡顿|滚动|列表|渲染).*flutter|dart.*(?:性能|优化)",
+      "boost": "flutter-expert",
+      "penalty": [
+        "performance-expert",
+        "frontend-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R47",
+      "note": "清理/删除系统组件 → devops-expert (修复 backend-builder 误触)",
+      "trigger": "(?:清理|清除|删除|移除).*(?:组件|模块|配置|缓存|痕迹|信息)|(?:系统|项目).*清(?:理|除)",
+      "boost": "devops-expert",
+      "penalty": [
+        "backend-builder",
+        "browser-automation-expert",
+        "data-engineer-expert"
+      ],
+      "weight": 0.2
+    },
+    {
+      "id": "R48",
+      "note": "网络/代理/VPN 配置和测速 → devops-expert (修复 flutter-expert 误触)",
+      "trigger": "(?:网络|代理|proxy|vpn|clash|网速|测速|带宽).*(?:配置|优化|测试|修复)|(?:配置|优化).*(?:网络|代理|proxy|vpn|clash)",
+      "boost": "devops-expert",
+      "penalty": [
+        "flutter-expert",
+        "mobile-expert",
+        "performance-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R49",
+      "trigger": "\bpod\b|kubectl|helm chart|k8s node|kubelet|kube-proxy|ingress controller",
+      "penalty": [
+        "cloud-native-expert"
+      ],
+      "weight": 0.3,
+      "description": "K8s 具体操作(pod/kubectl/helm)路由到 kubernetes-specialist 而非 cloud-native"
+    },
+    {
+      "id": "R50",
+      "trigger": "(?:修复|fix).*(?:系统|爆窗|崩溃|故障|上下文)|(?:系统|爆窗|崩溃).*(?:修复|fix)",
+      "boost": "debugger-expert",
+      "penalty": [
+        "backend-builder",
+        "developer-expert"
+      ],
+      "weight": 0.35,
+      "description": "修复+系统/爆窗/崩溃 → debugger-expert (context-aware fix routing)"
+    },
+    {
+      "id": "R51",
+      "trigger": "上下文.*(?:管理|优化|压缩|截断|爆窗|溢出)|context.*(?:管理|overflow|budget)",
+      "boost": "performance-expert",
+      "penalty": [
+        "cloud-native-expert"
+      ],
+      "weight": 0.3,
+      "description": "上下文管理/优化 → performance-expert (防误入 ultimate-code)"
+    },
+    {
+      "id": "R52",
+      "note": "Windows 桌面/RPA 自动化 → workflow-automation-expert (非浏览器自动化)",
+      "trigger": "(?:桌面|desktop).*(?:自动化|automation|rpa|控制)|(?:自动化|rpa).*(?:桌面|desktop|windows)|窗口.*(?:操控|点击|截图)|(?:windows|win).*(?:automation|自动操作)",
+      "boost": "workflow-automation-expert",
+      "penalty": [
+        "browser-automation-expert",
+        "frontend-expert",
+        "mobile-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "orbination",
+      "description": "桌面自动化场景使用 MCP: orbination/windows-mcp/askui-vision，非浏览器自动化"
+    },
+    {
+      "id": "R53",
+      "note": "COM/Office 自动化 → workflow-automation-expert (修复 developer-expert 误触)",
+      "trigger": "(?:com|COM).*(?:对象|object|自动化|automation)|(?:office|excel|word|outlook|ppt).*(?:自动化|automation|操作|脚本)|activex|ole|vba.*自动",
+      "boost": "workflow-automation-expert",
+      "penalty": [
+        "developer-expert",
+        "data-analyst-expert"
+      ],
+      "weight": 0.25,
+      "preferred_mcp": "mcp-com-server",
+      "description": "Windows COM 对象/Office 自动化场景使用 MCP: mcp-com-server"
+    },
+    {
+      "id": "R54",
+      "note": "视觉驱动自动化/OCR → workflow-automation-expert (非 mobile-expert)",
+      "trigger": "(?:视觉|vision).*(?:自动化|点击|识别|automation)|ocr.*(?:点击|自动化|识别)|(?:屏幕|screen).*(?:识别|ocr|元素)",
+      "boost": "workflow-automation-expert",
+      "penalty": [
+        "mobile-expert",
+        "browser-automation-expert"
+      ],
+      "weight": 0.25,
+      "preferred_mcp": "askui-vision",
+      "description": "视觉驱动桌面自动化场景使用 MCP: askui-vision/orbination"
+    },
+    {
+      "id": "R55",
+      "note": "网页截图/站点测试 → browse (Browserbase MCP, 区分桌面截图 R52)",
+      "trigger": "(?:网页|网站|页面|site).*(?:截图|screenshot|测试|检查|验证)|(?:截图|screenshot).*(?:网页|网站|url|http)|browserbase|headless.*(?:browser|浏览器)",
+      "boost": "browse",
+      "penalty": [
+        "workflow-automation-expert",
+        "mobile-expert"
+      ],
+      "weight": 0.3,
+      "description": "网页截图/站点测试使用 Browserbase MCP，桌面截图由 R52 路由"
+    },
+    {
+      "id": "R56",
+      "note": "Excel 数据分析 vs Excel 自动化 → data-analyst-expert (R53 处理自动化场景)",
+      "trigger": "(?:excel|csv|xlsx?).*(?:分析|统计|图表|可视化|透视|pivot|数据清洗|处理数据)|(?:数据|分析|统计).*(?:excel|csv|表格)",
+      "boost": "data-analyst-expert",
+      "penalty": [
+        "workflow-automation-expert",
+        "developer-expert"
+      ],
+      "weight": 0.25,
+      "description": "Excel 数据分析场景用 data-analyst-expert, Excel 自动化操作由 R53 路由到 workflow-automation-expert"
+    },
+    {
+      "id": "R57",
+      "note": "guardian 统一安全守护 → 替代已 deprecated 的 careful/freeze/guard/unfreeze",
+      "trigger": "(?:careful|freeze|unfreeze|guard\\b|安全守护|安全模式|限制编辑|冻结编辑|解冻|破坏性.*警告|lock.*down|safety.*mode)",
+      "boost": "guardian",
+      "penalty": [
+        "careful",
+        "freeze",
+        "guard",
+        "unfreeze"
+      ],
+      "weight": 0.35,
+      "description": "careful/freeze/guard/unfreeze 已 deprecated, 统一路由到 guardian"
+    },
+    {
+      "id": "R58",
+      "note": "evolution-tracker vs retro — 系统进化 vs 工程周报",
+      "trigger": "(?:进化|evolution|系统历史|版本历史|变更时间线|进化日志|evolution.?log|系统变更|升级记录)",
+      "penalty": [
+        "retro"
+      ],
+      "weight": 0.25,
+      "description": "系统进化追踪用 evolution-tracker, 团队工程周报用 retro",
+      "boost": "evolution-tracker"
+    },
+    {
+      "id": "R59",
+      "note": "qa report-only 模式 → qa (非 qa-only)",
+      "trigger": "(?:只报告|不修复|report.?only|just.?report|qa.?report.?only|test.?but.?don.?t.?fix|不要修|报告模式)",
+      "boost": "qa",
+      "penalty": [
+        "qa-only"
+      ],
+      "weight": 0.35,
+      "description": "qa-only 已 deprecated, report-only 模式由 qa 的模式检测处理"
+    },
+    {
+      "id": "R60",
+      "note": "office-hours deprecated → plan-ceo-review",
+      "trigger": "(?:office.?hours|brainstorm|头脑风暴|idea.*worth|is.*worth.*building|创业想法|验证想法)",
+      "penalty": [
+        "office-hours"
+      ],
+      "weight": 0.25,
+      "description": "office-hours 已 deprecated, 创业验证/头脑风暴路由到 plan-ceo-review"
+    },
+    {
+      "id": "R61",
+      "note": "AI 伦理/哲学/对齐/偏见 → ai-philosophy-expert (非 ai-ml-expert)",
+      "trigger": "(?:AI|人工智能).*(?:伦理|哲学|道德|对齐|治理|偏见|公平|透明|可解释)|(?:伦理|哲学|道德|对齐).*(?:AI|人工智能|算法|模型)|alignment|responsible\\s*ai|ai\\s*ethics|ai\\s*governance|bias\\s*audit|explainability|负责任.*AI|算法.*(?:偏见|公平|歧视)",
+      "penalty": [
+        "ai-ml-expert",
+        "security-expert",
+        "legal-review-skill"
+      ],
+      "weight": 0.3,
+      "description": "AI 伦理/哲学/对齐/偏见审计用 ai-philosophy-expert, 纯技术 ML 由 ai-ml-expert, 法律条款由 legal-review-skill"
+    },
+    {
+      "id": "R62",
+      "note": "Firecrawl 爬虫/站点抓取 → browser-automation-expert (MCP: firecrawl)",
+      "trigger": "firecrawl|(?:爬取|抓取|crawl).*(?:网站|站点|site)|(?:站点|sitemap).*(?:地图|抓取|提取)|批量.*(?:采集|抓取|爬取)",
+      "boost": "browser-automation-expert",
+      "penalty": [
+        "developer-expert",
+        "frontend-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "firecrawl",
+      "description": "Firecrawl 智能爬虫场景使用 MCP: firecrawl，路由到 browser-automation-expert"
+    },
+    {
+      "id": "R63",
+      "note": "GitHub 仓库/PR/Issue 操作 → developer-expert (MCP: github，非 git-operation-master)",
+      "trigger": "(?:创建|提|合并|关闭|搜索).*(?:pr|pull.?request|issue|仓库)|github.*(?:api|搜索|操作)|(?:fork|star|watch).*(?:仓库|repo)",
+      "boost": "developer-expert",
+      "penalty": [
+        "git-operation-master"
+      ],
+      "weight": 0.2,
+      "preferred_mcp": "github",
+      "description": "GitHub API 操作(PR/Issue/仓库)由 developer-expert + MCP: github, Git 本地操作(rebase/merge/conflict)由 git-operation-master"
+    },
+    {
+      "id": "R64",
+      "note": "Slack 消息/频道操作 → developer-expert (MCP: slack)",
+      "trigger": "(?:发|查看|回复).*slack.*(?:消息|频道|channel)|slack.*(?:post|reply|send|thread|历史)|(?:slack|Slack).*(?:bot|机器人|webhook)(?!.*(?:搭建|开发|架构))",
+      "boost": "developer-expert",
+      "penalty": [
+        "notification-system-expert"
+      ],
+      "weight": 0.2,
+      "preferred_mcp": "slack",
+      "description": "Slack 消息收发操作使用 MCP: slack，由 developer-expert 处理; Slack Bot 搭建/开发由 notification-system-expert"
+    },
+    {
+      "id": "R65",
+      "note": "NotebookLM 笔记本操作 → developer-expert (MCP: notebooklm)",
+      "trigger": "notebooklm|notebook.?lm|(?:查|搜索|创建|问).*笔记本|笔记本.*(?:管理|问答|搜索)",
+      "boost": "developer-expert",
+      "penalty": [
+        "tech-writer-expert"
+      ],
+      "weight": 0.25,
+      "preferred_mcp": "notebooklm",
+      "description": "NotebookLM 笔记本操作使用 MCP: notebooklm"
+    },
+    {
+      "id": "R66",
+      "note": "context7 实时文档查询 → developer-expert (MCP: context7)",
+      "trigger": "context7|(?:查|查询|获取).*(?:最新|实时).*(?:文档|api|docs)|(?:这个库|框架).*(?:怎么用|最新用法|文档)|resolve.?library",
+      "boost": "developer-expert",
+      "penalty": [
+        "tech-writer-expert"
+      ],
+      "weight": 0.2,
+      "preferred_mcp": "context7",
+      "description": "context7 实时文档查询用 MCP: context7, 文档编写用 tech-writer-expert"
+    },
+    {
+      "id": "R67",
+      "note": "sequential-thinking 深度推理 → developer-expert (MCP: sequential-thinking)",
+      "trigger": "sequential.?thinking|(?:分步|逐步|一步步).*(?:推理|分析|思考)|(?:逻辑|深度).*(?:推导|推理)|chain.?of.?thought",
+      "boost": "developer-expert",
+      "penalty": [
+        "ai-ml-expert"
+      ],
+      "weight": 0.2,
+      "preferred_mcp": "sequential-thinking",
+      "description": "结构化分步推理使用 MCP: sequential-thinking"
+    },
+    {
+      "id": "R68",
+      "note": "COM 对象精准触发 → workflow-automation-expert (区分 R53 增强覆盖)",
+      "trigger": "(?:操控|控制|打开).*(?:excel|word|outlook|ppt)|(?:写入|读取).*(?:单元格|工作表|sheet)|(?:发邮件|收邮件).*outlook|createobject|com.*(?:对象|object)",
+      "boost": "workflow-automation-expert",
+      "penalty": [
+        "data-analyst-expert",
+        "developer-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "mcp-com-server",
+      "description": "精准 COM/Office 自动化操作使用 MCP: mcp-com-server (操控Excel/写入单元格/发邮件Outlook)"
+    },
+    {
+      "id": "R69",
+      "note": "性能/调试/DevTools → browser-automation-expert (preferred_mcp: chrome-devtools)",
+      "trigger": "(?:性能|perf|profile|调试|debug|devtools|dev.?tools|开发者工具|network.*panel|console.*log|内存.*快照|memory.*snapshot|trace|火焰图|flame.?graph).*(?:浏览器|browser|页面|page|网页|web)|(?:浏览器|browser|chrome).*(?:性能|调试|开发者工具|devtools|profile)",
+      "boost": "browser-automation-expert",
+      "penalty": [
+        "performance-expert",
+        "debugger-expert",
+        "developer-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "chrome-devtools",
+      "description": "浏览器性能分析/调试/DevTools 场景使用 browser-automation-expert + chrome-devtools MCP"
+    },
+    {
+      "id": "R70",
+      "note": "E2E/自动化/表单/Playwright → browser-automation-expert (preferred_mcp: playwright)",
+      "trigger": "(?:e2e|end.?to.?end|端到端|自动化测试|自动填表|自动.*表单|playwright|puppeteer).*(?:浏览器|browser|网页|web|页面)|(?:浏览器|browser).*(?:自动化|automation|测试|test|填表|表单|form)|(?:playwright|puppeteer).*(?:脚本|script|测试|test|运行|run)",
+      "boost": "browser-automation-expert",
+      "penalty": [
+        "tester-expert",
+        "workflow-automation-expert",
+        "developer-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "playwright",
+      "description": "E2E 测试/浏览器自动化/表单填写场景使用 browser-automation-expert + playwright MCP"
+    },
+    {
+      "id": "R71",
+      "note": "智能浏览代理/CUA/多步骤网页任务 → browse (preferred_mcp: browserbase)",
+      "trigger": "(?:智能|agent|代理).*(?:浏览|browse|网页)|(?:多步骤|multi.?step|复杂).*(?:网页|web|浏览器).*(?:任务|操作|交互)|(?:cua|computer.?use|stagehand).*(?:浏览|browse|web)|browserbase.*(?:session|agent|cloud)|(?:云端|cloud).*(?:浏览器|browser)|(?:并发|parallel).*(?:浏览|session|页面)",
+      "boost": "browse",
+      "penalty": [
+        "browser-automation-expert",
+        "workflow-automation-expert"
+      ],
+      "weight": 0.35,
+      "preferred_mcp": "browserbase",
+      "description": "智能浏览代理/CUA/多步骤网页任务使用 Browserbase 云端 session，区分 playwright 本地自动化"
+    },
+    {
+      "id": "R72",
+      "note": "网络请求监控/抓包/API调试 → browser-automation-expert (preferred_mcp: chrome-devtools)",
+      "trigger": "(?:网络|network).*(?:请求|request|监控|monitor|抓包|capture)|(?:抓包|packet|har|waterfall).*(?:浏览器|browser|页面|chrome)|(?:api|xhr|fetch).*(?:调试|debug|拦截|intercept|查看)",
+      "boost": "browser-automation-expert",
+      "penalty": [
+        "developer-expert",
+        "debugger-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "chrome-devtools",
+      "description": "浏览器网络请求监控/抓包/API 调试使用 chrome-devtools MCP，区分 playwright 功能测试"
+    },
+    {
+      "id": "R73",
+      "note": "MCP 全量体检/连通性探测 → mcp-probe (区分 R44 单点故障排查)",
+      "trigger": "(?:体检|健康检查|连通性|全量测试|全部测试|诊断|probe).*(?:mcp|服务器)|(?:mcp|所有\\s*mcp).*(?:体检|健康检查|连通性|全量|全部|都正常|是否正常|探测|诊断|probe)|mcp-probe|测(?:试|一下|所有|全部)?\\s*mcp",
+      "boost": "mcp-probe",
+      "penalty": [
+        "debugger-expert",
+        "developer-expert",
+        "tester-expert"
+      ],
+      "weight": 0.35,
+      "mutual_exclusion": {
+        "with": "R44",
+        "on_keyword": "mcp",
+        "resolution": "R73 优先 — 全量体检/连通性探测使用 mcp-probe; R44 仅处理单点 MCP 故障排查 (用户明确说'xx MCP 连不上/失败/报错')"
+      },
+      "description": "用户要求对所有 MCP 做健康检查或连通性体检时，路由到专用的 mcp-probe 技能。单点故障排查仍由 R44 debugger-expert 处理"
+    },
+    {
+      "id": "R74",
+      "note": "Google Workspace 操作 → developer-expert (preferred_mcp: google-drive)",
+      "trigger": "(?:google\\s*drive|gdrive|谷歌网盘|谷歌云盘|google\\s*docs?|谷歌文档|google\\s*sheets?|谷歌表格|google\\s*slides?|谷歌幻灯片|google\\s*calendar|google\\s*日历|谷歌日历|google\\s*workspace|谷歌工作区)|(?:上传|下载|搜索|创建|读取|写入|分享|共享|放到?|存到?).{0,10}(?:google\\s*drive|gdrive|google\\s*docs?|google\\s*sheets?|google\\s*slides?|drive\\s*[里中])|(?:在|去|从|搜索|上传|放|存).{0,5}(?:我的?\\s*)?drive\\s*[里中]|(?:云端|在线).{0,10}(?:文档|表格|幻灯片|日历).{0,10}(?:google|谷歌)|(?:google|谷歌).{0,10}(?:日历|calendar).{0,15}(?:会议|事件|event|预约|安排)|(?:安排|创建|加|添加).{0,10}(?:到|进|至).{0,10}(?:google|谷歌).{0,5}(?:日历|calendar)",
+      "boost": "developer-expert",
+      "penalty": [
+        "data-analyst-expert",
+        "tech-writer-expert",
+        "project-coordinator",
+        "workflow-automation-expert"
+      ],
+      "weight": 0.35,
+      "preferred_mcp": "google-drive",
+      "description": "Google Workspace 操作（Drive/Docs/Sheets/Slides/Calendar）通过 google-drive MCP 实现，约 99 个工具覆盖文件管理/文档编辑/表格写入/幻灯片创建/日历事件等场景"
+    },
+    {
+      "id": "R75",
+      "note": "Linear 工单/issue 操作 → developer-expert (preferred_mcp: linear, 加固防 ML 术语误触)",
+      "trigger": "linear\\.(?:app|so)|\\blinear\\s+(?:issue|ticket|workspace|team|project|backlog|cycle|sprint)\\b|linear\\s*(?:上|里|中|的).{0,10}(?:issue|ticket|工单|任务|bug|backlog|sprint|cycle|创建|提|分配|查|看|关闭)|(?:提交|创建|查询|更新|查看|关闭|分配|提到|加到).{0,12}linear(?:\\s*(?:上|里|中|的))?(?:\\s*(?:工单|issue|ticket|任务|backlog|sprint|bug))?|linear.{0,12}(?:工单|backlog|cycle|sprint|milestone)",
+      "boost": "developer-expert",
+      "penalty": [
+        "ai-ml-expert",
+        "data-analyst-expert",
+        "architect-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "linear",
+      "description": "Linear 工单系统操作（issue/ticket/workspace/project）使用 MCP: linear，加 penalty 压制 linear regression/algebra 等 ML 场景误触"
+    },
+    {
+      "id": "R76",
+      "note": "Jira/Confluence 操作 → developer-expert (preferred_mcp: atlassian)",
+      "trigger": "atlassian|\\b[Jj]ira\\s+(?:issue|bug|ticket|sprint|backlog|project|task|epic|story|board|工单|看板)|[Cc]onfluence\\s+(?:page|space|文档|空间|项目)|(?:提交|创建|查询|更新|分配|打开|关闭|合并|同步).{0,12}(?:jira|confluence)|(?:jira|confluence).{0,12}(?:bug|issue|page|space|task|ticket|sprint|缺陷|工单|上|里|的)|(?:在|到).{0,5}(?:jira|confluence).{0,8}(?:上|里|中|的|提|建|开)",
+      "boost": "developer-expert",
+      "penalty": [
+        "project-coordinator",
+        "tech-writer-expert"
+      ],
+      "weight": 0.25,
+      "preferred_mcp": "atlassian",
+      "description": "Jira/Confluence 工单与文档协作使用 MCP: atlassian，覆盖中英文表达"
+    },
+    {
+      "id": "R77",
+      "note": "Supabase 数据库/BaaS → backend-builder (preferred_mcp: supabase)",
+      "trigger": "supabase\\s+(?:client|auth|storage|edge|realtime|rpc|table|row|migration|function|database)|(?:接入|连接|查询|创建|更新|删除|迁移|部署|用|使用|配置|初始化).{0,10}supabase|supabase.{0,10}(?:数据库|认证|存储|函数|实时|订阅|迁移|table|auth|storage)",
+      "boost": "backend-builder",
+      "penalty": [
+        "developer-expert",
+        "database-tuning-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "supabase",
+      "description": "Supabase 数据库/Auth/Storage/Edge Functions 操作使用 MCP: supabase，收紧正则避免讨论式裸词误触"
+    },
+    {
+      "id": "R78",
+      "note": "Figma 设计稿操作 → designer-expert (preferred_mcp: figma)",
+      "trigger": "figma\\s+(?:file|component|frame|design|token|variable|库|组件|设计|原型)|(?:查看|导出|读取|分析|导入|拉取|同步|打开|从).{0,10}(?:figma|设计稿)|figma.{0,10}(?:to|转|→).{0,10}(?:code|代码|component|组件|react|vue|html)|figma.{0,10}(?:设计稿|设计文件|原型|prototype|组件|文件|库)|(?:在|从).{0,5}figma.{0,8}(?:里|中|上|的|拉|取|导)",
+      "boost": "designer-expert",
+      "penalty": [
+        "frontend-expert",
+        "ui-ux-pro-max"
+      ],
+      "weight": 0.25,
+      "preferred_mcp": "figma",
+      "description": "Figma 设计稿读取/导出/转代码使用 MCP: figma，涵盖导入/拉取/同步等表达"
+    },
+    {
+      "id": "R79",
+      "note": "Cloudflare Workers/Pages/KV → edge-computing-expert (preferred_mcp: cloudflare, 加固防 service-worker 误触)",
+      "trigger": "\\bcloudflare\\b|Cloudflare|\\bcf\\s+(?:workers?|pages|kv|r2|d1|durable)\\b|cloudflare\\s+(?:workers?|pages|kv|r2|d1|durable|tunnel)|\\bwrangler\\b|边缘.{0,5}(?:函数|计算|worker)",
+      "penalty": [
+        "backend-builder",
+        "devops-expert",
+        "frontend-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "cloudflare",
+      "description": "Cloudflare Workers/Pages/KV/R2/D1/Durable Objects 操作使用 MCP: cloudflare，强制品牌词前缀避免 service worker/web worker/worker thread 误触"
+    },
+    {
+      "id": "R80",
+      "note": "AI 文生图/图像生成 → designer-expert (preferred_mcp: mcp-image, 加固防流程图误触)",
+      "trigger": "文生图|text.?to.?image|txt2img|AI\\s*(?:图像|配图|插画|绘图|绘画|生成图|生成画)|stable\\s*diffusion|dall.?e|midjourney|firefly\\s*AI|(?:生成|画|创建|出|做).{0,8}(?:一?张|一?幅)?[^。\\n]{0,5}(?:插画|配图|海报|封面|壁纸|头像|avatar|illustration|poster|AI图)",
+      "boost": "designer-expert",
+      "penalty": [
+        "diagram-as-code-expert",
+        "copywriter-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "mcp-image",
+      "description": "AI 文生图场景（插画/海报/配图/头像）使用 MCP: mcp-image，加 penalty 压制 Mermaid/PlantUML 流程图生成误触"
+    },
+    {
+      "id": "R81",
+      "note": "Bookworm 系统自审计 → self-auditor agent",
+      "trigger": "(?:bookkworm|bookworm).*(?:自检|自审计|系统自检)|self[.-]?auditor|bookworm.*(?:审计|健康|health)",
+      "boost": "self-auditor",
+      "agent": "self-auditor",
+      "penalty": [
+        "review",
+        "reviewer-expert",
+        "ultimate-code-expert",
+        "codex"
+      ],
+      "weight": 0.5,
+      "description": "品牌词+自检/审计绑定 self-auditor agent"
+    },
+    {
+      "id": "R82",
+      "note": "自动修复审计问题 → self-healer agent",
+      "trigger": "^自动修复$|自动修复.*(?:审计|问题|发现|漂移)|(?:修复|healer|fix).*(?:审计|audit|漂移|drift)|self[.-]?healer",
+      "boost": "self-healer",
+      "agent": "self-healer",
+      "penalty": [
+        "browser-automation-expert",
+        "workflow-automation-expert"
+      ],
+      "weight": 0.5,
+      "description": "自动修复短语精确锚定 self-healer"
+    },
+    {
+      "id": "R83",
+      "note": "裸字'自动' penalty browser-automation-expert",
+      "trigger": "^自动$|^自动(?!化|填|抓|截|浏览|爬|采|驱动)[\\u4e00-\\u9fa5a-zA-Z]{0,4}$",
+      "penalty": [
+        "browser-automation-expert"
+      ],
+      "weight": 0.4,
+      "description": "防 TF-IDF 过拟合：2-6字不含浏览器语义时降低 BAE 评分"
+    },
+    {
+      "id": "R84",
+      "note": "Bookworm 系统元词查询 (路由/消歧/钩子/管线/注入器/分类器/引擎/遥测) → self-auditor",
+      "trigger": "(?:bookworm|booworm).{0,20}(?:路由|消歧|钩子|hook|管线|注入器|分类器|引擎|遥测|盲点|融合权重|意图分类|消歧规则|路由引擎|权重学习器|状态文件|state\\s*file|追踪|trace|telemetry)|(?:路由|消歧|钩子).{0,10}(?:bookworm|booworm)|(?<!vue.?|vue\\s|next\\.?js?\\s|react\\s|angular\\s|nuxt\\s|uniapp\\s|uni-app\\s|taro\\s|svelte\\s|solid\\s|qwik\\s|项目|应用|这个)(?:路由分析|路由消歧|钩子管线|管线审查|路由引擎|意图分类器|权重学习器|消歧规则|消歧引擎|融合权重)",
+      "boost": "self-auditor",
+      "agent": "self-auditor",
+      "penalty": [
+        "vue-expert",
+        "angular-architect",
+        "api-integration-specialist",
+        "workflow-automation-expert"
+      ],
+      "weight": 0.55,
+      "description": "Bookworm 系统内部技术词锚定 self-auditor，penalty vue-expert 防 vue-router 误触"
+    },
+    {
+      "id": "R85",
+      "note": "Bookworm skill 矩阵/瘦身/提质/裁剪/精简 → self-auditor",
+      "trigger": "(?:bookworm|booworm).{0,15}(?:skill\\s*矩阵|skill\\s*列表|瘦身|提质|裁剪|精简|剪枝|净减|淘汰)|(?:skill\\s*矩阵|skill\\s*瘦身|skill\\s*提质|skill\\s*精简|0\\s*调用\\s*skill)",
+      "boost": "self-auditor",
+      "agent": "self-auditor",
+      "penalty": [
+        "canary",
+        "review",
+        "reviewer-expert",
+        "browse"
+      ],
+      "weight": 0.55,
+      "description": "skill 矩阵分析/瘦身决策 → self-auditor，penalty canary 防\"提质\"误触"
+    },
+    {
+      "id": "R86",
+      "note": "Bookworm 系统梳理/全量梳理/工作流梳理 → self-auditor",
+      "trigger": "(?:bookworm|booworm).{0,15}(?:全量梳理|工作流梳理|系统梳理|文件梳理|模块梳理|架构梳理|hook\\s*梳理|技术梳理)|(?<!项目|这个|应用|代码|帮我审|帮我检查)系统自检",
+      "boost": "self-auditor",
+      "agent": "self-auditor",
+      "penalty": [
+        "project-audit-expert",
+        "reviewer-expert",
+        "review"
+      ],
+      "weight": 0.55,
+      "description": "\"梳理\"短语 → self-auditor，penalty project-audit (业务化解读)"
+    },
+    {
+      "id": "R87",
+      "note": "Bookworm 查询性问题 (路径在哪里/是什么/如何配置) → developer-expert (explain)",
+      "trigger": "(?:bookworm|booworm).{0,30}(?:在哪|哪里|是什么|什么是|怎么用|如何配置|如何使用|怎么看|怎么找|路径|位置)",
+      "boost": "developer-expert",
+      "penalty": [
+        "project-audit-expert",
+        "reviewer-expert"
+      ],
+      "weight": 0.45,
+      "description": "查询性问题走 explain 路径，penalty 重型审计 agent"
+    },
+    {
+      "id": "R88",
+      "note": "通用 \"提质/质量提升\" 短语 penalty canary (canary 仅监控用途)",
+      "trigger": "提质|质量提升|质量优化|品质提升",
+      "penalty": [
+        "canary"
+      ],
+      "weight": 0.3,
+      "description": "防 \"提质\" → canary monitoring 误触"
+    },
+    {
+      "id": "R89",
+      "note": "路由/规则/钩子/计数 自动修复/自愈/同步 → self-healer",
+      "trigger": "(?:自动修复|自愈|同步|补建|修复|回写|刷新)(?:路由规则|消歧规则|钩子链路|融合权重|计数漂移|元数据漂移|版本号|注册表|MEMORY\\.md)|(?:路由|消歧|钩子|规则|hook)\\s*(?:自愈|self\\s*heal)|(?:同步|修复)\\s*(?:bookworm|booworm).{0,15}(?:计数|元数据|版本|注册)",
+      "boost": "self-healer",
+      "agent": "self-healer",
+      "penalty": [
+        "vue-expert",
+        "api-integration-specialist",
+        "reviewer-expert",
+        "project-audit-expert"
+      ],
+      "weight": 0.55,
+      "description": "写侧自愈动词 → self-healer，与 R84/R86 (read→self-auditor) 对称，penalty vue-router 等误触"
+    },
+    {
+      "id": "R90",
+      "note": "SRE 专属场景 → sre-expert，从 devops-expert 分离",
+      "trigger": "sli|slo|sla.*(?:监控|告警)|on.?call|postmortem|error.*budget|toil|事故响应|incident.*response|runbook|alert.*rule",
+      "boost": "sre-expert",
+      "penalty": [
+        "devops-expert"
+      ],
+      "weight": 0.35,
+      "note2": "SRE专属场景从devops-expert中分离"
+    },
+    {
+      "id": "R91",
+      "note": "变更影响分析 → impact-analyst，与架构咨询消歧",
+      "trigger": "变更影响|影响分析|影响范围|爆炸半径|依赖分析|改.*(?:会|有).*影响|change.*impact|blast.*radius|downstream.*impact|调用链.*分析|谁在.*(?:用|调用)",
+      "boost": "impact-analyst",
+      "penalty": [
+        "architect-expert",
+        "developer-expert"
+      ],
+      "weight": 0.35,
+      "note2": "变更影响分析与架构咨询消歧"
+    },
+    {
+      "id": "R92",
+      "note": "Google Sheets 数据分析 → data-analyst-expert (MCP: google-drive)",
+      "trigger": "(?:google\\s*sheets?|谷歌表格).*(?:分析|统计|可视化|透视|图表|数据清洗|pivot)",
+      "boost": "data-analyst-expert",
+      "penalty": [
+        "developer-expert"
+      ],
+      "weight": 0.3,
+      "preferred_mcp": "google-drive",
+      "note2": "Google Sheets数据分析场景从developer-expert分流"
+    },
+    {
+      "id": "R93",
+      "note": "浏览器MCP统一路由 → browser-automation-expert (playwright为主)",
+      "trigger": "(?:browser.?mcp|computer.?control|桌面控制).*(?:测试|自动化|操作)",
+      "boost": "browser-automation-expert",
+      "penalty": [],
+      "weight": 0.25,
+      "preferred_mcp": "playwright",
+      "note2": "浏览器MCP统一路由: playwright为主, chrome-devtools为辅, browser-mcp/computer-control-mcp为备选"
+    },
+    {
+      "id": "R94",
+      "note": "API设计 → api-designer (非 backend-builder/tech-writer)",
+      "trigger": "REST\\s*API.*设计|OpenAPI.*规范|Swagger.*文档.*设计",
+      "boost": "api-designer",
+      "penalty": [
+        "backend-builder",
+        "tech-writer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R95",
+      "note": "Golang → golang-pro (非 backend-builder)",
+      "trigger": "\\bGolang\\b|\\bGo语言\\b|go\\s+mod|goroutine",
+      "boost": "golang-pro",
+      "penalty": [
+        "backend-builder"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R96",
+      "note": "Next.js → nextjs-developer (非 miniprogram)",
+      "trigger": "Next\\.?js|App\\s+Router|SSR.*React",
+      "boost": "nextjs-developer",
+      "penalty": [
+        "miniprogram-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R97",
+      "note": "Python专用 → python-pro (非 tester-expert)",
+      "trigger": "Python.*pytest|Python.*类型提示|Python.*typing|Python.*装饰器|Python.*async",
+      "boost": "python-pro",
+      "penalty": [
+        "tester-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R98",
+      "note": "TypeScript专用 → typescript-pro",
+      "trigger": "TypeScript.*泛型|TypeScript.*interface|TypeScript.*类型.*编程",
+      "boost": "typescript-pro",
+      "penalty": [
+        "backend-builder",
+        "frontend-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R99",
+      "note": "法律合规 → legal-review-skill",
+      "trigger": "法律.*合规|隐私政策.*审查|合同.*审查.*条款|法务",
+      "boost": "legal-review-skill",
+      "penalty": [
+        "reviewer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R100",
+      "note": "SQL分析 → data-analyst (非 database-tuning)",
+      "trigger": "SQL.*分析.*报表|数据.*查询.*分析.*报表",
+      "boost": "data-analyst-expert",
+      "penalty": [
+        "database-tuning-expert"
+      ],
+      "weight": 0.3
+    },
+    {
+      "id": "R101",
+      "note": "规划文件管理 → planning-with-files",
+      "trigger": "项目.*规划.*文件.*管理|Manus.*planning|进度.*文件.*跟踪",
+      "boost": "planning-with-files",
+      "penalty": [
+        "project-audit-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R102",
+      "note": "代码深度审查 → ultimate-code-expert",
+      "trigger": "终极.*代码.*审查|双重.*审查.*代码|深度.*代码.*审查",
+      "boost": "ultimate-code-expert",
+      "penalty": [
+        "reviewer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R103",
+      "note": "翻墙/VPN/代理 → devops-expert",
+      "trigger": "翻墙.*上网|clash.*配置|静态.*住宅.*IP|VPN.*配置.*上网",
+      "boost": "devops-expert",
+      "penalty": [
+        "data-engineer-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R104",
+      "note": "Flutter专用 → flutter-expert",
+      "trigger": "Flutter.*性能|Flutter.*列表|Flutter.*滚动|Flutter.*组件",
+      "boost": "flutter-expert",
+      "penalty": [
+        "performance-expert",
+        "mobile-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R105",
+      "note": "Vue专用 → vue-expert",
+      "trigger": "Vue.*组合式|Vue3.*API|Vue.*组件.*写法",
+      "boost": "vue-expert",
+      "penalty": [
+        "frontend-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R106",
+      "note": "K8s部署 → kubernetes-specialist",
+      "trigger": "Kubernetes.*部署|K8s.*配置.*写|kubectl.*apply",
+      "boost": "kubernetes-specialist",
+      "penalty": [
+        "devops-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R107",
+      "note": "Terraform → terraform-engineer",
+      "trigger": "Terraform.*管理|IaC.*配置.*资源",
+      "boost": "terraform-engineer",
+      "penalty": [
+        "devops-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R108",
+      "note": "正则/Shell → regex-shell-wizard",
+      "trigger": "正则.*表达式.*匹配|regex.*匹配.*格式|Shell.*脚本.*批量",
+      "boost": "regex-shell-wizard",
+      "penalty": [
+        "developer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R109",
+      "note": "MCP操作 → mcp-probe (非 mobile-expert)",
+      "trigger": "terminator.*mcp|MCP.*体检|MCP.*健康.*检查|MCP.*全量",
+      "boost": "mcp-probe",
+      "penalty": [
+        "mobile-expert"
+      ],
+      "weight": 0.45
+    },
+    {
+      "id": "R110",
+      "note": "安全守护命令 → guardian (非 security-expert)",
+      "trigger": "安全守护|guard\\s*mode|freeze\\s+冻结|careful\\s+破坏|unfreeze\\s+解除|\\bguard\\b.*安全",
+      "boost": "guardian",
+      "penalty": [
+        "security-expert",
+        "pricing-strategist",
+        "database-tuning-expert"
+      ],
+      "weight": 0.45
+    },
+    {
+      "id": "R111",
+      "note": "brainstorm/office-hours → plan-ceo-review",
+      "trigger": "brainstorm.*想法|office\\s*hours.*创业|值不值得做|验证.*创业",
+      "boost": "plan-ceo-review",
+      "penalty": [
+        "backend-builder",
+        "retro"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R112",
+      "note": "进化追踪 → evolution-tracker",
+      "trigger": "系统.*进化.*时间线|evolution.log|evolution.*tracker|进化.*追踪|版本.*历史.*变更",
+      "boost": "evolution-tracker",
+      "penalty": [
+        "ultimate-code-expert",
+        "designer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R113",
+      "note": "gstack升级 → gstack-upgrade",
+      "trigger": "upgrade\\s+gstack|gstack.*更新.*版本",
+      "boost": "gstack-upgrade",
+      "penalty": [
+        "document-release"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R114",
+      "note": "CSS/Grid/Flexbox → designer-expert",
+      "trigger": "CSS\\s+Grid|Flexbox.*布局|Grid.*布局.*CSS",
+      "boost": "designer-expert",
+      "penalty": [
+        "frontend-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R115",
+      "note": "PPT → powerpoint",
+      "trigger": "\\bPPT\\b.*制作|演示文稿.*制作|幻灯片",
+      "boost": "powerpoint",
+      "penalty": [
+        "business-plan-skill"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R116",
+      "note": "PDF编辑 → nano-pdf",
+      "trigger": "PDF.*文档.*编辑|PDF.*修改",
+      "boost": "nano-pdf",
+      "penalty": [
+        "tech-writer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R117",
+      "note": "MCP prune → mcp-prune",
+      "trigger": "mcp.*prune|MCP.*剪枝",
+      "boost": "mcp-prune",
+      "penalty": [
+        "mobile-expert"
+      ],
+      "weight": 0.45
+    },
+    {
+      "id": "R118",
+      "note": "terminator MCP → mcp-probe (stronger)",
+      "trigger": "\\bterminator\\b.*mcp|\\bMCP\\b.*\\b体检\\b|\\bMCP\\b.*全量",
+      "boost": "mcp-probe",
+      "penalty": [
+        "mobile-expert"
+      ],
+      "weight": 0.5
+    },
+    {
+      "id": "R119",
+      "note": "Google服务 → google-workspace",
+      "trigger": "Google\\s+Calendar|Google\\s+Drive|Google\\s+Workspace|Gmail",
+      "boost": "google-workspace",
+      "penalty": [
+        "developer-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R120",
+      "note": "Notion → notion",
+      "trigger": "\\bNotion\\b.*页面|\\bNotion\\b.*数据库|\\bNotion\\b.*管理",
+      "boost": "notion",
+      "penalty": [
+        "database-tuning-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R121",
+      "note": "SVG架构图 → architecture-diagram",
+      "trigger": "SVG.*架构图|暗色.*主题.*架构|dark.*theme.*diagram",
+      "boost": "architecture-diagram",
+      "penalty": [
+        "architect-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R122",
+      "note": "ASCII art → ascii-art",
+      "trigger": "ASCII\\s+art|文字.*艺术.*生成|ascii.*文字",
+      "boost": "ascii-art",
+      "penalty": [
+        "ui-ux-pro-max"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R123",
+      "note": "AI伦理→ ai-philosophy-expert",
+      "trigger": "AI.*伦理|AI.*偏见|AI.*对齐|AI.*哲学",
+      "boost": "ai-philosophy-expert",
+      "penalty": [
+        "reviewer-expert",
+        "security-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R124",
+      "note": "代码审计漏洞→ devsecops-expert",
+      "trigger": "代码.*审计.*漏洞|安全.*扫描.*代码|SAST|SCA.*扫描",
+      "boost": "devsecops-expert",
+      "penalty": [
+        "reviewer-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R125",
+      "note": "screenpipe清理→ browser-automation",
+      "trigger": "清理.*screenpipe|screenpipe.*清理",
+      "boost": "browser-automation-expert",
+      "penalty": [
+        "devops-expert",
+        "project-audit-expert"
+      ],
+      "weight": 0.4
+    },
+    {
+      "id": "R126",
+      "note": "Excel数据修改 → data-analyst-expert",
+      "trigger": "xlsx.*修[改正]|Excel.*数据.*修[改正]|.xlsx.*数据",
+      "boost": "data-analyst-expert",
+      "penalty": [
+        "tester-expert",
+        "impact-analyst",
+        "product-manager-expert"
+      ],
+      "weight": 0.5
+    },
+    {
+      "id": "R127",
+      "note": "MCP认证/重连错误 → debugger-expert (高权重)",
+      "trigger": "/mcp[^]*Authentication.*reconnection.*failed|/mcp.*认证.*重新连接.*失败|mcp.*重连.*失败",
+      "boost": "debugger-expert",
+      "penalty": [
+        "websocket-engineer",
+        "planning-with-files",
+        "review",
+        "browse",
+        "security-expert",
+        "workflow-automation-expert",
+        "flutter-expert",
+        "miniprogram-expert",
+        "cloud-native-expert",
+        "backend-builder"
+      ],
+      "weight": 1
+    },
+    {
+      "id": "R128",
+      "note": "上下文设置/上限 → planning-with-files",
+      "trigger": "上下文.*上限|上下文.*设置.*最高|context.*[Ww]indow.*up|上下文.*拉到",
+      "boost": "planning-with-files",
+      "penalty": [
+        "debugger-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R129",
+      "note": "裸config查询 → planning-with-files",
+      "trigger": "^config$|^配置$",
+      "boost": "planning-with-files",
+      "penalty": [
+        "typescript-pro",
+        "vue-expert"
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "R130",
+      "note": "[v6.6.1反馈 #1] HANDOFF识别 — 15/26次手动纠正为handoff。路由未能识别上下文交接请求，误路由到canvas-ui-designer/ultimate-code-expert/devops-expert。修复: handoff关键词→handoff技能",
+      "trigger": "(?:/handoff|handoff|hand\\s*off|交接|上下文.*(?:切换|转交|移交|传递)|换手|hand\\s*over|会话.*(?:转交|移交给)|task.*handover)",
+      "boost": "handoff",
+      "penalty": [
+        "canvas-ui-designer",
+        "ultimate-code-expert",
+        "devops-expert",
+        "architect-expert"
+      ],
+      "weight": 0.4,
+      "source": "v6.6.1-feedback-analysis"
+    },
+    {
+      "id": "R131",
+      "note": "[v6.6.1反馈 #2] DevOps优先于SRE — 2次手动纠正 sre-expert→devops-expert。部署/安装/服务管理类查询误路由到SRE。修复: 运维操作关键词→devops-expert",
+      "trigger": "部署|安装.*(?:环境|依赖|包)|配置.*(?:环境|服务器)|setup|server\\s*restart|restart\\s*service|nginx.*reload|systemctl|服务.*(?:重启|启动|停止)|镜像.*(?:构建|拉取|推送)|docker.*(?:build|compose|run)|容器.*(?:启动|部署|编排)",
+      "boost": "devops-expert",
+      "penalty": [
+        "sre-expert",
+        "kubernetes-specialist"
+      ],
+      "weight": 0.3,
+      "source": "v6.6.1-feedback-analysis"
+    },
+    {
+      "id": "R132",
+      "note": "[v6.6.1反馈 #3] 上下文继承增强 — 134次路由失败(cf=0)，多为短查询('执行'/'继续'/'好的')。当查询长度<5字且上一轮有明确路由时，应继承而非归零。此规则降低误boost风险，仅对极短确认词添加继承权重。路由引擎需配合上下文状态实现继承逻辑",
+      "trigger": "^(?:执行|继续|下一步|好的|OK|yes|嗯|对|可以|行|好|go|next|确认|是的|OK\\s*go|go\\s*ahead)\\s*$",
+      "boost": "developer-expert",
+      "penalty": [],
+      "weight": 0.15,
+      "note_context": "此规则为辅助标记。路由引擎检测到此模式时应优先从会话历史继承上一轮的primary_skill，而非创建新的路由决策。如果无法获取历史，则路由到developer-expert作为安全回退。",
+      "source": "v6.6.1-feedback-analysis"
+    },
+    {
+      "id": "R133",
+      "note": "视频编辑/剪辑/FFmpeg/转码 → video-agent-expert (区分 browser-automation 视频下载和 mobile-expert 视频播放)",
+      "trigger": "视频编辑|视频剪辑|FFmpeg|ffmpeg|转码|剪片|视频Agent|DSL.*时间线|concat.*视频|video\\s*edit|video\\s*agent|transcode|subtitle.*burn|字幕.*烧录|视频拼接|帧提取|frame.*extract",
+      "boost": "video-agent-expert",
+      "penalty": ["browser-automation-expert", "mobile-expert", "ai-ml-expert"],
+      "weight": 0.3,
+      "source": "v7.0.0-video-agent-integration"
+    }
+  ]
+}

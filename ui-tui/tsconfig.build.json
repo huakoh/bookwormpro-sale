@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@bookworm/ink": ["src/types/bookworm-ink.d.ts"]
+    }
+  }
+}

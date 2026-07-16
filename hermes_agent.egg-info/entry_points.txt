@@ -1,0 +1,4 @@
+[console_scripts]
+bookworm = bwm_cli.main:main
+bookworm-acp = acp_adapter.entry:main
+bookwormpro = run_agent:main

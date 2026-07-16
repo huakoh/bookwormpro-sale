@@ -1,0 +1,98 @@
+{
+  "expert": "系统架构专家",
+  "review_target": "0Bug Agent (zero-defect-guardian + project-audit-expert 双技能组合)",
+  "review_date": "2026-05-06",
+  "artifacts_examined": [
+    "bookwormpro-skills-categorized/7-sec/zero-defect-guardian/SKILL.md (70行)",
+    "skills/project-audit-expert/SKILL.md (265行)",
+    "skill-alias.json (zero-defect-guardian → project-audit-expert 映射)",
+    "projects/mingyuan-web/zero_defect_audit.py (458行, 具体实现)",
+    "docs/audit-sprint-2026-05-06.md (Phase 1-5 + 六专家并行实例)",
+    "routing/disambiguation-rules.json (路由触发规则)"
+  ],
+  "findings": [
+    {
+      "severity": "BLOCKER",
+      "rule_or_line": "架构核心缺陷 — 无规则引擎",
+      "finding": "设计要求审查'六条规则(R1-R6)覆盖度'，但当前设计中不存在任何可被程序化执行的规则定义。zero-defect-guardian 仅有5步工作流(Step 1-5)，project-audit-expert 仅有5阶段流水线(Phase 1-5)，均为自然语言 prompt 指令，依赖 LLM 解释执行。不存在规则数据结构、规则注册表、规则匹配引擎或规则优先级排序机制。'R1-R6'概念在设计文档中完全不存在。",
+      "fix_suggestion": "定义 Rule 抽象层：RuleSchema {id, name, pattern(Regex/AST), severity(blocker|critical|major|minor|trivial), dimension(code|security|performance|accessibility|seo|compliance), description, fix_template}。将5步工作流与规则集解耦，使规则可独立加载、配置和扩展。实现 RuleRegistry + RuleEngine 模块，支持按维度/严重性过滤规则集。"
+    },
+    {
+      "severity": "BLOCKER",
+      "rule_or_line": "规则严重性不可配置",
+      "finding": "当前设计中严重性定义全部硬编码在 SKILL.md 提示词的 Markdown 表格中（如 project-audit-expert 的 P0/P1/P2/P3 映射表，zero_defect_audit.py 的 severity_weights 字典）。用户/项目无法按需调整某条规则的严重级别。例如无法将'缺少 Error Boundary'从 P1 提升为 P0，或按项目类型调整安全规则权重。",
+      "fix_suggestion": "引入可外部化配置的严重性映射：rule_severity_profile.json，支持 global / per-project / per-sprint 三级覆盖。提供 CLI 接口 `bookworm audit config severity --rule R3 --set blocker`。"
+    },
+    {
+      "severity": "BLOCKER",
+      "rule_or_line": "缺少 Git pre-commit 集成设计",
+      "finding": "设计要求审查'与 Git pre-commit 的集成设计'，但当前架构完全未涉及 Git hooks 集成。zero-defect-guardian 的 Step 5 提及 `git reset --hard` 作为回滚手段，project-audit-expert 未涉及 Git 集成。零实现：无 pre-commit hook 脚本、无增量扫描机制、无 staged-files-only 过滤、无 commit 消息注入审计结果的能力。",
+      "fix_suggestion": "设计 pre-commit 集成架构：(1) `hooks/pre-commit` 调用 `bookworm audit precommit --staged-only`；(2) 增量扫描仅分析 `git diff --cached` 涉及的文件；(3) 扫描结果注入 commit message footer；(4) 按规则严重性决定是否阻塞 commit（blocker→拒绝，critical→警告+确认，major→仅提示）。"
+    },
+    {
+      "severity": "CRITICAL",
+      "rule_or_line": "Phase 1-5 流程设计 — 缺少并行化与增量机制",
+      "finding": "project-audit-expert 的 Phase 1-5 是线性串行流水线，审计执行方式表中虽提及'大型项目→TeamCreate前后端分离审计'，但未定义具体的并行策略。大型项目(500+文件)下 Phase 2 深度审查将面临严重的 LLM 上下文窗口限制和时间成本(估计每次审计需 50+ 次 LLM 调用)。zero_defect_audit.py 的实现更是完全串行、同步的 SSH 命令执行。",
+      "fix_suggestion": "(1) Phase 2 和 Phase 3 可完全并行化(代码质量和安全扫描无依赖)；(2) 引入文件级并行:将500+文件分片到多个 Agent 子进程，合并结果；(3) 增量审计:基于 git diff 仅扫描变更文件；(4) 缓存机制:未变更文件的审计结果缓存至 `.audit-cache.json`，TTL 24h。"
+    },
+    {
+      "severity": "CRITICAL",
+      "rule_or_line": "大型项目(500+文件)扫描性能 — 无设计",
+      "finding": "当前架构完全未考虑大型项目扫描性能。SKILL.md 中的检查命令(如 glob + grep 遍历全部文件)在500+文件项目中必然超时。project-audit-expert 的审计执行方式最多到'全项目 Phase 1-5'，未定义批处理、分页、超时、内存管理或进度上报机制。zero_defect_audit.py 在18个 PHP 文件上的审计都需要 SSH 串行执行数十条命令。",
+      "fix_suggestion": "(1) 两阶段扫描: Phase 0 快速索引(文件名/大小/扩展名/行数)→Phase 1-5 仅处理目标文件；(2) 文件优先级排序:最近的 git 变更 + 高风险文件(.env/config/auth)优先；(3) 分片策略:按目录或文件数分片，每片 ≤100 文件，独立 Agent 处理；(4) 超时机制:单文件扫描 >30s 跳过并记录；(5) 进度报告:WebSocket 或文件进度追踪。"
+    },
+    {
+      "severity": "HIGH",
+      "rule_or_line": "扩展性 — 添加 R7-RN 无标准化路径",
+      "finding": "当前设计中添加新规则需要修改 SKILL.md Markdown 表格(project-audit-expert 的 Phase 2 代码审查表、Phase 3 安全漏洞表等)，属于手写自然语言插入，无程序化注册机制。新规则无法携带元数据(作者、版本、适用范围)、无法被规则引擎发现、无法独立测试、无法启用/禁用。zero-defect-guardian 的5步工作流是完全固定的，无法动态插入新步骤。",
+      "fix_suggestion": "设计规则插件架构：(1) 每条规则是独立文件 `rules/R{n}_{name}.{yaml|json}`；(2) 规则注册表自动发现并加载；(3) 规则携带元数据: {id, name, severity, dimension, pattern, language, min_version, enabled}；(4) 支持规则包:按场景组合规则集(web-security.ruleset, python-quality.ruleset)；(5) CLI: `bookworm audit rule add|remove|enable|disable|list`。"
+    },
+    {
+      "severity": "HIGH",
+      "rule_or_line": "与其他 skill 集成架构 — 耦合方式松散但缺少契约",
+      "finding": "zero-defect-guardian 通过 `composable: true / requires: [tester-expert] / enhances: [reviewer-expert, debugger-expert]` 声明依赖关系。这是一种基于名称的松散耦合，但缺少以下关键契约要素：(1) tester-expert 必须提供什么接口/输出格式？(2) guardian 输出什么格式供 reviewer-expert 消费？(3) 两个 skill 的上下文如何传递而不超出 token 限制？skill-alias.json 中的映射(guardian→audit-expert)暗示未来合并，但合并语义未定义。",
+      "fix_suggestion": "(1) 定义 Skill 间数据契约:输出 JSON Schema(如 AuditResult, PinTestReport)；(2) skill-alias 添加合并策略字段: 'replace' | 'chain' | 'enhance'；(3) 上下文传递通过结构化摘要(<500 tokens)而非完整输出；(4) 添加集成测试验证 A→B 契约不破裂。"
+    },
+    {
+      "severity": "HIGH",
+      "rule_or_line": "zero-defect-guardian SKILL.md:29-51 — 5步工作流缺少失败恢复机制",
+      "finding": "Step 5 规定'lint 失败执行 git reset --hard'，这是一个硬回滚策略，会丢失所有修改。没有中间保存点(checkpoint)、部分回滚或冲突分析机制。Step 1 要求'现有测试失败则拒绝修改'，但未说明如何区分测试环境问题和代码问题导致的失败。",
+      "fix_suggestion": "(1) Step 1 增加测试环境自检:检查依赖安装、数据库连接、配置文件；(2) 原子修改前自动 `git stash` 保存 checkpoint；(3) 回滚策略分级: lint 失败→仅回滚当前文件而非整个工作区；(4) 添加 `--dry-run` 模式预览所有将执行的修改。"
+    },
+    {
+      "severity": "MEDIUM",
+      "rule_or_line": "项目架构 — 双技能设计导致职责重叠",
+      "finding": "zero-defect-guardian(重构安全)和 project-audit-expert(全面审计)存在职责重叠。两者都涉及代码修改、测试验证和回归检查。skill-alias.json 的计划合并(zero-defect-guardian→project-audit-expert)确认了这种冗余，但合并方案未定义。zero_defect_audit.py 作为具体实现，其8维度审计模式与 SKILL.md 的5阶段流水线也不完全对齐。",
+      "fix_suggestion": "明确技能边界：(1) zero-defect-guardian→聚焦'单次修改的安全验证'（微观）；(2) project-audit-expert→聚焦'项目级质量审计'（宏观）。合并后 guardian 成为 audit-expert 的 Phase 4.5(修改后回归验证)，使用相同规则引擎。"
+    },
+    {
+      "severity": "MEDIUM",
+      "rule_or_line": "zero_defect_audit.py — 实现与设计脱节",
+      "finding": "zero_defect_audit.py(458行)是一个硬编码的 WordPress 网站审计脚本，使用 SSH + paramiko 远程执行。它的8维度审计(Code/Security/Content/Performance/Accessibility/SEO/Compliance/CSS)与 project-audit-expert 的5阶段流水线不完全对应。脚本中硬编码了服务器凭据(HOST/USER/PASS)、具体文件路径、特定 WordPress 检查项，缺乏通用性。",
+      "fix_suggestion": "(1) 将审计维度从脚本中抽象为可配置的 RuleSchema；(2) SSH 连接从 Rule 执行器中分离为 Transport 层；(3) 凭据从环境变量读取，禁止硬编码；(4) 将 WordPress 特定检查封装为 ruleset 插件而非核心代码。"
+    },
+    {
+      "severity": "MEDIUM",
+      "rule_or_line": "架构整体评价 — 基于 Prompt 而非引擎",
+      "finding": "0Bug Agent 的核心架构本质上是'LLM Prompt 模板 + 人工工作流指导'，而非一个可独立运行的规则引擎。所有'规则'以自然语言嵌入 SKILL.md 的 Markdown 表格中，规则的发现、匹配和执行完全依赖 LLM 的语义理解能力。这种架构的优点是实现成本极低，缺点是：(1) 结果不可复现(同一输入不同 LLM 调用可能产出不同结果)；(2) 规则无法独立测试；(3) 无法保证规则覆盖率；(4) 审计质量完全取决于 LLM 能力。",
+      "fix_suggestion": "架构升级为'规则引擎 + LLM 增强'模式：(1) 核心规则用正则/AST 实现确定性匹配；(2) LLM 仅用于需要语义理解的复杂规则(如业务逻辑验证)；(3) 确定性匹配结果标注 confidence=1.0，LLM 结果标注 confidence≈0.7-0.9；(4) 提供规则覆盖率报告:scanned_rules/total_rules。"
+    },
+    {
+      "severity": "LOW",
+      "rule_or_line": "zero-defect-guardian SKILL.md:67-70 — 禁止事项缺乏技术强制",
+      "finding": "禁止事项(禁止无测试提交、禁止大文件修改、禁止忽略TS错误、禁止顺便修复无关Bug)是纯文本约束，无技术手段强制执行。例如 LLM 仍可能在一次调用中产生大量文件修改而不遵循拆分原则。",
+      "fix_suggestion": "(1) 在 Agent 工具调用层添加护栏:单次 Edit/Write 超过 N 个文件时返回警告并建议拆分；(2) pre-commit hook 检测 unstaged 测试文件变更并阻止提交。"
+    }
+  ],
+  "overall_grade": "D",
+  "summary": "0Bug Agent 架构审查结论:整体评分 D(不及格)。核心问题在于该系统的设计与审查维度之间存在根本性错配——设计要求审查的'六条规则(R1-R6)覆盖度'、'规则严重性可配置'、'Git pre-commit 集成'、'大型项目扫描性能'等工程化需求，在当前以 SKILL.md Prompt 模板为核心的架构中完全不存在对应实现。当前架构本质上是'自然语言工作流指导 + LLM 自由解释执行'的模式，缺少规则引擎、配置系统、Git 集成和性能优化策略四个关键架构组件。正向方面:Phase 1-5 流水线设计思路清晰，与其他 skill 的 composable/requires/enhances 声明式依赖管理是优秀的集成模式，skill-alias 映射为合并提供了演进路径。建议将架构升级为'确定性规则引擎 + LLM 语义增强'的混合模式，并补充规则注册、严重性配置、增量扫描和 pre-commit 集成四个缺失模块，方可达到生产级质控系统的标准。",
+  "grade_rationale": {
+    "规则覆盖度(30%)": "F — 不存在形式化规则定义，无法评估覆盖度",
+    "扩展性(15%)": "D — 添加规则需手改 Markdown，无注册/发现/禁用机制",
+    "Skill集成(10%)": "B — requires/enhances/composable 声明式集成设计合理，但缺少数据契约",
+    "Phase流程设计(15%)": "C — 5阶段流水线思路正确，但缺少并行化、增量、缓存设计",
+    "大规模扫描性能(10%)": "F — 完全未设计，500+文件场景下必然超时/爆token",
+    "严重性可配置(10%)": "F — 严重性全部硬编码在 Markdown 表格中",
+    "Git pre-commit集成(10%)": "F — 零实现，设计文档中无任何相关章节"
+  }
+}

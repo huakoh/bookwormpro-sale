@@ -1,0 +1,7 @@
+name: gemini
+version: 1.0.0
+description: "Google Gemini image generation backend (gemini-2.5-flash-image / Nano Banana 2). Free tier supported via Google AI Studio API key."
+author: BookwormPRO
+kind: backend
+requires_env:
+  - GOOGLE_API_KEY

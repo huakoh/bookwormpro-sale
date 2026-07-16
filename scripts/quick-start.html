@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookwormPRO — 快速上手</title>
+<meta name="description" content="BookwormPRO 快速上手指南：3 步完成安装、配置、激活，5 分钟开始使用。">
+<meta property="og:title" content="BookwormPRO 快速上手">
+<meta property="og:description" content="3 步完成安装配置，5 分钟开始使用 135+ AI 技能">
+<meta property="og:url" content="https://portable.bookwormweb.com/quick-start">
+<link rel="canonical" href="https://portable.bookwormweb.com/quick-start">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<style>
+:root{--bg:#0a0a12;--s:#12121e;--b:rgba(200,160,80,0.15);--t:#e0e0ea;--m:#8888a0;--a:#c8a050;--a2:#20e0c0;--blue:#4080ff;--green:#20c070;--red:#e04040;--code-bg:#1a1a2e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--t);line-height:1.7}
+a{color:var(--a);text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:760px;margin:0 auto;padding:0 20px}
+
+header{text-align:center;padding:48px 20px 32px;border-bottom:1px solid var(--b)}
+header h1{font-size:2em;font-weight:900;color:#fff;line-height:1.3}
+header h1 span{background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+header p{color:var(--m);margin-top:8px;font-size:1em}
+header nav{margin-top:16px;display:flex;gap:20px;justify-content:center;font-size:.85em}
+
+/* ── 进度条 ── */
+.progress{display:flex;align-items:center;justify-content:center;gap:0;margin:32px auto 8px;max-width:520px}
+.progress .dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.9em;border:2px solid var(--b);color:var(--m);background:var(--s);cursor:pointer;transition:all .3s;position:relative;z-index:1}
+.progress .dot.active{border-color:var(--a);background:var(--a);color:#0a0a12}
+.progress .dot.done{border-color:var(--green);background:var(--green);color:#0a0a12}
+.progress .line{flex:1;height:2px;background:var(--b);margin:0 -2px;z-index:0}
+.progress .line.done{background:var(--green)}
+.progress-labels{display:flex;justify-content:space-between;max-width:520px;margin:0 auto 24px;font-size:.75em;color:var(--m)}
+.progress-labels span{flex:0 0 80px;text-align:center}
+
+section{padding:40px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+h2{font-size:1.4em;color:#fff;margin-bottom:6px}
+h3{font-size:1.1em;color:var(--a);margin:20px 0 10px}
+
+pre{background:var(--code-bg);border:1px solid var(--b);border-radius:10px;padding:14px 16px;overflow-x:auto;font-family:"JetBrains Mono","Fira Code","Cascadia Code",Consolas,monospace;font-size:.85em;line-height:1.8;margin:10px 0;position:relative;transition:border-color .2s}
+pre:hover{border-color:var(--a)}
+pre .copy-btn{position:absolute;top:8px;right:8px;background:rgba(200,160,80,0.2);border:1px solid var(--b);border-radius:6px;color:var(--a);font-size:.78em;padding:5px 12px;cursor:pointer;transition:all .2s;font-family:-apple-system,"PingFang SC",sans-serif;opacity:1}
+pre .copy-btn:hover{background:var(--a);color:#0a0a12}
+pre .copy-btn.copied{background:var(--a2);color:#0a0a12}
+pre .comment{color:#6a6a8a}
+pre .cmd{color:var(--a2)}
+pre .output{color:#6a8a6a}
+code{font-family:"JetBrains Mono","Fira Code",Consolas,monospace;background:rgba(200,160,80,0.1);padding:2px 8px;border-radius:4px;font-size:.88em}
+
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--a);color:#0a0a12;font-weight:900;font-size:1em;margin-right:10px;flex-shrink:0}
+.step-block{margin:16px 0;padding:20px 24px;background:var(--s);border:1px solid var(--b);border-radius:12px}
+.step-block h3{display:flex;align-items:center;margin:0 0 12px;color:#fff;font-size:1.1em}
+.step-block p{color:var(--m);font-size:.9em}
+
+.time-badge{font-size:.7em;font-weight:600;color:var(--a);background:rgba(200,160,80,0.1);padding:2px 10px;border-radius:10px;margin-left:auto}
+
+/* 预期结果框 */
+.expect{margin:12px 0;padding:12px 16px;background:rgba(32,200,112,0.05);border:1px solid rgba(32,200,112,0.15);border-radius:8px;display:flex;align-items:flex-start;gap:10px}
+.expect::before{content:"";display:block;width:20px;height:20px;flex-shrink:0;margin-top:2px;background:var(--green);border-radius:50%;mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.5 13.3 5 9.8l1.2-1.2L8.5 11l5.3-5.3L15 6.9z'/%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.5 13.3 5 9.8l1.2-1.2L8.5 11l5.3-5.3L15 6.9z'/%3E%3C/svg%3E")}
+.expect p{color:var(--m);font-size:.85em;margin:0;line-height:1.5}
+.expect code{font-size:.82em}
+
+/* 卡住了？ */
+.stuck{margin:12px 0;padding:12px 16px;background:rgba(224,64,64,0.04);border:1px solid rgba(224,64,64,0.12);border-radius:8px;cursor:pointer}
+.stuck summary{color:var(--red);font-size:.85em;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px}
+.stuck summary::before{content:"";display:block;width:16px;height:16px;flex-shrink:0;background:var(--red);border-radius:50%;mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ctext x='5' y='15' font-size='14' fill='white'%3E%3F%3C/text%3E%3C/svg%3E");-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ctext x='5' y='15' font-size='14' fill='white'%3E%3F%3C/text%3E%3C/svg%3E")}
+.stuck p{color:var(--m);font-size:.83em;margin-top:8px}
+
+.install-nav{display:flex;gap:0;margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid var(--b)}
+.install-tab{flex:1;padding:10px;text-align:center;cursor:pointer;background:var(--s);color:var(--m);font-weight:600;font-size:.85em;border:none;transition:all .2s}
+.install-tab.active{background:linear-gradient(135deg,var(--a),#e0b860);color:#0a0a12}
+.install-tab:hover:not(.active){background:rgba(200,160,80,0.1)}
+.install-panel{display:none;animation:fadeIn .3s}
+.install-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.72em;font-weight:700;margin-left:6px}
+.badge-rec{background:rgba(32,224,192,0.15);color:var(--a2)}
+
+.tip{margin:14px 0;padding:12px 16px;background:rgba(200,160,80,0.04);border-left:3px solid var(--a);border-radius:0 10px 10px 0}
+.tip p{color:var(--m);font-size:.85em;margin:0}
+
+.next-step{display:block;text-align:center;margin:24px 0 0;padding:14px;background:rgba(200,160,80,0.06);border:1px solid var(--b);border-radius:10px;color:var(--a);font-weight:700;font-size:.95em;transition:all .2s}
+.next-step:hover{background:rgba(200,160,80,0.12);border-color:var(--a);text-decoration:none;transform:translateY(-1px)}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:18px 16px}
+.card h4{color:#fff;margin-bottom:4px;font-size:.92em}
+.card p{color:var(--m);font-size:.83em;line-height:1.5}
+
+/* 折叠的高级区域 */
+.advanced{margin:16px 0}
+.advanced summary{color:var(--m);font-size:.9em;cursor:pointer;padding:12px 0;font-weight:600}
+.advanced summary:hover{color:var(--a)}
+
+.bottom-nav{display:flex;justify-content:space-between;padding:28px 0;margin-top:8px}
+.bottom-nav a{color:var(--a);font-size:.9em}
+footer{text-align:center;padding:28px 20px;color:var(--m);font-size:.8em;border-top:1px solid var(--b)}
+@media(max-width:768px){header h1{font-size:1.5em}.g2{grid-template-columns:1fr}.install-nav{flex-direction:column}.progress-labels span{font-size:.65em;flex:0 0 60px}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>BookwormPRO</span> 快速上手</h1>
+  <p>照着做，5 分钟搞定</p>
+  <nav>
+    <a href="/">首页</a>
+    <a href="/#install-guide">完整指南</a>
+    <a href="/#pricing">定价</a>
+    <a href="/#faq">FAQ</a>
+  </nav>
+</header>
+
+<div class="container">
+
+<!-- ═══════ 进度条 ═══════ -->
+<div class="progress" id="progress">
+  <a class="dot active" href="#step-prereq">0</a>
+  <div class="line"></div>
+  <a class="dot" href="#step-install">1</a>
+  <div class="line"></div>
+  <a class="dot" href="#step-config">2</a>
+  <div class="line"></div>
+  <a class="dot" href="#step-activate">3</a>
+  <div class="line"></div>
+  <a class="dot" href="#step-use">Go</a>
+</div>
+<div class="progress-labels">
+  <span>准备</span><span>安装</span><span>配置</span><span>激活</span><span>使用</span>
+</div>
+
+<!-- ═══════ Step 0: 准备 ═══════ -->
+<section id="step-prereq">
+  <div class="step-block">
+    <h3><span class="step-num">0</span>先准备两样东西 <span class="time-badge">1 分钟</span></h3>
+
+    <details class="stuck" style="margin-bottom:16px;border-color:rgba(200,160,80,0.2);background:rgba(200,160,80,0.03)">
+      <summary style="color:var(--a)">电脑上装过旧版 Bookworm？先清理</summary>
+      <p>有 <code>bookworm</code> 命令就运行 <code>bookworm uninstall</code>。<br>
+      太早的版本没这个命令？手动删：</p>
+      <pre style="font-size:.78em;margin:6px 0"><span class="cmd">Remove-Item -Recurse -Force "$env:LOCALAPPDATA\bookworm","$HOME\.bookwormpro","$HOME\.hermes" -ErrorAction SilentlyContinue</span></pre>
+      <p>删完重开终端再继续。</p>
+    </details>
+
+    <p style="margin-bottom:12px"><strong style="color:#fff">第一样：Git</strong></p>
+    <p>检查是否已装：打开终端，输入 <code>git --version</code>。有输出就行，没有就装：</p>
+    <pre><span class="cmd">winget install Git.Git</span></pre>
+    <div class="expect"><p>装好后关闭终端再打开，输入 <code>git --version</code> 能看到版本号即可。</p></div>
+
+    <p style="margin:20px 0 8px"><strong style="color:#fff">第二样：AI API Key</strong></p>
+    <p>BookwormPRO 需要调用 AI 模型。最简单的方式：</p>
+    <p style="margin-top:8px">打开 <a href="https://platform.deepseek.com" target="_blank" style="font-weight:700;color:var(--a2)">platform.deepseek.com</a> → 注册 → 支付宝充 1 元 → 复制 API Key → 记下来待会用。</p>
+
+    <div class="expect"><p>你手里应该有一串 <code>sk-</code> 开头的字符串。</p></div>
+
+    <details class="stuck">
+      <summary>没有国际信用卡也能用吗？</summary>
+      <p>能。DeepSeek 支持支付宝充值。或者用 <a href="https://bww.letcareme.com" target="_blank">源力AI 中转站</a>，也支持支付宝，一个 Key 还能调用 GPT-4o、Claude 等多家模型。</p>
+    </details>
+  </div>
+  <a class="next-step" href="#step-install">准备好了，下一步：安装 &darr;</a>
+</section>
+
+<!-- ═══════ Step 1: 安装 ═══════ -->
+<section id="step-install">
+  <div class="step-block">
+    <h3><span class="step-num">1</span>一键安装 <span class="time-badge">3 分钟</span></h3>
+
+    <div class="install-nav">
+      <button class="install-tab active" onclick="switchTab('win')">Windows <span class="badge badge-rec">推荐</span></button>
+      <button class="install-tab" onclick="switchTab('unix')">Linux / macOS / WSL2</button>
+      <button class="install-tab" onclick="switchTab('docker')">Docker</button>
+    </div>
+
+    <div id="panel-win" class="install-panel active">
+      <p>打开终端 (按 <code>Win+X</code> → 选 "终端")，粘贴这一行：</p>
+      <pre><span class="cmd">irm https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.ps1 | iex</span></pre>
+      <p>等它跑完（自动安装 Python、Node.js 等依赖），然后 <strong style="color:#fff">关闭终端，重新打开</strong>。</p>
+    </div>
+
+    <div id="panel-unix" class="install-panel">
+      <p>打开终端，粘贴这一行：</p>
+      <pre><span class="cmd">curl -fsSL https://raw.githubusercontent.com/huakoh/bookwormpro-sale/master/scripts/install.sh | bash</span></pre>
+      <p>跑完后执行 <code>source ~/.bashrc</code></p>
+    </div>
+
+    <div id="panel-docker" class="install-panel">
+      <pre><span class="cmd">git clone https://github.com/huakoh/bookwormpro-sale.git</span>
+<span class="cmd">cd BookwormPRO && docker compose up -d --build</span></pre>
+    </div>
+
+    <p style="margin-top:14px"><strong style="color:#fff">验证：</strong>在新终端里输入</p>
+    <pre><span class="cmd">bookworm version</span></pre>
+    <div class="expect"><p>应该看到 <code>BookwormPRO v7.0.0</code> 或更高版本号。看到了就说明装好了。</p></div>
+
+    <details class="stuck">
+      <summary>输入 bookworm 提示 "不是命令" 怎么办？</summary>
+      <p>你<strong>没有重新打开终端</strong>。关闭当前终端窗口，重新打开一个新的再试。<br>还不行？手动加 PATH：<code>$env:PATH += ";$env:LOCALAPPDATA\bookworm\bookwormpro\venv\Scripts"</code></p>
+    </details>
+  </div>
+  <a class="next-step" href="#step-config">安装完成，下一步：配置 AI &darr;</a>
+</section>
+
+<!-- ═══════ Step 2: 配置 AI ═══════ -->
+<section id="step-config">
+  <div class="step-block">
+    <h3><span class="step-num">2</span>配置 AI 模型 <span class="time-badge">30 秒</span></h3>
+
+    <p>安装过程中向导会自动弹出。如果跳过了，运行：</p>
+    <pre><span class="cmd">bookworm setup --quick</span></pre>
+    <p style="margin-top:12px">向导问你选哪个 AI 时，<strong style="color:#fff">选 DeepSeek</strong>，然后粘贴刚才复制的 API Key。</p>
+
+    <div class="expect"><p>向导结束后会显示 "Setup complete" 和已配置的模型名称。</p></div>
+
+    <details class="stuck">
+      <summary>我想用其他 AI 模型怎么办？</summary>
+      <p>运行 <code>bookworm setup model</code> 进入完整配置。支持 28 个 Provider：Anthropic、OpenAI、Gemini、Kimi、通义等。<br>如果用 <a href="https://bww.letcareme.com" target="_blank">源力AI 中转站</a>，选 "Custom endpoint"，Base URL 填 <code>https://bww.letcareme.com/v1</code>。</p>
+    </details>
+  </div>
+  <a class="next-step" href="#step-activate">配置完成，下一步：激活 &darr;</a>
+</section>
+
+<!-- ═══════ Step 3: 激活 ═══════ -->
+<section id="step-activate">
+  <div class="step-block">
+    <h3><span class="step-num">3</span>激活 <span class="time-badge">10 秒</span></h3>
+
+    <p style="margin-bottom:14px"><strong style="color:var(--a2)">先免费试用 7 天</strong>，满意了再购买：</p>
+    <pre><span class="cmd">bookworm trial</span></pre>
+    <div class="expect"><p>看到绿色的 "Trial activated!" 框就成功了。显示到期日期和 tier: trial。</p></div>
+    <p style="font-size:.85em;color:var(--m)">无需注册、无需信用卡、无需联网验证。每台电脑可试用一次。</p>
+
+    <details class="stuck">
+      <summary>提示 "Trial already used" 怎么办？</summary>
+      <p>这台电脑已经试用过了。联系客服购买正式 License：<a href="/#pricing">查看定价</a>。</p>
+    </details>
+
+    <details class="advanced" style="margin-top:20px">
+      <summary>已购买？激活正式 License</summary>
+      <pre><span class="comment"># 1. 先拿到机器指纹</span>
+<span class="cmd">bookworm license hwid</span>
+<span class="output"># 输出一串 64 位字符，复制它</span>
+
+<span class="comment"># 2. 把指纹发给客服，收到 .license 文件后：</span>
+<span class="cmd">bookworm activate 你的文件.license</span>
+<span class="output"># 看到 "Activation Successful" 即可</span>
+
+<span class="comment"># 3. 确认一下</span>
+<span class="cmd">bookworm license status</span></pre>
+    </details>
+  </div>
+  <a class="next-step" href="#step-use">激活完成，开始使用! &darr;</a>
+</section>
+
+<!-- ═══════ 开始使用 ═══════ -->
+<section id="step-use">
+  <div class="step-block" style="border-color:var(--a);background:linear-gradient(135deg,rgba(200,160,80,0.03),rgba(32,224,192,0.02))">
+    <h3 style="color:var(--a2)"><span class="step-num" style="background:var(--a2)">Go</span>开始对话</h3>
+    <p>在终端输入：</p>
+    <pre><span class="cmd">bookworm</span></pre>
+    <div class="expect"><p>看到 BookwormPRO 的欢迎横幅和 <code>&gt;</code> 提示符，就可以开始对话了。<br>直接用中文打字，AI 会自动匹配最合适的专家技能。</p></div>
+
+    <p style="margin:16px 0 10px"><strong style="color:#fff">试试说：</strong></p>
+    <div class="g2">
+      <div class="card" style="padding:14px">
+        <h4 style="font-size:.88em">"帮我审查这个项目的安全性"</h4>
+        <p style="font-size:.78em">自动调用安全审查技能组合</p>
+      </div>
+      <div class="card" style="padding:14px">
+        <h4 style="font-size:.88em">"帮我写一个 Python 爬虫"</h4>
+        <p style="font-size:.78em">自动匹配开发专家技能</p>
+      </div>
+      <div class="card" style="padding:14px">
+        <h4 style="font-size:.88em">"分析这份 sales.csv"</h4>
+        <p style="font-size:.78em">自动启动数据分析 + 出图表</p>
+      </div>
+      <div class="card" style="padding:14px">
+        <h4 style="font-size:.88em">"/help"</h4>
+        <p style="font-size:.78em">查看全部命令</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ 进阶（折叠） ═══════ -->
+<section>
+  <details class="advanced">
+    <summary>进阶：其他启动方式</summary>
+    <pre style="margin-top:12px"><span class="cmd">bookworm --tui</span>         <span class="comment"># 图形化界面 (鼠标操作/模态窗口)</span>
+<span class="cmd">bookworm --continue</span>    <span class="comment"># 继续上次没聊完的对话</span></pre>
+  </details>
+
+  <details class="advanced">
+    <summary>进阶：安装后体检</summary>
+    <pre style="margin-top:12px"><span class="cmd">bookworm canary</span>            <span class="comment"># 快速检查 (不联网)</span>
+<span class="cmd">bookworm canary --live</span>      <span class="comment"># 检查 + 测试 API 连通</span>
+<span class="cmd">bookworm doctor</span>             <span class="comment"># 完整诊断报告</span></pre>
+    <div class="tip" style="margin-top:8px"><p>遇到问题？运行 <code>bookworm dump</code> 生成调试信息，发给技术支持。</p></div>
+  </details>
+
+  <details class="advanced">
+    <summary>进阶：常用命令速查</summary>
+    <div class="g2" style="margin-top:12px">
+      <div class="card">
+        <h4 style="font-size:.88em">配置管理</h4>
+        <pre style="margin:4px 0;font-size:.78em;padding:10px 12px"><span class="cmd">bookworm setup</span>          <span class="comment"># 完整向导</span>
+<span class="cmd">bookworm setup model</span>    <span class="comment"># 只改模型</span>
+<span class="cmd">bookworm setup gateway</span>  <span class="comment"># 消息平台</span></pre>
+      </div>
+      <div class="card">
+        <h4 style="font-size:.88em">License 管理</h4>
+        <pre style="margin:4px 0;font-size:.78em;padding:10px 12px"><span class="cmd">bookworm license status</span>     <span class="comment"># 状态</span>
+<span class="cmd">bookworm license hwid</span>       <span class="comment"># 指纹</span>
+<span class="cmd">bookworm license deactivate</span> <span class="comment"># 移除</span></pre>
+      </div>
+      <div class="card">
+        <h4 style="font-size:.88em">Gateway</h4>
+        <pre style="margin:4px 0;font-size:.78em;padding:10px 12px"><span class="cmd">bookworm gateway setup</span>   <span class="comment"># 配置</span>
+<span class="cmd">bookworm gateway start</span>   <span class="comment"># 启动</span>
+<span class="cmd">bookworm gateway status</span>  <span class="comment"># 状态</span></pre>
+      </div>
+      <div class="card">
+        <h4 style="font-size:.88em">维护</h4>
+        <pre style="margin:4px 0;font-size:.78em;padding:10px 12px"><span class="cmd">bookworm update</span>      <span class="comment"># 更新版本</span>
+<span class="cmd">bookworm doctor</span>      <span class="comment"># 诊断</span>
+<span class="cmd">bookworm uninstall</span>   <span class="comment"># 卸载</span></pre>
+      </div>
+    </div>
+  </details>
+</section>
+
+<div class="bottom-nav">
+  <a href="/">&larr; 返回首页</a>
+  <a href="/#pricing">查看定价 &rarr;</a>
+</div>
+
+</div>
+
+<footer>
+  <p><strong>BookwormPRO</strong> &mdash; AI 助手的工匠级技能包</p>
+  <p style="margin-top:6px"><a href="/terms.html">服务条款</a> &middot; <a href="/privacy.html">隐私政策</a></p>
+  <p style="margin-top:8px;font-size:.75em">鑫霖科技（广东）有限公司 &middot; <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备2026011564号</a></p>
+  <p style="margin-top:10px;color:var(--a)">善读者，必善造。</p>
+</footer>
+
+<script>
+function switchTab(id){
+  document.querySelectorAll('.install-tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.install-panel').forEach(function(p){p.classList.remove('active')});
+  event.target.closest('.install-tab').classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('pre').forEach(function(pre){
+    var btn=document.createElement('span');
+    btn.className='copy-btn';
+    btn.textContent='复制';
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var text=pre.textContent.replace(btn.textContent,'').replace(/^#.*$/gm,'').replace(/^\s*\n/gm,'').trim();
+      navigator.clipboard.writeText(text).then(function(){
+        btn.textContent='已复制 ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){btn.textContent='复制';btn.classList.remove('copied')},2000);
+      });
+    });
+    pre.appendChild(btn);
+    pre.addEventListener('click',function(){btn.click()});
+  });
+
+  var sections=['step-prereq','step-install','step-config','step-activate','step-use'];
+  var dots=document.querySelectorAll('.progress .dot');
+  var lines=document.querySelectorAll('.progress .line');
+  function updateProgress(){
+    var scrollY=window.scrollY+window.innerHeight*0.4;
+    var activeIdx=0;
+    sections.forEach(function(id,i){
+      var el=document.getElementById(id);
+      if(el&&el.offsetTop<=scrollY)activeIdx=i;
+    });
+    dots.forEach(function(d,i){
+      d.classList.remove('active','done');
+      if(i<activeIdx)d.classList.add('done');
+      else if(i===activeIdx)d.classList.add('active');
+    });
+    lines.forEach(function(l,i){
+      l.classList.toggle('done',i<activeIdx);
+    });
+  }
+  window.addEventListener('scroll',updateProgress);
+  updateProgress();
+});
+</script>
+
+</body>
+</html>
